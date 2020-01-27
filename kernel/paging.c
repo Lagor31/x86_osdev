@@ -29,7 +29,7 @@ uint32_t kVirtualNextInstr;
 uint16_t lastAllocatedEntry = 0;
 
 void gpFaultHandler(registers_t *regs) {
-  
+
     _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
 
 
@@ -38,6 +38,8 @@ void gpFaultHandler(registers_t *regs) {
   kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d\n", regs->cs, regs->eip,
           regs->err_code);
   resetScreenColors();
+
+  
   while (TRUE)
     ;
 }
