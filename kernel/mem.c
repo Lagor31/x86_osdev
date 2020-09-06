@@ -5,6 +5,10 @@
 
 #include "mem.h"
 
+uint8_t
+    *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
+uint8_t *stack_pointer;  // Top of the kernel stack
+
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
 void meminit() {
