@@ -230,7 +230,7 @@ void irq_install() {
   // Setup requested IRQs
   init_keyboard();
   activateCursor();
-  initTime(50);
+  initTimer();
   asm volatile("sti");
 }
 

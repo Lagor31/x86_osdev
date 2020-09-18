@@ -18,7 +18,6 @@
 #include "../utils/shutdown.h"
 #include "../utils/utils.h"
 #include "paging.h"
-
 #include "kernel.h"
 
 struct kmultiboot2info *kMultiBootInfo;
@@ -50,6 +49,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   gdt_install();
   kPrintOKMessage("GTD Installed");
 
+  kPrintOKMessage("Buddy initialized");
   // We setup a Page mapping allowing the kernel to transparently use Virtual
   // Addresses starting from 0xC0000000
   // kprintf("Enabling kernel paging...\n");
@@ -63,7 +63,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   kPrintOKMessage("Interrupts Handlers installed...");
 
   saveMultibootInfo(addr, magic);
-  loadUserProcess(getModule(kMultiBootInfo));
+  // loadUserProcess(getModule(kMultiBootInfo));
 
   resetScreenColors();
 
@@ -71,7 +71,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // meaningful value for srand
 
   setBackgroundColor(LIGHTGREEN);
-  // fakeSysLoadingBar(1.8 * 1000);
+  //fakeSysLoadingBar(1.8 * 1000);
   resetScreenColors();
 
   // srand(tickCount);
@@ -79,15 +79,15 @@ void kernel_main(uint32_t magic, uint32_t addr) {
 
   // syncWait(1000);
 
-  clearScreen();
-  // printInitScreen();
+  /*   clearScreen();
+    printInitScreen(); */
 
   // Print the prompt and we're done, from now on we hlt the cpu until an
   // external interrupts gives control back to our OS
-  setCursorPos(2, 0);
+  // setCursorPos(2, 0);
   kprintf("\n>");
 
-  //runProcess();
+  // runProcess();
 }
 
 /*

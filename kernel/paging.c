@@ -119,7 +119,7 @@ uint32_t *createPageTable(uint32_t pdRow) {
 
   return pt;
 }
-
+/* Old */
 void enableKernelPaging() {
   uint16_t i = 0;
   for (i = 0; i < 1024; i++) {

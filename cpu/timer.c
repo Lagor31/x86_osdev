@@ -34,11 +34,11 @@ void syncWait(uint32_t millis) {
 uint32_t getUptime() { return (uint32_t)ticksToMillis(tickCount); }
 
 inline uint64_t millisToTicks(uint32_t millis) {
-  return millis / (((double)1 / (double)50) * 1000);
+  return millis / (((double)1 / (double)RTC_FREQ) * 1000);
 }
 
 inline uint32_t ticksToMillis(uint64_t tickCount) {
-  return (uint32_t)((tickCount * ((double)1 / (double)50)) * 1000);
+  return (uint32_t)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
 
 static void timer_callback(registers_t *regs) {
@@ -52,7 +52,7 @@ static void timer_callback(registers_t *regs) {
   ++tickCount;
   int prevPos = getCursorOffset();
   setCursorPos(2, 0);
-  kprintf("Kernel code! (%d)\n", rand());
+  kprintf("Kernel code! (%d)\n", tickCount);
   setCursorPos(getOffsetRow(prevPos), getOffsetCol(prevPos));
 
   if (userMode) {
@@ -90,7 +90,7 @@ void timerHandler(registers_t *regs) {
     _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
 
   ++tickCount;
-
+  
   UNUSED(regs);
   regs->eflags |= 0x200;
 

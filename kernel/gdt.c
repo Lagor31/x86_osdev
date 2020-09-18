@@ -48,8 +48,7 @@ void gdt_install() {
   /* The second entry is our Code Segment.  The base address
    * is 0, the limit is 4 gigabytes, it uses 4 kilobyte
    * granularity, uses 32-bit opcodes, and is a Code Segment
-   * descriptor.  Please check the table above in the tutorial
-   * in order to see exactly what each value means */
+   * descriptor. */
   gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
 
   /* The third entry is our Data Segment.  It's exactly the

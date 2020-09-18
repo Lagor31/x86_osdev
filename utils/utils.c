@@ -4,7 +4,6 @@
 #include "../kernel/multiboot.h"
 #include "../kernel/gdt.h"
 
-
 #include "../cpu/ports.h"
 #include "../cpu/timer.h"
 #include "../drivers/screen.h"
@@ -276,17 +275,39 @@ void printInitScreen() {
 void printHelp() {
   setTextColor(WHITE);
   setBackgroundColor(GREEN);
-  kprintf("clear     -> Clears the screen                                                 \n");
-  kprintf("init      -> Re-prints the initial screen                                      \n");
-  kprintf("gdt       -> Prints the Global Descriptor Table structure                      \n");
-  kprintf("uptime    -> Prints current uptime of the machine                              \n");
-  kprintf("mods      -> Prints basic info about GRUB2 Modules                             \n");
-  kprintf("meminfo   -> Shows current kernel memory infos                                 \n");
-  kprintf("mmap      -> Shows available memory block map                                  \n");
-  kprintf("bootinfo  -> Shows multiboot2 info returned by GRUB2                           \n");
-  kprintf("alloc     -> Allocates a chuck of kernel memory (4KB Aligned)                  \n");
-  kprintf("shutdown  -> Shuts-down the PC                                                 \n");
-  kprintf("reboot    -> Re-boots the PC                                                   ");
+  kprintf(
+      "clear     -> Clears the screen                                          "
+      "       \n");
+  kprintf(
+      "init      -> Re-prints the initial screen                               "
+      "       \n");
+  kprintf(
+      "gdt       -> Prints the Global Descriptor Table structure               "
+      "       \n");
+  kprintf(
+      "uptime    -> Prints current uptime of the machine                       "
+      "       \n");
+  kprintf(
+      "mods      -> Prints basic info about GRUB2 Modules                      "
+      "       \n");
+  kprintf(
+      "meminfo   -> Shows current kernel memory infos                          "
+      "       \n");
+  kprintf(
+      "mmap      -> Shows available memory block map                           "
+      "       \n");
+  kprintf(
+      "bootinfo  -> Shows multiboot2 info returned by GRUB2                    "
+      "       \n");
+  kprintf(
+      "alloc     -> Allocates a chuck of kernel memory (4KB Aligned)           "
+      "       \n");
+  kprintf(
+      "shutdown  -> Shuts-down the PC                                          "
+      "       \n");
+  kprintf(
+      "reboot    -> Re-boots the PC                                            "
+      "       ");
   resetScreenColors();
 }
 
@@ -314,10 +335,13 @@ stdDate_t *getSystemDate() {
 
 void getStandardDate(uint32_t millis, stdDate_t *date) {
   date->seconds = millis / MILLIS_IN_A_SECOND;
+  kprintf("1\n");
   if (date->seconds >= 60) date->seconds %= 60;
   date->minutes = millis / MILLIS_IN_A_MINUTE;
+  kprintf("2\n");
   if (date->minutes >= 60) date->minutes %= 60;
   date->hours = millis / MILLIS_IN_A_HOUR;
+  kprintf("3\n");
   if (date->hours >= 24) date->hours %= 24;
   date->days = millis / MILLIS_IN_A_DAY;
 }
@@ -329,9 +353,10 @@ void printModuleInfo(struct multiboot_tag_module *module) {
 }
 
 void printUptime() {
-  stdDate_t *uptime = getSystemDate();
+  /* stdDate_t *uptime = getSystemDate();
   kprintf("%u days, %02u:%02u:%02u", uptime->days, uptime->hours,
-          uptime->minutes, uptime->seconds);
+          uptime->minutes, uptime->seconds); */
+  kprintf("Uptime %dms", getUptime());
 }
 
 // Enable/Disable non maskable interrupt

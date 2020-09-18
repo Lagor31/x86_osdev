@@ -2,9 +2,19 @@
 #define MEM_H
 
 #define STACK_SIZE 0x1000
-    
-extern uint8_t *free_mem_addr; // Reppresents the first byte that we can freeily allocate
-extern uint8_t *stack_pointer; // Top of the kernel stack
+
+typedef struct page{
+  //8 Bits for various flags
+  char flags;
+  //Usage count
+  int count;
+  // Free pages list for buddy allocator
+  void * list_head;
+} page_t;
+
+extern uint8_t
+    *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
+extern uint8_t *stack_pointer;  // Top of the kernel stack
 
 void meminit();
 void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes);
