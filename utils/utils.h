@@ -1,10 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-struct kmultiboot2info {
-  uint8_t *info;
-  uint32_t magic;
-};
 
 void saveMultibootInfo(uint32_t addr, uint32_t magic);
 void printMultibootInfo(struct kmultiboot2info *info, uint8_t onlyMem);

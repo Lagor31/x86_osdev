@@ -3,7 +3,7 @@
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../utils/list.h"
-
+#include "multiboot.h"
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"

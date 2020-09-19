@@ -1,6 +1,6 @@
 #include "../cpu/types.h"
 #include "../utils/list.h"
-
+#include "../kernel/multiboot.h"
 #include "../cpu/ports.h"
 #include "../kernel/mem.h"
 #include "../libc/strings.h"

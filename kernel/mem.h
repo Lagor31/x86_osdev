@@ -2,19 +2,16 @@
 #define MEM_H
 
 #define STACK_SIZE 0x1000
-#define PHYS_MEM_FRAMES 100 
-//1048576
+#define PHYS_MEM_FRAMES 100
+// 1048576
 
-typedef struct Page {
-  // 8 Bits for various flags
-  char buddy_info;
-  // Usage count
-  int count;
-  // Free pages list for buddy allocator
-  List list;
-} Page;
+typedef struct boot_mmap {
+  uint32_t highest_mem_addess;
+  uint32_t total_pages;
+} BootMmap;
 
 extern struct Page *frames;
+extern BootMmap boot_mmap;
 
 extern uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
@@ -24,5 +21,8 @@ void meminit();
 void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);
 void memset(uint8_t *dest, uint8_t val, size_t len);
+uint8_t parse_multiboot_info(struct kmultiboot2info *info);
+void buddy_init();
+void memmory_alloc_init();
 
 #endif

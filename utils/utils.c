@@ -1,9 +1,9 @@
 #include "../cpu/types.h"
+#include "../kernel/multiboot.h"
 
 #include "../utils/list.h"
 
 #include "../kernel/mem.h"
-#include "../kernel/multiboot.h"
 #include "../kernel/gdt.h"
 
 #include "../cpu/ports.h"

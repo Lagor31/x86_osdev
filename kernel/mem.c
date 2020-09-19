@@ -4,13 +4,18 @@
 #include "../kernel/kernel.h"
 
 #include "../utils/list.h"
+#include "../utils/utils.h"
+#include "multiboot.h"
 #include "mem.h"
+#include "../mem/page.h"
+#include "../mem/buddy.h"
 
 uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 uint8_t *stack_pointer;  // Top of the kernel stack
 
 Page *frames;
+BootMmap boot_mmap;
 
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
@@ -19,7 +24,54 @@ void meminit() {
   kprintf("Stack Pointer: 0x%x\n", (uint32_t)stack_pointer);
   free_mem_addr = stack_pointer;
   kprintf("Free memory address: 0x%x\n", (uint32_t)free_mem_addr);
-  frames = boot_alloc(sizeof(Page) * PHYS_MEM_FRAMES, 1);
+}
+
+void memory_alloc_init() {
+  //Allocating array of pages
+  frames = boot_alloc(sizeof(Page) * boot_mmap.total_pages, 1);
+  buddy_init();
+}
+
+uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
+  struct multiboot_tag *tag;
+
+  /*  Am I booted by a Multiboot-compliant boot loader? */
+  if (info->magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
+    kprintf("Invalid magic number: 0x%x\n", (unsigned)info->magic);
+    return -1;
+  }
+
+  unsigned max_mem_address = 0;
+
+  for (tag = (struct multiboot_tag *)(info->info + 8);
+       tag->type != MULTIBOOT_TAG_TYPE_END;
+       tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag +
+                                      ((tag->size + 7) & ~7))) {
+    switch (tag->type) {
+      case MULTIBOOT_TAG_TYPE_MMAP: {
+        multiboot_memory_map_t *mmap;
+        for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
+             (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
+             mmap = (multiboot_memory_map_t
+                         *)((unsigned long)mmap +
+                            ((struct multiboot_tag_mmap *)tag)->entry_size)) {
+          unsigned base_addr = (unsigned)(mmap->addr >> 32) +
+                               (unsigned)(mmap->addr & 0xffffffff);
+          unsigned length =
+              (unsigned)(mmap->len >> 32) + (unsigned)(mmap->len & 0xffffffff);
+
+          unsigned type = (unsigned)mmap->type;
+          if (type == 1 && (base_addr + length) > max_mem_address)
+            max_mem_address = base_addr + length;
+        }
+      } break;
+    }
+  }
+  boot_mmap.highest_mem_addess = max_mem_address;
+  boot_mmap.total_pages = (max_mem_address & 0xFFFFF000) / PAGE_SIZE;
+  kprintf("High mem addr: %x\n", boot_mmap.highest_mem_addess);
+  kprintf("Total pages [0 - %d]\n", boot_mmap.total_pages);
+  return 0;
 }
 
 // Just copies byte per byte from source to destination
@@ -50,7 +102,7 @@ void *boot_alloc(size_t size, uint8_t align) {
   }
   // kprintf("Free mem pointer 0x%x\n", free_mem_addr);
   void *ret = free_mem_addr;
-  // memset(ret, 0, size);   // Setting the newly allocated memory to 0
+  memset(ret, 0, size);   // Setting the newly allocated memory to 0
   free_mem_addr += size;  // We move up to the next free byte
   return ret;
 }

@@ -18,20 +18,23 @@ typedef struct list_head {
   })
 
 /*
-  Just an alias used to extract the struct from the embedded lsit pointer
+  Just an alias used to extract the struct from the embedded list pointer
  */
 #define list_entry(ptr, type, member) container_of(ptr, type, member)
 
 /*
   Init list element head by making it point to itself in both directions
 */
-static inline void INIT_LIST_HEAD(List *list) {
+static inline void LIST_INIT(List *list) {
   list->next = list;
   list->prev = list;
 }
 
+#define list_for_each(pos, head) \
+  for (pos = (head)->next; pos != (head); pos = pos->next)
+
 /*
- Adds element after the list head 
+ Adds element after the list head
  O(1) time complexity
 */
 static inline void list_add(List *head, List *new) {

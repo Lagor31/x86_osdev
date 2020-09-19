@@ -1,7 +1,7 @@
 #include "../cpu/types.h"
 #include "../utils/list.h"
+#include "../kernel/multiboot.h"
 #include "mem.h"
-
 #include "gdt.h"
 
 #define GDT_ENTRIES_NUMBER 6
