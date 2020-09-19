@@ -1,5 +1,7 @@
 #include "types.h"
 
+#include "../utils/list.h"
+
 #include "../kernel/kernel.h"
 #include "../kernel/mem.h"
 #include "../kernel/paging.h"
@@ -104,7 +106,7 @@ void timerHandler(registers_t *regs) {
 }
 
 void initTimer() {
-  sysDate = (stdDate_t *)kmalloc(sizeof(stdDate_t), 0);
+  sysDate = (stdDate_t *)boot_alloc(sizeof(stdDate_t), 0);
   setTimerPhase(RTC_PHASE);
   register_interrupt_handler(IRQ8, timerHandler);
 }

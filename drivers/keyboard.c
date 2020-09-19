@@ -1,5 +1,7 @@
 #include "../cpu/types.h"
 
+#include "../utils/list.h"
+
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../kernel/kernel.h"

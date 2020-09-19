@@ -3,6 +3,7 @@
 #include "multiboot.h"
 
 #include "../drivers/keyboard.h"
+#include "../utils/list.h"
 
 #include "gdt.h"
 #include "mem.h"
@@ -16,7 +17,8 @@
 #include "../libc/strings.h"
 #include "../rfs/rfs.h"
 #include "../utils/shutdown.h"
-#include "../utils/utils.h"
+#include "../utils/utils.h" 
+
 #include "paging.h"
 #include "kernel.h"
 
@@ -71,7 +73,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // meaningful value for srand
 
   setBackgroundColor(LIGHTGREEN);
-  //fakeSysLoadingBar(1.8 * 1000);
+  // fakeSysLoadingBar(1.8 * 1000);
   resetScreenColors();
 
   // srand(tickCount);
@@ -120,7 +122,7 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "alloc")) {
     size_t s = 0x4000;
-    void *page = kmalloc(s, 1);
+    void *page = boot_alloc(s, 1);
     memset(page, 0x90, s);
     kprintf("Page Address: 0x%x Size: %d, FreeMemPtr: 0x%x", page, s,
             free_mem_addr);

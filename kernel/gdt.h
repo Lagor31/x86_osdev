@@ -64,7 +64,7 @@ extern void gdt_install();
 #include "mem.h"
 
 static inline struct gdtr *read_gdtr() {
-  struct gdtr *gdtr = (struct gdtr *)kmalloc(sizeof(struct gdtr), 1);
+  struct gdtr *gdtr = (struct gdtr *)boot_alloc(sizeof(struct gdtr), 1);
 
   __asm__("sgdt %0" : "=m"(*gdtr));
   //__asm__("mov $31, %%eax\n\r" "mov %%eax, %0" : "=m"(eax));

@@ -1,5 +1,7 @@
 #include "../cpu/types.h"
 
+#include "../utils/list.h"
+
 #include "../kernel/mem.h"
 #include "../kernel/multiboot.h"
 #include "../kernel/gdt.h"
@@ -27,7 +29,7 @@ void saveMultibootInfo(uint32_t addr, uint32_t magic) {
   size_t size = *(uint16_t *)addr;
   kprintf("Bootinfo address in save: 0x%x Magic:  0x%x Size: %d\n", addr, magic,
           size);
-  kMultiBootInfo->info = (uint8_t *)kmalloc(size, 1);
+  kMultiBootInfo->info = (uint8_t *)boot_alloc(size, 1);
   memcopy((uint8_t *)addr, kMultiBootInfo->info, size);
   kMultiBootInfo->magic = magic;
 }

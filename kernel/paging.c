@@ -2,6 +2,7 @@
 
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
+#include "../utils/list.h"
 
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
@@ -72,7 +73,7 @@ void pageFaultHandler(registers_t *regs) {
 }
 
 void enableUserModePaging(void *processVA) {
-  uint32_t *userPageTable = (uint32_t *)kmalloc(sizeof(uint32_t) * 1024, 1);
+  uint32_t *userPageTable = (uint32_t *)boot_alloc(sizeof(uint32_t) * 1024, 1);
   userPageTable[0] = (PA((uint32_t)processVA) & 0xFFFFF000) | 7;
   user_page_directory[0] = PA((uint32_t)userPageTable) | 7;
   user_page_directory[1] =
@@ -100,7 +101,7 @@ void enableUserModePaging(void *processVA) {
 
 uint32_t *createPageTableUser(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
-  uint32_t *pt = kmalloc(sizeof(uint32_t) * 1024, 1);
+  uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
   for (uint32_t i = 0; i < 1024; ++i) {
     uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
     pt[i] = curFrameNumber | 0x107;
@@ -111,7 +112,7 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
 
 uint32_t *createPageTable(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
-  uint32_t *pt = kmalloc(sizeof(uint32_t) * 1024, 1);
+  uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
   for (uint32_t i = 0; i < 1024; ++i) {
     uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
     pt[i] = curFrameNumber | 3;

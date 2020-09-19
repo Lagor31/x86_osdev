@@ -1,4 +1,5 @@
 #include "../cpu/types.h"
+#include "../utils/list.h"
 
 #include "../cpu/ports.h"
 #include "../kernel/mem.h"

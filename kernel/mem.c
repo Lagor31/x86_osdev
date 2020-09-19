@@ -3,11 +3,14 @@
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
 
+#include "../utils/list.h"
 #include "mem.h"
 
 uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 uint8_t *stack_pointer;  // Top of the kernel stack
+
+Page *frames;
 
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
@@ -16,6 +19,7 @@ void meminit() {
   kprintf("Stack Pointer: 0x%x\n", (uint32_t)stack_pointer);
   free_mem_addr = stack_pointer;
   kprintf("Free memory address: 0x%x\n", (uint32_t)free_mem_addr);
+  frames = boot_alloc(sizeof(Page) * PHYS_MEM_FRAMES, 1);
 }
 
 // Just copies byte per byte from source to destination
@@ -37,7 +41,7 @@ void memset(uint8_t *dest, uint8_t val, size_t len) {
   No way to free chunks (there are no chunks).
   TODO: Implement a (serious) memory allocator.
 */
-void *kmalloc(size_t size, uint8_t align) {
+void *boot_alloc(size_t size, uint8_t align) {
   // Pages are aligned to 4K, or 0x1000
   uint32_t isAligned = (uint32_t)free_mem_addr & 0x00000FFF;
   if (align == 1 && isAligned != 0) {
@@ -46,7 +50,7 @@ void *kmalloc(size_t size, uint8_t align) {
   }
   // kprintf("Free mem pointer 0x%x\n", free_mem_addr);
   void *ret = free_mem_addr;
-  memset(ret, 0, size);   // Setting the newly allocated memory to 0
+  // memset(ret, 0, size);   // Setting the newly allocated memory to 0
   free_mem_addr += size;  // We move up to the next free byte
   return ret;
 }
