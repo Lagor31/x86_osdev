@@ -1,25 +1,23 @@
 #include "../cpu/types.h"
 
-#include "multiboot.h"
-
-#include "../drivers/keyboard.h"
-#include "../utils/list.h"
-
-#include "gdt.h"
-#include "mem.h"
-
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
-#include "../cpu/timer.h"
-#include "../cpu/types.h"
+#include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/strings.h"
-#include "../rfs/rfs.h"
+#include "../utils/list.h"
 #include "../utils/shutdown.h"
-#include "../utils/utils.h" 
-
+#include "../utils/utils.h"
+#include "gdt.h"
+#include "mem.h"
+#include "multiboot.h"
 #include "paging.h"
+
+#include "../rfs/rfs.h"
+
+#include "../cpu/timer.h"
+
 #include "kernel.h"
 
 struct kmultiboot2info *kMultiBootInfo;
@@ -81,8 +79,8 @@ void kernel_main(uint32_t magic, uint32_t addr) {
 
   // syncWait(1000);
 
-  /*   clearScreen();
-    printInitScreen(); */
+  clearScreen();
+  printInitScreen();
 
   // Print the prompt and we're done, from now on we hlt the cpu until an
   // external interrupts gives control back to our OS

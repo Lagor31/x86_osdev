@@ -1,8 +1,8 @@
+[bits 32]
 VIDEO_MEMORY equ 0x400000 + 0xB8000
 xor ecx, ecx
 mov eax, 0x0f31
 loop_start:
-    sti
     mov DWORD [VIDEO_MEMORY + ecx], eax
     add ecx,2
     cmp ecx, 80
