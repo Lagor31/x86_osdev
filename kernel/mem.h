@@ -22,7 +22,6 @@ void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);
 void memset(uint8_t *dest, uint8_t val, size_t len);
 uint8_t parse_multiboot_info(struct kmultiboot2info *info);
-void buddy_init();
-void memmory_alloc_init();
+void memory_alloc_init();
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef BUDDY_H
-#define BUDDY_h
+#define BUDDY_H
 
-#include "page.h"
 
 #define BUDDY_ORDER 11
 

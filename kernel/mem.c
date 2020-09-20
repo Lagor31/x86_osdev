@@ -6,9 +6,9 @@
 #include "../utils/list.h"
 #include "../utils/utils.h"
 #include "multiboot.h"
-#include "mem.h"
 #include "../mem/page.h"
 #include "../mem/buddy.h"
+#include "mem.h"
 
 uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate

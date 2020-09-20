@@ -3,15 +3,15 @@
 # $^ = all dependencies
 
 
-QEMU-MEM = 512M
+QEMU-MEM = 128M
 GDB = gdb
 CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 		 -Wall -Wextra  -ffreestanding
 #-Werror
 
 CC = gcc
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c libc/*.c cpu/*.c utils/*.c rfs/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h libc/*h cpu/*.h utils/*.h rfs/*.h)
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c libc/*.c cpu/*.c utils/*.c rfs/*.c mem/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h libc/*h cpu/*.h utils/*.h rfs/*.h mem/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o}
 
@@ -34,7 +34,7 @@ debug-iso: os.iso kernel/kernel.elf
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel/kernel.elf"
 
 clean:
-	rm -f *.bin boot/*.bin boot/*.o kernel/*.o  kernel/*.elf kernel/*.bin drivers/*.o cpu/*.o libc/*.o  utils/*.o rfs/*.o *.iso  iso/boot/*.elf asm/*.o
+	rm -f *.bin boot/*.bin boot/*.o kernel/*.o  kernel/*.elf kernel/*.bin drivers/*.o cpu/*.o libc/*.o mem/*.o  utils/*.o rfs/*.o *.iso  iso/boot/*.elf asm/*.o 
 
 external: external/user_process.asm
 	 nasm -f elf32  external/user_process.asm -o iso/boot/user_process

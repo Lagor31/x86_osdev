@@ -1,13 +1,18 @@
+
+#include "page.h"
 #include "buddy.h"
-#include "../kernel/mem.h"
-#include "../utils/list.h"
+
 #include "../cpu/types.h"
+#include "../drivers/screen.h"
+#include "../kernel/mem.h"
+#include "../kernel/multiboot.h"
+#include "../utils/list.h"
 
 Buddy buddy[BUDDY_ORDER];
 
 void buddy_init() {
   int i = 0;
-  List *head = &frames[0].list;
+  List *head = &(frames[0].list);
   LIST_INIT(head);
 
   for (i = 0; i < BUDDY_ORDER; ++i) {
@@ -27,4 +32,6 @@ void buddy_init() {
       buddy[i].free_buddy_list = NULL;
     }
   }
+
+ 
 }
