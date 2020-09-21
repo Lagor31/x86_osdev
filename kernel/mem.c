@@ -27,9 +27,11 @@ void meminit() {
 }
 
 void memory_alloc_init() {
-  //Allocating array of pages
-  frames = boot_alloc(sizeof(Page) * boot_mmap.total_pages, 1);
+  int mem_system_size = (uint32_t) free_mem_addr;
   buddy_init();
+  kprintf("Free memory address: 0x%x\n", (uint32_t)free_mem_addr);
+  kprintf("Kernel Memory Subsystem Usage %d bytes\n", (uint32_t) free_mem_addr - mem_system_size);
+
 }
 
 uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
@@ -70,6 +72,7 @@ uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
   boot_mmap.highest_mem_addess = max_mem_address;
   boot_mmap.total_pages = (max_mem_address & 0xFFFFF000) / PAGE_SIZE;
   kprintf("High mem addr: %x\n", boot_mmap.highest_mem_addess);
+  kprintf("Total usable bytes %d\n",max_mem_address);
   kprintf("Total pages [0 - %d]\n", boot_mmap.total_pages);
   return 0;
 }

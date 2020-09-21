@@ -123,6 +123,7 @@ uint32_t *createPageTable(uint32_t pdRow) {
 /* Old */
 void enableKernelPaging() {
   uint16_t i = 0;
+  uint32_t s = (uint32_t) free_mem_addr;
   for (i = 0; i < 1024; i++) {
     // Mapping the higher half kernel
     if (i < 10)
@@ -134,6 +135,7 @@ void enableKernelPaging() {
           3;
   }
 
+  kprintf("Kernel paging subsystem size = %d bytes\n", free_mem_addr - s);
   pdPhysical = (uint32_t)kernel_page_directory - KERNEL_VIRTUAL_ADDRESS_BASE;
   lastAllocatedEntry = i;
   // kprintf("KPDAdr: 0x%x\nPhysical: 0x%x\n", kernel_page_directory,

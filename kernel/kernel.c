@@ -40,32 +40,34 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   clearScreen();
   setTextColor(WHITE);
 
-  // Just setting a couple of pointers in our C variables, nothing special
-  // kprintf("Kernel memory initialization...\n");
-  meminit();
-  kPrintOKMessage("Kernel memory inizialized");
-
   // Installing the Global Descriptor Table for the segments we will need
   // kprintf("Installing GDT...\n");
   gdt_install();
   kPrintOKMessage("GTD Installed");
 
+  // Just setting a couple of pointers in our C variables, nothing special
+  // kprintf("Kernel memory initialization...\n");
+  meminit();
+
   // We setup a Page mapping allowing the kernel to transparently use Virtual
   // Addresses starting from 0xC0000000
   // kprintf("Enabling kernel paging...\n");
   enableKernelPaging();
-  kPrintOKMessage("Kernel paging enabled");
+  
+  saveMultibootInfo(addr, magic);
+  parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
+
+  memory_alloc_init();
+  kPrintOKMessage("Kernel memory inizialized");
+  //kPrintOKMessage("Kernel paging enabled");
 
   // Installing the interrupt/exception handlers
   // kprintf("Installing Interrupts Handlers...\n");
   isr_install();
   irq_install();
-  kPrintOKMessage("Interrupts Handlers installed...");
+  //kPrintOKMessage("Interrupts Handlers installed...");
 
-  saveMultibootInfo(addr, magic);
-  parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
-
-  memory_alloc_init();
+  
   // loadUserProcess(getModule(kMultiBootInfo));
 
   resetScreenColors();
@@ -78,7 +80,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   resetScreenColors();
 
   // srand(tickCount);
-  kPrintOKMessage("Kernel loaded successfully!");
+  //kPrintOKMessage("Kernel loaded successfully!");
 
   // syncWait(1000);
 

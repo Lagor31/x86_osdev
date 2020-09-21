@@ -2,7 +2,7 @@
 #define BUDDY_H
 
 
-#define BUDDY_ORDER 11
+#define MAX_ORDER 10
 
 typedef struct buddy{
     void *bitmap;

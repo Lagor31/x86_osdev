@@ -34,15 +34,15 @@ static inline void LIST_INIT(List *list) {
   for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /*
- Adds element after the list head
+ Adds element before the list head
  O(1) time complexity
 */
-static inline void list_add(List *head, List *new) {
-  List *next = head->next;
-  next->prev = new;
-  new->next = next;
-  new->prev = head;
-  head->next = new;
+static inline void list_add(List *first, List *new) {
+  List *last = first->prev;
+  last->next = new;
+  new->next = first;
+  new->prev = last;
+  first->prev = new;
 }
 
 #endif

@@ -1,37 +1,46 @@
-
 #include "page.h"
 #include "buddy.h"
 
 #include "../cpu/types.h"
 #include "../drivers/screen.h"
-#include "../kernel/mem.h"
 #include "../kernel/multiboot.h"
+
+#include "../kernel/mem.h"
 #include "../utils/list.h"
 
-Buddy buddy[BUDDY_ORDER];
+Buddy buddy[MAX_ORDER + 1];
 
 void buddy_init() {
-  int i = 0;
+  // Allocating array of pages
+  frames = boot_alloc(sizeof(Page) * boot_mmap.total_pages, 1);
+  int curr_order = 0;
   List *head = &(frames[0].list);
   LIST_INIT(head);
+  int order_count = 0;
 
-  for (i = 0; i < BUDDY_ORDER; ++i) {
-    buddy[i].bitmap = boot_alloc(boot_mmap.total_pages / (1 << i), 1);
-    if (i == BUDDY_ORDER - 1) {
-      buddy[i].free_buddy_list = &frames[0];
-      frames[0].buddy_info = BUDDY_ORDER - 1;
-      List *head = &frames[0].list;
-      LIST_INIT(head);
-      int k = 1 << i;
-      while (k < boot_mmap.total_pages) {
-        list_add(head, &frames[k].list);
-        frames[k].buddy_info = BUDDY_ORDER - 1;
-        k += (1 << i);
+  for (curr_order = MAX_ORDER; curr_order >= 0; --curr_order) {
+    kprintf("Order %d", curr_order);
+    if (curr_order == MAX_ORDER) {
+      buddy[MAX_ORDER].free_buddy_list = &frames[0];
+      frames[0].buddy_info = MAX_ORDER;
+      List *free_list = &buddy[MAX_ORDER].free_buddy_list->list;
+      LIST_INIT(free_list);
+      uint32_t k = 0;
+      while (k <= (boot_mmap.total_pages - (1 << MAX_ORDER))) {
+        order_count++;
+        list_add(free_list, &frames[k].list);
+        frames[k].buddy_info = MAX_ORDER;
+        k += (1 << MAX_ORDER);
       }
+      kprintf(" - OOC= %d", order_count);
+      order_count &= 0xFFFFFFFE;
     } else {
-      buddy[i].free_buddy_list = NULL;
+      order_count *= 2;
+      buddy[curr_order].free_buddy_list = NULL;
     }
+    int calculated_oc = boot_mmap.total_pages / (1 << curr_order);
+    kprintf(" ROC=%d CCO=%d)\n", order_count, calculated_oc);
+    buddy[curr_order].bitmap = boot_alloc(order_count, 1);
   }
-
- 
+  kprintf("Wasted %d pages\n", boot_mmap.total_pages - order_count);
 }
