@@ -7,11 +7,9 @@
 
 typedef struct Page {
   // 8 Bits for various flags
-  char buddy_info;
+  char flags;
   // Usage count
   int count;
-  // Free pages list for buddy allocator
-  List list;
 } Page;
 
 #endif

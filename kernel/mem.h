@@ -10,7 +10,7 @@ typedef struct boot_mmap {
   uint32_t total_pages;
 } BootMmap;
 
-extern struct Page *frames;
+extern struct Page *pages;
 extern BootMmap boot_mmap;
 
 extern uint8_t

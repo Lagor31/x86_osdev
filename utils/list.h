@@ -45,4 +45,22 @@ static inline void list_add(List *first, List *new) {
   first->prev = new;
 }
 
+static inline int list_length(List *head) {
+  List *p;
+  int i = 0;
+  list_for_each(p, head) { ++i; }
+  return i;
+}
+
+static inline void list_remove(List *deleteme, List *head) {
+  List *p;
+  list_for_each(p, head) {
+    if (p == deleteme) {
+      List *prev = p->prev;
+      List *next = p->next;
+      prev->next = next;
+      next->prev = prev;
+    }
+  }
+}
 #endif

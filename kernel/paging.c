@@ -106,7 +106,6 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
     uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
     pt[i] = curFrameNumber | 0x107;
   }
-
   return pt;
 }
 
@@ -117,7 +116,6 @@ uint32_t *createPageTable(uint32_t pdRow) {
     uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
     pt[i] = curFrameNumber | 3;
   }
-
   return pt;
 }
 /* Old */
