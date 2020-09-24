@@ -1,5 +1,5 @@
-#ifndef PAGING_H
-#define PAGING_H
+#ifndef PAGE_H
+#define PAGE_H
 
 #include "../utils/list.h"
 

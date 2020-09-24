@@ -12,21 +12,31 @@
 
 Buddy buddy[MAX_ORDER + 1];
 BuddyBlock *buddies;
+uint32_t total_free_memory = 0;
 
-uint32_t get_pfn(Page *p) {
+uint32_t get_pfn_from_page(Page *p) {
   return ((uint32_t)p - (uint32_t)pages) / sizeof(Page);
 }
 
-void *pa(uint32_t pfn) {
+void *ka(uint32_t pfn) {
   return (void *)(pfn * PAGE_SIZE + KERNEL_VIRTUAL_ADDRESS_BASE);
 }
 
+Page *get_page_from_address(void *ptr) {
+  kprintf("Base = %x PA: %x PgPtr=%x", pages, (PA((uint32_t)ptr)),
+          ((uint32_t)pages + (PA((uint32_t)ptr) * sizeof(Page))));
+  return (Page *)((uint32_t)pages + (PA((uint32_t)ptr) / sizeof(Page)));
+}
+
+void *get_page_address(Page *p) { return ka(get_pfn_from_page(p)); }
+
 void *get_free_address(BuddyBlock *b) {
-  return (BuddyBlock *)pa(get_pfn(b->head));
+  return (BuddyBlock *)ka(get_pfn_from_page(b->head));
 }
 
 void printBuddy(BuddyBlock *b) {
-  kprintf("[%x]->%x S=%d\n", b, get_free_address(b), b->order);
+  kprintf("[%x]->%x S=%d PagePtr=%x PhysAddr=%x\n", b, get_free_address(b),
+          b->order, b->head, PA(get_page_address(b->head)));
 }
 
 int get_buddy_pos(BuddyBlock *b) {
@@ -56,11 +66,13 @@ void buddy_init() {
         int curr_buddy_pos = i * PAGES_PER_BLOCK(MAX_ORDER);
         buddies[curr_buddy_pos].order = MAX_ORDER;
         list_add(&buddy[curr_order].free_list, &buddies[curr_buddy_pos].item);
+        total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
         if (i <= 3) {
           kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
                   curr_buddy_pos, &buddies[curr_buddy_pos],
-                  get_pfn(buddies[curr_buddy_pos].head),
-                  buddies[curr_buddy_pos].order, find_buddy( &buddies[curr_buddy_pos]));
+                  get_pfn_from_page(buddies[curr_buddy_pos].head),
+                  buddies[curr_buddy_pos].order,
+                  find_buddy(&buddies[curr_buddy_pos]));
         }
       }
       kprintf("\n");
@@ -107,23 +119,15 @@ void free_buddy_block(BuddyBlock *b) {
     // Mark it free
     set_block_usage(b, b->order, FREE);
   }
+  total_free_memory += PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
 }
 
 BuddyBlock *get_buddy_block(int order) {
-  int cur_list_length = 0;
-  cur_list_length = list_length(&buddy[order].free_list);
-  /*  kprintf("Looking for a block of order %d, List-length=%d ", order,
-           cur_list_length); */
   BuddyBlock *found = search_free_block(order);
   if (found != NULL) {
     // Found a block in the free list, i need to mark it used and return it
-    /* kprintf("\nFound block of order %d -> %x, ListSize=%d\n", order, found,
-            list_length(&buddy[order].free_list));
-    kprintf("Ptr Addr=%x Size=%d\n", get_free_address(found), found->order);
- */
     set_block_usage(found, order, USED);
     list_remove(&found->item);
-
     return found;
   } else {
     if (order == MAX_ORDER) {
@@ -134,19 +138,18 @@ BuddyBlock *get_buddy_block(int order) {
       return NULL;
     }
     /*     kprintf("Looking up at order %d\n", order + 1);
-     */    // Search in the higher order and split the block
+     */
+    // Search in the higher order and split the block
     found = get_buddy_block(order + 1);
-    if(found == NULL){
+    if (found == NULL) {
       return NULL;
     }
     // I found a block in the higher order
-    // Need to remove from free list, mark used and add the 2 split blocks to
+    // Need to remove from free list, mark it used and add the 2 split blocks to
     // this free list
     found->order--;
     BuddyBlock *foundBuddy = find_buddy(found);
     foundBuddy->order = found->order;
-
-    // list_add(&buddy[order].free_buddy_list->list, &found->list);
     list_add(&buddy[order].free_list, &foundBuddy->item);
     /*  kprintf("List[%d].length = %d\n", order + 1,
              list_length(&buddy[order + 1].free_list));
@@ -177,7 +180,7 @@ BuddyBlock *find_buddy(BuddyBlock *me) {
 }
 
 void set_block_usage(BuddyBlock *p, int order, int used) {
-  int block_pos = get_pfn(p->head) / PAGES_PER_BLOCK(order);
+  int block_pos = get_pfn_from_page(p->head) / PAGES_PER_BLOCK(order);
   buddy[order].bitmap[block_pos] = used;
 }
 
@@ -190,7 +193,7 @@ BuddyBlock *get_buddy_from_pos(int order, int pos) {
 BuddyBlock *search_free_block(int order) {
   if (order < 0 || order > MAX_ORDER) return NULL;
 
-  int i = 0;
+  uint32_t i = 0;
   for (i = 0; i < buddy[order].bitmap_length; ++i) {
     if (buddy[order].bitmap[i] == FREE) {
       return get_buddy_from_pos(order, i);

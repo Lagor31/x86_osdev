@@ -1,6 +1,7 @@
 #ifndef MEM_H
 #define MEM_H
 
+#include "../mem/buddy.h"
 #define STACK_SIZE 0x1000
 #define PHYS_MEM_FRAMES 100
 // 1048576
@@ -17,6 +18,8 @@ extern uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 extern uint8_t *stack_pointer;  // Top of the kernel stack
 
+
+BuddyBlock *get_buddy_from_page(Page *p);
 void meminit();
 void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);

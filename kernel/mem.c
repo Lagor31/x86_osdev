@@ -25,6 +25,37 @@ void meminit() {
   free_mem_addr = stack_pointer;
   kprintf("Free memory address: 0x%x\n", (uint32_t)free_mem_addr);
 }
+/*
+  Returns the pointer of the first available page with the specified order of
+  free memory
+*/
+Page *alloc_pages(int order) {
+  BuddyBlock *b = get_buddy_block(order);
+  printBuddy(b);
+  if (b == NULL) return NULL;
+  total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  return b->head;
+}
+
+void free_pages(Page *p) {
+  kprintf(" Free PN %d\n", get_pfn_from_page(p));
+  free_buddy_block(get_buddy_from_page(p));
+}
+
+void *kmalloc(uint32_t order) {
+  Page *p = alloc_pages(order);
+  if (p == NULL) return NULL;
+  return get_page_address(p);
+}
+
+void kfree(void *ptr) {
+  kprintf("Free ptr %x ", ptr);
+  free_pages(get_page_from_address(ptr));
+}
+
+BuddyBlock *get_buddy_from_page(Page *p) {
+  return (BuddyBlock *)(buddies + get_pfn_from_page(p));
+}
 
 void memory_alloc_init() {
   int mem_system_size = (uint32_t)free_mem_addr;
@@ -33,14 +64,13 @@ void memory_alloc_init() {
   kprintf("Kernel Memory Subsystem Usage %d bytes\n",
           (uint32_t)free_mem_addr - mem_system_size);
 
-  int i = 0;
-  for (i = 0; i < 150; ++i) {
-    BuddyBlock *b1 = get_buddy_block(9);
-    if (b1 != NULL) {
-      printBuddy(b1);
-      //free_buddy_block(b1);
-    }
-  }
+  kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
+
+  void *mem = kmalloc(10);
+
+  void *m2 = kmalloc(0);
+  kfree(m2);
+  kfree(mem);
 }
 
 uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
