@@ -24,8 +24,9 @@ void *ka(uint32_t pfn) {
 
 Page *get_page_from_address(void *ptr) {
   kprintf("Base = %x PA: %x PgPtr=%x", pages, (PA((uint32_t)ptr)),
-          ((uint32_t)pages + (PA((uint32_t)ptr) * sizeof(Page))));
-  return (Page *)((uint32_t)pages + (PA((uint32_t)ptr) / sizeof(Page)));
+          ((uint32_t)pages + (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page)));
+  return (Page *)((uint32_t)pages +
+                  (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page));
 }
 
 void *get_page_address(Page *p) { return ka(get_pfn_from_page(p)); }
