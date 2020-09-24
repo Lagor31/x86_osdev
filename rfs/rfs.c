@@ -3,8 +3,8 @@
 
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
-#include "../kernel/mem.h"
-#include "../kernel/multiboot.h"
+#include "../mem/mem.h"
+#include "../boot/multiboot.h"
 
 #include "rfs.h"
 

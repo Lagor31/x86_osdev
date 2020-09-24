@@ -1,6 +1,6 @@
 #include "../cpu/types.h"
 
-#include "multiboot.h"
+#include "../boot/multiboot.h"
 
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
@@ -11,9 +11,9 @@
 #include "../utils/list.h"
 #include "../utils/shutdown.h"
 #include "../utils/utils.h"
-#include "gdt.h"
-#include "mem.h"
-#include "paging.h"
+#include "../cpu/gdt.h"
+#include "../mem/mem.h"
+#include "../mem/paging.h"
 
 #include "../rfs/rfs.h"
 

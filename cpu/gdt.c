@@ -1,8 +1,8 @@
 #include "../cpu/types.h"
 #include "../utils/list.h"
-#include "../kernel/multiboot.h"
-#include "mem.h"
-#include "gdt.h"
+#include "../boot/multiboot.h"
+#include "../mem/mem.h"
+#include "../cpu/gdt.h"
 
 #define GDT_ENTRIES_NUMBER 6
 /* Our GDT, with 5 entries, and finally our special GDT pointer */

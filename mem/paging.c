@@ -3,17 +3,17 @@
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../utils/list.h"
-#include "multiboot.h"
+#include "../boot/multiboot.h"
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"
 #include "../utils/utils.h"
-#include "kernel.h"
-#include "mem.h"
+#include "../kernel/kernel.h"
+#include "../mem/mem.h"
 
 #include <elf.h>
 
-#include "gdt.h"
+#include "../cpu/gdt.h"
 
 #include "../cpu/timer.h"
 

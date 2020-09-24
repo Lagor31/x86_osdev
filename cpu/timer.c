@@ -3,10 +3,10 @@
 #include "../utils/list.h"
 
 #include "../kernel/kernel.h"
-#include "../kernel/mem.h"
-#include "../kernel/paging.h"
+#include "../mem/mem.h"
+#include "../mem/paging.h"
 
-#include "../kernel/gdt.h"
+#include "../cpu/gdt.h"
 
 #include "../drivers/screen.h"
 #include "../libc/constants.h"

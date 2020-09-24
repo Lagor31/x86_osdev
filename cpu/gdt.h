@@ -61,7 +61,7 @@ extern void gdt_set_gate(int num, unsigned long base, unsigned long limit,
                          unsigned char access, unsigned char gran);
 extern void gdt_install();
 
-#include "mem.h"
+#include "../mem/mem.h"
 
 static inline struct gdtr *read_gdtr() {
   struct gdtr *gdtr = (struct gdtr *)boot_alloc(sizeof(struct gdtr), 1);

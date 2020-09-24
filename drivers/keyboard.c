@@ -5,13 +5,13 @@
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../kernel/kernel.h"
-#include "../kernel/paging.h"
+#include "../mem/paging.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"
 #include "../libc/strings.h"
 #include "../utils/utils.h"
 
-#include "../kernel/gdt.h"
+#include "../cpu/gdt.h"
 
 #include "screen.h"
 

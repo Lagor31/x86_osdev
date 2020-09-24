@@ -5,9 +5,9 @@
 #include "../kernel/kernel.h"
 
 #include "../drivers/screen.h"
-#include "../kernel/multiboot.h"
+#include "../boot/multiboot.h"
 
-#include "../kernel/mem.h"
+#include "../mem/mem.h"
 #include "../utils/list.h"
 
 Buddy buddy[MAX_ORDER + 1];

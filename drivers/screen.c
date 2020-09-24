@@ -1,8 +1,8 @@
 #include "../cpu/types.h"
 #include "../utils/list.h"
-#include "../kernel/multiboot.h"
+#include "../boot/multiboot.h"
 #include "../cpu/ports.h"
-#include "../kernel/mem.h"
+#include "../mem/mem.h"
 #include "../libc/strings.h"
 
 #include "screen.h"

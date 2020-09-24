@@ -5,7 +5,7 @@
 
 #include "../utils/list.h"
 #include "../utils/utils.h"
-#include "multiboot.h"
+#include "../boot/multiboot.h"
 #include "../mem/page.h"
 #include "../mem/buddy.h"
 #include "mem.h"
@@ -133,7 +133,6 @@ void memset(uint8_t *dest, uint8_t val, size_t len) {
 /*
   Our memory allocator is just a pointer as of now.
   No way to free chunks (there are no chunks).
-  TODO: Implement a (serious) memory allocator.
 */
 void *boot_alloc(size_t size, uint8_t align) {
   // Pages are aligned to 4K, or 0x1000
