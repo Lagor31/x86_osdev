@@ -1,6 +1,8 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include "../cpu/types.h"
+
 typedef struct list_head {
   struct list_head *next;
   struct list_head *prev;
@@ -46,21 +48,17 @@ static inline void list_add(List *first, List *new) {
 }
 
 static inline int list_length(List *head) {
+  if (head == NULL) return 0;
   List *p;
   int i = 0;
   list_for_each(p, head) { ++i; }
   return i;
 }
 
-static inline void list_remove(List *deleteme, List *head) {
-  List *p;
-  list_for_each(p, head) {
-    if (p == deleteme) {
-      List *prev = p->prev;
-      List *next = p->next;
-      prev->next = next;
-      next->prev = prev;
-    }
-  }
+static inline void list_remove(List *deleteme) {
+  List *prev = deleteme->prev;
+  List *next = deleteme->next;
+  prev->next = next;
+  next->prev = prev;
 }
 #endif
