@@ -13,7 +13,6 @@ struct BuddyBlock {
   Page *head;
   uint8_t order;
   List item;
-  BuddyBlock *buddy;
 };
 
 typedef struct buddy {

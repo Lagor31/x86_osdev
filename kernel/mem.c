@@ -33,17 +33,14 @@ void memory_alloc_init() {
   kprintf("Kernel Memory Subsystem Usage %d bytes\n",
           (uint32_t)free_mem_addr - mem_system_size);
 
-  BuddyBlock *b1 = get_buddy_block(9);
-  printBuddy(b1);
-  BuddyBlock *b = get_buddy_block(9);
-  printBuddy(b);
-  //free_buddy_block(b);
-
-  b = get_buddy_block(9);
-  printBuddy(b);
-  //free_buddy_block(b1);
-  b = get_buddy_block(9);
-  printBuddy(b);
+  int i = 0;
+  for (i = 0; i < 150; ++i) {
+    BuddyBlock *b1 = get_buddy_block(9);
+    if (b1 != NULL) {
+      printBuddy(b1);
+      //free_buddy_block(b1);
+    }
+  }
 }
 
 uint8_t parse_multiboot_info(struct kmultiboot2info *info) {

@@ -55,20 +55,12 @@ void buddy_init() {
       for (i = 0; i < number_of_blocks; ++i) {
         int curr_buddy_pos = i * PAGES_PER_BLOCK(MAX_ORDER);
         buddies[curr_buddy_pos].order = MAX_ORDER;
-        // Find his buddy
-        BuddyBlock *myBuddy;
-        if (i % 2 == 0)
-          myBuddy = &buddies[curr_buddy_pos + PAGES_PER_BLOCK(MAX_ORDER)];
-        else
-          myBuddy = &buddies[curr_buddy_pos - PAGES_PER_BLOCK(MAX_ORDER)];
-
-        buddies[curr_buddy_pos].buddy = myBuddy;
         list_add(&buddy[curr_order].free_list, &buddies[curr_buddy_pos].item);
         if (i <= 3) {
           kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
                   curr_buddy_pos, &buddies[curr_buddy_pos],
                   get_pfn(buddies[curr_buddy_pos].head),
-                  buddies[curr_buddy_pos].order, buddies[curr_buddy_pos].buddy);
+                  buddies[curr_buddy_pos].order, find_buddy( &buddies[curr_buddy_pos]));
         }
       }
       kprintf("\n");
@@ -92,7 +84,9 @@ uint8_t is_buddy_block_free(BuddyBlock *b) {
 }
 
 void free_buddy_block(BuddyBlock *b) {
-  kprintf("Freeing %x O:%d\n", b, b->order);
+  setColor(LIGHTGREEN);
+  printBuddy(b);
+  resetScreenColors();
   BuddyBlock *my_buddy = find_buddy(b);
   uint8_t need_to_merge =
       is_buddy_block_free(my_buddy) && (b->order != MAX_ORDER);
@@ -123,10 +117,10 @@ BuddyBlock *get_buddy_block(int order) {
   BuddyBlock *found = search_free_block(order);
   if (found != NULL) {
     // Found a block in the free list, i need to mark it used and return it
-    kprintf("\nFound block of order %d -> %x, ListSize=%d\n", order, found,
+    /* kprintf("\nFound block of order %d -> %x, ListSize=%d\n", order, found,
             list_length(&buddy[order].free_list));
     kprintf("Ptr Addr=%x Size=%d\n", get_free_address(found), found->order);
-
+ */
     set_block_usage(found, order, USED);
     list_remove(&found->item);
 
@@ -142,6 +136,9 @@ BuddyBlock *get_buddy_block(int order) {
     /*     kprintf("Looking up at order %d\n", order + 1);
      */    // Search in the higher order and split the block
     found = get_buddy_block(order + 1);
+    if(found == NULL){
+      return NULL;
+    }
     // I found a block in the higher order
     // Need to remove from free list, mark used and add the 2 split blocks to
     // this free list
@@ -185,7 +182,7 @@ void set_block_usage(BuddyBlock *p, int order, int used) {
 }
 
 BuddyBlock *get_buddy_from_pos(int order, int pos) {
-  return (BuddyBlock*) (buddies + (pos * PAGES_PER_BLOCK(order)));
+  return (BuddyBlock *)(buddies + (pos * PAGES_PER_BLOCK(order)));
 }
 /*
   Returns the first free block in a given order or NULL
