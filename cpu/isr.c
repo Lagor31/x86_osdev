@@ -137,7 +137,7 @@ char *exception_messages[] = {"Division By Zero",
 void isr_handler(registers_t *r) {
   setTextColor(RED);
   setBackgroundColor(WHITE);
-  // kprintf("received interrupt %d\n", r->int_no);
+  //kprintf("received interrupt %d\n", r->int_no);
   switch (r->int_no) {
     case 14:
       pageFaultHandler(r);

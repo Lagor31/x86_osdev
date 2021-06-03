@@ -31,7 +31,7 @@ uint16_t lastAllocatedEntry = 0;
 
 void gpFaultHandler(registers_t *regs) {
 
-    _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
+  //_loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
 
 
   setBackgroundColor(BLUE);
@@ -47,11 +47,11 @@ void gpFaultHandler(registers_t *regs) {
 
 void pageFaultHandler(registers_t *regs) {
   uint8_t userMode = FALSE;
-  if ((regs->cs & 0b11) == 3) userMode = TRUE;
+ /*  if ((regs->cs & 0b11) == 3) userMode = TRUE; */
 
-  if (userMode)
+  /* if (userMode)
     _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
-
+ */
   setBackgroundColor(BLUE);
   setTextColor(RED);
   kprintf("Page fault EIP 0x%x Code: %d\n", regs->eip, regs->err_code);
@@ -63,6 +63,9 @@ void pageFaultHandler(registers_t *regs) {
   // put the present bit to 1 because we have no disk to load pages from
   lastAllocatedEntry++;
   resetScreenColors();
+
+  while (TRUE)
+    ;
 
   if (userMode) {
     user_page_directory[0] &= 0xFFFFFFDF;
@@ -120,14 +123,15 @@ uint32_t *createPageTable(uint32_t pdRow) {
 }
 /* Old */
 void enableKernelPaging() {
+  int num_entries = 1;
   uint16_t i = 0;
   uint32_t s = (uint32_t) free_mem_addr;
   for (i = 0; i < 1024; i++) {
     // Mapping the higher half kernel
-    if (i < 10)
+    if (i < num_entries)
       kernel_page_directory[i] =
           (((uint32_t)createPageTable(i)) - KERNEL_VIRTUAL_ADDRESS_BASE) | 3;
-    else if (i >= 768)
+    else if (i >= 768 && i < 788 + num_entries)
       kernel_page_directory[i] =
           (((uint32_t)createPageTable(i - 768)) - KERNEL_VIRTUAL_ADDRESS_BASE) |
           3;

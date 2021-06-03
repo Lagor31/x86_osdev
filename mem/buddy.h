@@ -4,7 +4,7 @@
 #include "page.h"
 
 #define MAX_ORDER 10
-#define PAGES_PER_BLOCK(x) (1 << x)
+#define PAGES_PER_BLOCK(order) (1 << order)
 
 #define FREE 1
 #define USED 0
@@ -25,7 +25,7 @@ typedef struct buddy {
   uint32_t bitmap_length;
 } Buddy;
 
-void *ka(uint32_t pfn);
+void *address_from_pfn(uint32_t pfn);
 uint32_t get_pfn_from_page(Page *p);
 uint32_t get_pfn_from_address(void *);
 Page *get_page_from_address(void *ptr);

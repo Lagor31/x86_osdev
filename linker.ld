@@ -21,7 +21,7 @@ SECTIONS {
 
     /*
         From now on, the sections will have addresses starting from 0xC0100000
-        and will be loaden in physical memory starting from address 0x10000 which makes it 
+        and will be loadex in physical memory starting from address 0x10000 which makes it 
         trivial to convert from Virtual to Physical when Paging will be enabled
         (just remove 0xC0000000 from VA to get the PA)
     */

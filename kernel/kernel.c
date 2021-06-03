@@ -13,8 +13,10 @@
 #include "../utils/utils.h"
 #include "../cpu/gdt.h"
 #include "../mem/mem.h"
-#include "../mem/paging.h"
+#include "../mem/slab.h"
 
+#include "../mem/paging.h"
+#include "../mem/slab.h"
 #include "../rfs/rfs.h"
 
 #include "../cpu/timer.h"
@@ -47,27 +49,25 @@ void kernel_main(uint32_t magic, uint32_t addr) {
 
   // Just setting a couple of pointers in our C variables, nothing special
   // kprintf("Kernel memory initialization...\n");
-  meminit();
-
-  // We setup a Page mapping allowing the kernel to transparently use Virtual
-  // Addresses starting from 0xC0000000
-  // kprintf("Enabling kernel paging...\n");
+  init_memory_subsystem();
   enableKernelPaging();
-  
+
   saveMultibootInfo(addr, magic);
   parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
 
   memory_alloc_init();
   kPrintOKMessage("Kernel memory inizialized");
-  //kPrintOKMessage("Kernel paging enabled");
+  // kPrintOKMessage("Kernel paging enabled");
 
+  // We setup a Page mapping allowing the kernel to transparently use Virtual
+  // Addresses starting from 0xC0000000
+  // kprintf("Enabling kernel paging...\n");
   // Installing the interrupt/exception handlers
   // kprintf("Installing Interrupts Handlers...\n");
   isr_install();
   irq_install();
-  //kPrintOKMessage("Interrupts Handlers installed...");
+  // kPrintOKMessage("Interrupts Handlers installed...");
 
-  
   // loadUserProcess(getModule(kMultiBootInfo));
 
   resetScreenColors();
@@ -79,8 +79,10 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // fakeSysLoadingBar(1.8 * 1000);
   resetScreenColors();
 
+  kMemCacheInit();
+
   // srand(tickCount);
-  //kPrintOKMessage("Kernel loaded successfully!");
+  // kPrintOKMessage("Kernel loaded successfully!");
 
   // syncWait(1000);
 
@@ -91,7 +93,6 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // external interrupts gives control back to our OS
   // setCursorPos(2, 0);
   kprintf("\n>");
-
   // runProcess();
 }
 
@@ -105,7 +106,8 @@ void user_input(char *input) {
   else if (!strcmp(input, "clear")) {
     clearScreen();
     setCursorPos(2, 0);
-
+  } else if (!strcmp(input, "free")) {
+    printFree();
   } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((struct kmultiboot2info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
@@ -124,11 +126,10 @@ void user_input(char *input) {
   } else if (!strcmp(input, "mods")) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "alloc")) {
-    size_t s = 0x4000;
-    void *page = boot_alloc(s, 1);
-    memset(page, 0x90, s);
-    kprintf("Page Address: 0x%x Size: %d, FreeMemPtr: 0x%x", page, s,
-            free_mem_addr);
+    for (int i = 0; i < 10; ++i) {
+      char *p = kmalloc(10);
+      *p = 0;
+    }
   } else if (!strcmp(input, "run")) {
     kprintf("\n>");
     input[0] = '\0';

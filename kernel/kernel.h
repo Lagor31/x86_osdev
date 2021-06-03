@@ -4,8 +4,8 @@
 
 #define KERNEL_VIRTUAL_ADDRESS_BASE 0xC0000000
 
-#define PA(X) ((X) - (0xC0000000))
-#define VA(X) ((X) + (0xC0000000))
+#define PA(X) ((X) - (KERNEL_VIRTUAL_ADDRESS_BASE))
+#define VA(X) ((X) + (KERNEL_VIRTUAL_ADDRESS_BASE))
 
 typedef void (*callme)(void);
 

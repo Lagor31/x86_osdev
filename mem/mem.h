@@ -18,13 +18,13 @@ extern uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 extern uint8_t *stack_pointer;  // Top of the kernel stack
 
-
 BuddyBlock *get_buddy_from_page(Page *p);
-void meminit();
+void init_memory_subsystem();
 void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);
 void memset(uint8_t *dest, uint8_t val, size_t len);
 uint8_t parse_multiboot_info(struct kmultiboot2info *info);
 void memory_alloc_init();
-
+void *kmalloc(uint32_t order);
+void printFree();
 #endif

@@ -18,7 +18,7 @@ uint32_t get_pfn_from_page(Page *p) {
   return ((uint32_t)p - (uint32_t)pages) / sizeof(Page);
 }
 
-void *ka(uint32_t pfn) {
+void *address_from_pfn(uint32_t pfn) {
   return (void *)(pfn * PAGE_SIZE + KERNEL_VIRTUAL_ADDRESS_BASE);
 }
 
@@ -29,10 +29,12 @@ Page *get_page_from_address(void *ptr) {
                   (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page));
 }
 
-void *get_page_address(Page *p) { return ka(get_pfn_from_page(p)); }
+void *get_page_address(Page *p) {
+  return address_from_pfn(get_pfn_from_page(p));
+}
 
 void *get_free_address(BuddyBlock *b) {
-  return (BuddyBlock *)ka(get_pfn_from_page(b->head));
+  return (BuddyBlock *)address_from_pfn(get_pfn_from_page(b->head));
 }
 
 void printBuddy(BuddyBlock *b) {
@@ -80,7 +82,7 @@ void buddy_init() {
     } else {
       number_of_blocks *= 2;
     }
-    // Allocate bits, not bytes
+    // TODO: Allocate bits, not bytes
     buddy[curr_order].bitmap =
         boot_alloc(sizeof(uint8_t) * number_of_blocks, 1);
     buddy[curr_order].bitmap_length = number_of_blocks;

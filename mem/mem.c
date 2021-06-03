@@ -11,15 +11,20 @@
 #include "mem.h"
 
 uint8_t
-    *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
+    *free_mem_addr;  // Represents the first byte that we can freeily allocate
 uint8_t *stack_pointer;  // Top of the kernel stack
 
 Page *pages;
 BootMmap boot_mmap;
 
+void printFree() {
+  int totFree = total_free_memory / 1024 / 1024;
+  int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
+  kprintf("Free: %d / %d Mb\nUsed: %dMb", totFree, tot, tot - totFree);
+}
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
-void meminit() {
+void init_memory_subsystem() {
   stack_pointer = (uint8_t *)_stack_address;
   kprintf("Stack Pointer: 0x%x\n", (uint32_t)stack_pointer);
   free_mem_addr = stack_pointer;
@@ -60,17 +65,19 @@ BuddyBlock *get_buddy_from_page(Page *p) {
 void memory_alloc_init() {
   int mem_system_size = (uint32_t)free_mem_addr;
   buddy_init();
-  kprintf("Free memory address: 0x%x\n", (uint32_t)free_mem_addr);
-  kprintf("Kernel Memory Subsystem Usage %d bytes\n",
-          (uint32_t)free_mem_addr - mem_system_size);
+  kprintf("Free memory address: 0x%x,  PHY: 0x%x\n", (uint32_t)free_mem_addr,
+          (uint32_t)PA(free_mem_addr));
+  kprintf("Kernel Memory Subsystem Usage %d Mb\n",
+          ((uint32_t)free_mem_addr - mem_system_size) / 1024 / 1024);
 
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 
-  void *mem = kmalloc(10);
-
-  void *m2 = kmalloc(0);
-  kfree(m2);
-  kfree(mem);
+  int i = 0;
+  int firstNUsedPages = ((uint32_t)PA(free_mem_addr) / PAGE_SIZE) + 1;
+  kprintf("You've used the first %d pages allocating now...\n",
+          firstNUsedPages);
+  for (i = 0; i < firstNUsedPages; ++i) kmalloc(0);
+  kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 }
 
 uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
