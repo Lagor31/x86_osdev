@@ -79,7 +79,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // fakeSysLoadingBar(1.8 * 1000);
   resetScreenColors();
 
-  kMemCacheInit();
+  //kMemCacheInit();
 
   // srand(tickCount);
   // kPrintOKMessage("Kernel loaded successfully!");

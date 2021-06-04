@@ -9,21 +9,21 @@
 #define FREE 1
 #define USED 0
 
-typedef struct BuddyBlock BuddyBlock;
 extern uint32_t total_free_memory;
-extern BuddyBlock *buddies;
 
-struct BuddyBlock {
+typedef struct buddy_block {
   Page *head;
   uint8_t order;
   List item;
-};
+} BuddyBlock;
 
 typedef struct buddy {
   uint8_t *bitmap;
   List free_list;
   uint32_t bitmap_length;
 } Buddy;
+
+extern BuddyBlock *buddies;
 
 void *address_from_pfn(uint32_t pfn);
 uint32_t get_pfn_from_page(Page *p);
@@ -37,6 +37,6 @@ BuddyBlock *search_free_block(int order);
 void free_buddy_block(BuddyBlock *b);
 void set_block_usage(BuddyBlock *p, int order, int used);
 void printBuddy(BuddyBlock *);
-void buddy_init();
+void buddy_init(Page *,  BuddyBlock *);
 
 #endif
