@@ -15,7 +15,7 @@ BuddyBlock *buddies;
 uint32_t total_free_memory = 0;
 
 uint32_t get_pfn_from_page(Page *p) {
-  // kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p, pages_base_addr);
+  //kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p, (void *)pages_base_addr);
   return ((uint32_t)p - (uint32_t)pages_base_addr) / sizeof(Page);
 }
 
@@ -48,11 +48,13 @@ int get_buddy_pos(BuddyBlock *b) {
   return ((uint32_t)b - (uint32_t)buddies) / sizeof(BuddyBlock);
 }
 
-void buddy_init(Page *pages, BuddyBlock *buddies1) {
+void buddy_init(Page *kernel_pages) {
   // Allocating array of pages
-  pages = boot_alloc(sizeof(Page) * boot_mmap.total_pages, 1);
-  pages_base_addr = pages;
+  kernel_pages = boot_alloc(sizeof(Page) * boot_mmap.total_pages, 1);
+  pages_base_addr = kernel_pages;
 
+  kprintf("Pages Addr: 0x%x, Pages Val: 0x%x\nPages_base_addr: 0x%x\n",
+          &kernel_pages, kernel_pages, pages_base_addr);
   int curr_order = MAX_ORDER;
   uint32_t number_of_blocks =
       boot_mmap.total_pages / PAGES_PER_BLOCK(MAX_ORDER);
@@ -61,7 +63,7 @@ void buddy_init(Page *pages, BuddyBlock *buddies1) {
 
   uint32_t i = 0;
   for (i = 0; i < boot_mmap.total_pages; ++i) {
-    buddies[i].head = pages + i;
+    buddies[i].head = kernel_pages + i;
   }
 
   for (curr_order = MAX_ORDER; curr_order >= 0; --curr_order) {

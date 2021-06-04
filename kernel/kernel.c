@@ -56,6 +56,8 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
 
   memory_alloc_init();
+  //kMemCacheInit();
+
   kPrintOKMessage("Kernel memory inizialized");
   // kPrintOKMessage("Kernel paging enabled");
 
@@ -78,8 +80,6 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   setBackgroundColor(LIGHTGREEN);
   // fakeSysLoadingBar(1.8 * 1000);
   resetScreenColors();
-
-  //kMemCacheInit();
 
   // srand(tickCount);
   // kPrintOKMessage("Kernel loaded successfully!");

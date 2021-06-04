@@ -11,7 +11,7 @@ typedef struct boot_mmap {
   uint32_t total_pages;
 } BootMmap;
 
-extern Page *pages;
+extern Page *kernel_pages;
 extern BootMmap boot_mmap;
 extern void *pages_base_addr;
 
