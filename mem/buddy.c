@@ -45,7 +45,8 @@ int get_buddy_pos(BuddyBlock *b) {
   return ((uint32_t)b - (uint32_t)buddies) / sizeof(BuddyBlock);
 }
 
-void buddy_init(Page **input_pages, uint32_t number_of_pages) {
+void buddy_init(Page **input_pages, BuddyBlock **buddy_ext,
+                uint32_t number_of_pages) {
   // Allocating array of pages
   Page **tPage;
   kprintf("Bootallocating %d pages, size: %d", number_of_pages,
@@ -58,11 +59,15 @@ void buddy_init(Page **input_pages, uint32_t number_of_pages) {
   int curr_order = MAX_ORDER;
   uint32_t number_of_blocks = number_of_pages / PAGES_PER_BLOCK(MAX_ORDER);
   // blocks_number &= 0xFFFFFFFE;
-  buddies = boot_alloc(sizeof(BuddyBlock) * number_of_pages, 1);
+
+  BuddyBlock *bb =
+      (BuddyBlock *)boot_alloc(sizeof(BuddyBlock) * number_of_pages, 1);
+  // buddies = bb;
+  *buddy_ext = bb;
 
   uint32_t i = 0;
   for (i = 0; i < number_of_pages; ++i) {
-    buddies[i].head = *input_pages + i;
+    bb[i].head = (*input_pages + i);
   }
 
   for (curr_order = MAX_ORDER; curr_order >= 0; --curr_order) {
@@ -72,18 +77,18 @@ void buddy_init(Page **input_pages, uint32_t number_of_pages) {
       kprintf("Order %d Total Blocks %d\n", curr_order, number_of_blocks);
       for (i = 0; i < number_of_blocks; ++i) {
         int curr_buddy_pos = i * PAGES_PER_BLOCK(MAX_ORDER);
-        buddies[curr_buddy_pos].order = MAX_ORDER;
-        list_add(&buddy[curr_order].free_list, &buddies[curr_buddy_pos].item);
+        bb[curr_buddy_pos].order = MAX_ORDER;
+        list_add(&buddy[curr_order].free_list, &bb[curr_buddy_pos].item);
         total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
-        /*  if (i <= 3) {
-           kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
-                   curr_buddy_pos, &buddies[curr_buddy_pos],
-                   get_pfn_from_page(buddies[curr_buddy_pos].head),
-                   buddies[curr_buddy_pos].order,
-                   find_buddy(&buddies[curr_buddy_pos]));
-         } */
+        if (i <= 3) {
+          kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
+                  curr_buddy_pos, &buddies[curr_buddy_pos],
+                  get_pfn_from_page(buddies[curr_buddy_pos].head),
+                  buddies[curr_buddy_pos].order,
+                  find_buddy(&buddies[curr_buddy_pos]));
+        }
       }
-      // kprintf("\n");
+      kprintf("\n");
     } else {
       number_of_blocks *= 2;
     }
