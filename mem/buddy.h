@@ -10,6 +10,8 @@
 #define USED 0
 
 extern uint32_t total_free_memory;
+extern uint32_t total_kfree_memory;
+extern uint32_t total_nfree_memory;
 
 typedef struct buddy_block {
   Page *head;
@@ -25,19 +27,20 @@ typedef struct buddy {
 
 extern BuddyBlock *buddies;
 extern Buddy buddy[MAX_ORDER + 1];
-
+extern Buddy normal_buddy[MAX_ORDER + 1];
+extern BuddyBlock *normal_buddies;
 void *address_from_pfn(uint32_t pfn);
-uint32_t get_pfn_from_page(Page *p);
+uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc);
 uint32_t get_pfn_from_address(void *);
-Page *get_page_from_address(void *ptr);
-void *get_page_address(Page *p);
-BuddyBlock *find_buddy_order(BuddyBlock *me, int order);
-BuddyBlock *find_buddy(BuddyBlock *me);
-BuddyBlock *get_buddy_block(int order);
-BuddyBlock *search_free_block(int order);
-void free_buddy_block(BuddyBlock *b);
-void set_block_usage(BuddyBlock *p, int order, int used);
-void printBuddy(BuddyBlock *);
-void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size);
+Page *get_page_from_address(void *ptr, uint8_t kernel_alloc);
+void *get_page_address(Page *p, uint8_t kernel_alloc);
+BuddyBlock *find_buddy_order(BuddyBlock *me, int order, uint8_t kernel_alloc);
+BuddyBlock *find_buddy(BuddyBlock *me, uint8_t kernel_alloc);
+BuddyBlock *get_buddy_block(int order, uint8_t kernel_alloc);
+BuddyBlock *search_free_block(int order, uint8_t kernel_alloc);
+void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc);
+void set_block_usage(BuddyBlock *p, int order, int used, uint8_t kernel_alloc);
+void printBuddy(BuddyBlock *, uint8_t kernel_alloc);
+void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size, uint8_t kernel_alloc);
 
 #endif

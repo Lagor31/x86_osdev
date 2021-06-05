@@ -10,6 +10,9 @@
 #include "../mem/buddy.h"
 #include "mem.h"
 
+#define KERNEL_ALLOC 1
+#define NORMAL_ALLOC 0
+
 uint8_t
     *free_mem_addr;  // Represents the first byte that we can freely allocate
 uint8_t *stack_pointer;  // Top of the kernel stack
@@ -24,8 +27,10 @@ BootMmap boot_mmap;
 
 void printFree() {
   int totFree = total_free_memory / 1024 / 1024;
-  int tot = (boot_mmap.total_pages / 4 + 1) * 4096 / 1024 / 1024;
-  kprintf("Free: %d / %d Mb\nUsed: %dMb", totFree, tot, tot - totFree);
+  int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
+  kprintf("Free: %d / %d Mb\nUsed: %dMb\n", totFree, tot, tot - totFree);
+  kprintf("KMem free: %d\n", total_kfree_memory / 1024 / 1024);
+  kprintf("NMem free: %d\n", total_nfree_memory / 1024 / 1024);
 }
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
@@ -40,41 +45,74 @@ void init_memory_subsystem() {
   free memory
 */
 Page *alloc_pages(int order) {
-  BuddyBlock *b = get_buddy_block(order);
-  printBuddy(b);
-
+  BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
+  printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  return b->head;
+}
+
+Page *alloc_normal_pages(int order) {
+  BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
+  printBuddy(b, NORMAL_ALLOC);
+  if (b == NULL) return NULL;
+  total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   return b->head;
 }
 
 void free_pages(Page *p) {
-  kprintf(" Free PN %d\n", get_pfn_from_page(p));
-  free_buddy_block(get_buddy_from_page(p));
+  kprintf(" Free PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
+  free_buddy_block(get_buddy_from_page(p, KERNEL_ALLOC), KERNEL_ALLOC);
+}
+
+void free_normal_pages(Page *p) {
+  kprintf(" Free PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
+  free_buddy_block(get_buddy_from_page(p, NORMAL_ALLOC), NORMAL_ALLOC);
 }
 
 void *kmalloc(uint32_t order) {
   Page *p = alloc_pages(order);
   if (p == NULL) return NULL;
-  return get_page_address(p);
+  return get_page_address(p, KERNEL_ALLOC);
+}
+
+void *normalAlloc(uint32_t order) {
+  Page *p = alloc_normal_pages(order);
+  if (p == NULL) return NULL;
+  return get_page_address(p, NORMAL_ALLOC);
 }
 
 void kfree(void *ptr) {
   if (ptr == NULL) return;
   kprintf("Free ptr %x ", ptr);
-  free_pages(get_page_from_address(ptr));
+  free_pages(get_page_from_address(ptr, KERNEL_ALLOC));
 }
 
-BuddyBlock *get_buddy_from_page(Page *p) {
-  return (BuddyBlock *)(buddies + get_pfn_from_page(p));
+void kfreeNormal(void *ptr) {
+  if (ptr == NULL) return;
+  kprintf("Free ptr %x ", ptr);
+  free_pages(get_page_from_address(ptr, NORMAL_ALLOC));
+}
+
+BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {
+  return (BuddyBlock *)(buddies + get_pfn_from_page(p, kernel_alloc));
 }
 
 void memory_alloc_init() {
   total_kernel_pages = (boot_mmap.total_pages / 4) + 1;
-  kprintf("Total kernel pages %d\n", total_kernel_pages);
-  buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages);
-  kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
   total_normal_pages = boot_mmap.total_pages - total_kernel_pages;
+  kprintf("Total kernel pages %d\nTotal normal pages %d\n", total_kernel_pages,
+          total_normal_pages);
+  kprintf("Alloc kernel buddy\n");
+
+  buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages, KERNEL_ALLOC);
+  kprintf("Alloc normal buddy\n");
+  buddy_init(&normal_pages, &normal_buddies, normal_buddy, total_normal_pages,
+             NORMAL_ALLOC);
+
+  kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 
   int i = 0;
   int firstNUsedPages = ((uint32_t)PA(free_mem_addr) / PAGE_SIZE) + 1;

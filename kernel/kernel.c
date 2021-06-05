@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 20
+#define ALLOC_NUM 1
 
 struct kmultiboot2info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -32,7 +32,8 @@ struct fileTableEntry *kfileTable;
 // void (*userProcess)(void);
 void *userProcess;
 
-void **frees;
+void **kfrees;
+void **nfrees;
 
 void runProcess() {
   enableUserModePaging(userProcess);
@@ -58,12 +59,13 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   saveMultibootInfo(addr, magic);
   parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
 
-  frees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
+  kfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
+  nfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
 
   memory_alloc_init();
   enableKernelPaging();
 
-  //kMemCacheInit();
+  // kMemCacheInit();
 
   kPrintOKMessage("Kernel memory inizialized");
   // kPrintOKMessage("Kernel paging enabled");
@@ -132,10 +134,20 @@ void user_input(char *input) {
     printUptime();
   } else if (!strcmp(input, "mods")) {
     printModuleInfo(getModule(kMultiBootInfo));
-  } else if (!strcmp(input, "alloc")) {
+  } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      frees[i] = kmalloc(10);
-      uint8_t **a = frees[i];
+      kfrees[i] = kmalloc(10);
+      uint8_t **a = kfrees[i];
+      kprintf("Addr = 0x%x\n", a);
+      *a = 1;
+    }
+    /* for (int i = 0; i < ALLOC_NUM; ++i) {
+      kfree(frees[i]);
+    } */
+  } else if (!strcmp(input, "nalloc")) {
+    for (int i = 0; i < ALLOC_NUM; ++i) {
+      nfrees[i] = normalAlloc(10);
+      uint8_t **a = nfrees[i];
       kprintf("Addr = 0x%x\n", a);
       *a = 1;
     }
@@ -144,7 +156,11 @@ void user_input(char *input) {
     } */
   } else if (!strcmp(input, "kfree")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfree(frees[i]);
+      kfree(kfrees[i]);
+    }
+  } else if (!strcmp(input, "nfree")) {
+    for (int i = 0; i < ALLOC_NUM; ++i) {
+      kfreeNormal(nfrees[i]);
     }
   } else if (!strcmp(input, "run")) {
     kprintf("\n>");
