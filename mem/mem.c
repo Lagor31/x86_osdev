@@ -14,7 +14,9 @@ uint8_t
     *free_mem_addr;  // Represents the first byte that we can freely allocate
 uint8_t *stack_pointer;  // Top of the kernel stack
 
-Page *kernel_pages;
+int test = 10;
+
+Page **kernel_pages;
 void *pages_base_addr;
 
 BootMmap boot_mmap;
@@ -66,7 +68,7 @@ BuddyBlock *get_buddy_from_page(Page *p) {
 
 void memory_alloc_init() {
   int mem_system_size = (uint32_t)free_mem_addr;
-  buddy_init(kernel_pages);
+  buddy_init(&kernel_pages);
   kprintf("Free memory address: 0x%x,  PHY: 0x%x\n", (uint32_t)free_mem_addr,
           (uint32_t)PA(free_mem_addr));
   kprintf("Kernel Memory Subsystem Usage %d Mb\n",
@@ -78,7 +80,7 @@ void memory_alloc_init() {
   int firstNUsedPages = ((uint32_t)PA(free_mem_addr) / PAGE_SIZE) + 1;
   kprintf("You've used the first %d pages allocating now...\n",
           firstNUsedPages);
-  //for (i = 0; i < firstNUsedPages; ++i) kmalloc(0);
+  // for (i = 0; i < firstNUsedPages; ++i) kmalloc(0);
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 }
 

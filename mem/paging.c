@@ -123,7 +123,7 @@ uint32_t *createPageTable(uint32_t pdRow) {
 }
 /* Old */
 void enableKernelPaging() {
-  int num_entries = 2;
+  int num_entries = 20;
   uint16_t i = 0;
   uint32_t s = (uint32_t) free_mem_addr;
   for (i = 0; i < 1024; i++) {

@@ -11,9 +11,8 @@ typedef struct boot_mmap {
   uint32_t total_pages;
 } BootMmap;
 
-extern Page *kernel_pages;
+extern Page **kernel_pages;
 extern BootMmap boot_mmap;
-extern void *pages_base_addr;
 
 extern uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
