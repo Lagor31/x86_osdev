@@ -40,7 +40,8 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order);
-  printBuddy(b);
+  //printBuddy(b);
+
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   return b->head;
@@ -58,6 +59,7 @@ void *kmalloc(uint32_t order) {
 }
 
 void kfree(void *ptr) {
+  if (ptr == NULL) return;
   kprintf("Free ptr %x ", ptr);
   free_pages(get_page_from_address(ptr));
 }
@@ -78,9 +80,11 @@ void memory_alloc_init() {
 
   int i = 0;
   int firstNUsedPages = ((uint32_t)PA(free_mem_addr) / PAGE_SIZE) + 1;
-  kprintf("You've used the first %d pages allocating now...\n",
-          firstNUsedPages);
-  // for (i = 0; i < firstNUsedPages; ++i) kmalloc(0);
+  int four_megs_pages = firstNUsedPages / PAGES_PER_BLOCK(10);
+
+  kprintf("You've used the first %d pages allocating now %d 4Mb pages...\n",
+          firstNUsedPages, ++four_megs_pages);
+  for (i = 0; i < four_megs_pages; ++i) kmalloc(10);
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 }
 
