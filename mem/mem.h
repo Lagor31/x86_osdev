@@ -17,6 +17,8 @@ extern BootMmap boot_mmap;
 extern uint8_t
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 extern uint8_t *stack_pointer;  // Top of the kernel stack
+extern uint32_t total_kernel_pages;
+
 
 BuddyBlock *get_buddy_from_page(Page *p);
 void init_memory_subsystem();

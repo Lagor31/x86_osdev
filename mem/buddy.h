@@ -37,6 +37,6 @@ BuddyBlock *search_free_block(int order);
 void free_buddy_block(BuddyBlock *b);
 void set_block_usage(BuddyBlock *p, int order, int used);
 void printBuddy(BuddyBlock *);
-void buddy_init(Page **);
+void buddy_init(Page **, uint32_t size);
 
 #endif

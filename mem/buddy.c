@@ -45,22 +45,23 @@ int get_buddy_pos(BuddyBlock *b) {
   return ((uint32_t)b - (uint32_t)buddies) / sizeof(BuddyBlock);
 }
 
-void buddy_init(Page **input_pages) {
+void buddy_init(Page **input_pages, uint32_t number_of_pages) {
   // Allocating array of pages
   Page **tPage;
-  tPage = boot_alloc(sizeof(Page) * boot_mmap.total_pages, 1);
+  kprintf("Bootallocating %d pages, size: %d", number_of_pages,
+          sizeof(Page) * number_of_pages);
+  tPage = boot_alloc(sizeof(Page) * number_of_pages, 1);
   *input_pages = tPage;
 
   kprintf("Pages Addr: 0x%x, Pages Val: 0x%x\nPages_base_addr: 0x%x\n",
           &input_pages, input_pages, kernel_pages);
   int curr_order = MAX_ORDER;
-  uint32_t number_of_blocks =
-      boot_mmap.total_pages / PAGES_PER_BLOCK(MAX_ORDER);
+  uint32_t number_of_blocks = number_of_pages / PAGES_PER_BLOCK(MAX_ORDER);
   // blocks_number &= 0xFFFFFFFE;
-  buddies = boot_alloc(sizeof(BuddyBlock) * boot_mmap.total_pages, 1);
+  buddies = boot_alloc(sizeof(BuddyBlock) * number_of_pages, 1);
 
   uint32_t i = 0;
-  for (i = 0; i < boot_mmap.total_pages; ++i) {
+  for (i = 0; i < number_of_pages; ++i) {
     buddies[i].head = *input_pages + i;
   }
 

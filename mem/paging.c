@@ -59,7 +59,7 @@ void pageFaultHandler(registers_t *regs) {
   lastAllocatedEntry++;
   resetScreenColors();
   asm volatile("hlt");
-  
+
   if (userMode) {
     user_page_directory[0] &= 0xFFFFFFDF;
     user_page_directory[1] &= 0xFFFFFFDF;
@@ -117,19 +117,22 @@ uint32_t *createPageTable(uint32_t pdRow) {
 /* Old */
 void enableKernelPaging() {
   int num_entries = 30;
+  int t = (total_kernel_pages >> 10);
+  num_entries = t;
+  kprintf("Tot: %d Num entried PD: %d\n", total_kernel_pages, t);
   uint16_t i = 0;
   uint32_t s = (uint32_t)free_mem_addr;
   for (i = 0; i < 1024; i++) {
     // Mapping the higher half kernel
     if (i < num_entries) {
-      // kprintf("KPDG[%d] ", i);
+      //kprintf("KPDG[%d] ", i);
       kernel_page_directory[i] =
           (((uint32_t)createPageTable(i)) - KERNEL_VIRTUAL_ADDRESS_BASE) | 3;
     } else if (i >= 768 && i < 768 + num_entries) {
       kernel_page_directory[i] =
           (((uint32_t)createPageTable(i - 768)) - KERNEL_VIRTUAL_ADDRESS_BASE) |
           3;
-      // kprintf("KPDG[%d] ", i);
+      //kprintf("KPDG[%d] ", i);
     }
   }
 

@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 5
+#define ALLOC_NUM 20
 
 struct kmultiboot2info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -54,7 +54,6 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // Just setting a couple of pointers in our C variables, nothing special
   // kprintf("Kernel memory initialization...\n");
   init_memory_subsystem();
-  enableKernelPaging();
 
   saveMultibootInfo(addr, magic);
   parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
@@ -62,6 +61,8 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   frees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
 
   memory_alloc_init();
+  enableKernelPaging();
+
   kMemCacheInit();
 
   kPrintOKMessage("Kernel memory inizialized");
