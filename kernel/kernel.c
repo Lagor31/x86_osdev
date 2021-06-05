@@ -127,7 +127,7 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "alloc")) {
     for (int i = 0; i < 2; ++i) {
-      char *p = kmalloc(2, kernel_pages);
+      char *p = kmalloc(2);
       *p = 0;
     }
   } else if (!strcmp(input, "run")) {
