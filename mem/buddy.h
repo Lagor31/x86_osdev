@@ -24,6 +24,7 @@ typedef struct buddy {
 } Buddy;
 
 extern BuddyBlock *buddies;
+extern Buddy buddy[MAX_ORDER + 1];
 
 void *address_from_pfn(uint32_t pfn);
 uint32_t get_pfn_from_page(Page *p);
@@ -37,6 +38,6 @@ BuddyBlock *search_free_block(int order);
 void free_buddy_block(BuddyBlock *b);
 void set_block_usage(BuddyBlock *p, int order, int used);
 void printBuddy(BuddyBlock *);
-void buddy_init(Page **, BuddyBlock **, uint32_t size);
+void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size);
 
 #endif

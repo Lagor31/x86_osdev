@@ -17,8 +17,8 @@ uint8_t *stack_pointer;  // Top of the kernel stack
 uint32_t total_kernel_pages = 0;
 uint32_t total_normal_pages = 0;
 
-Page **kernel_pages;
-void *pages_base_addr;
+Page *kernel_pages;
+Page *normal_pages;
 
 BootMmap boot_mmap;
 
@@ -72,7 +72,7 @@ BuddyBlock *get_buddy_from_page(Page *p) {
 void memory_alloc_init() {
   total_kernel_pages = (boot_mmap.total_pages / 4) + 1;
   kprintf("Total kernel pages %d\n", total_kernel_pages);
-  buddy_init(&kernel_pages, &buddies, total_kernel_pages);
+  buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages);
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
   total_normal_pages = boot_mmap.total_pages - total_kernel_pages;
 

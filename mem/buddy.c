@@ -45,13 +45,12 @@ int get_buddy_pos(BuddyBlock *b) {
   return ((uint32_t)b - (uint32_t)buddies) / sizeof(BuddyBlock);
 }
 
-void buddy_init(Page **input_pages, BuddyBlock **buddy_ext,
+void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
                 uint32_t number_of_pages) {
   // Allocating array of pages
-  Page **tPage;
   kprintf("Bootallocating %d pages, size: %d", number_of_pages,
           sizeof(Page) * number_of_pages);
-  tPage = boot_alloc(sizeof(Page) * number_of_pages, 1);
+  Page *tPage = boot_alloc(sizeof(Page) * number_of_pages, 1);
   *input_pages = tPage;
 
   kprintf("Pages Addr: 0x%x, Pages Val: 0x%x\nPages_base_addr: 0x%x\n",
@@ -63,7 +62,7 @@ void buddy_init(Page **input_pages, BuddyBlock **buddy_ext,
   BuddyBlock *bb =
       (BuddyBlock *)boot_alloc(sizeof(BuddyBlock) * number_of_pages, 1);
   // buddies = bb;
-  *buddy_ext = bb;
+  *buddies_ext = bb;
 
   uint32_t i = 0;
   for (i = 0; i < number_of_pages; ++i) {
@@ -71,21 +70,20 @@ void buddy_init(Page **input_pages, BuddyBlock **buddy_ext,
   }
 
   for (curr_order = MAX_ORDER; curr_order >= 0; --curr_order) {
-    LIST_INIT(&buddy[curr_order].free_list);
+    LIST_INIT(&buddy_ext[curr_order].free_list);
 
     if (curr_order == MAX_ORDER) {
       kprintf("Order %d Total Blocks %d\n", curr_order, number_of_blocks);
       for (i = 0; i < number_of_blocks; ++i) {
         int curr_buddy_pos = i * PAGES_PER_BLOCK(MAX_ORDER);
         bb[curr_buddy_pos].order = MAX_ORDER;
-        list_add(&buddy[curr_order].free_list, &bb[curr_buddy_pos].item);
+        list_add(&buddy_ext[curr_order].free_list, &bb[curr_buddy_pos].item);
         total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
         if (i <= 3) {
           kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
-                  curr_buddy_pos, &buddies[curr_buddy_pos],
-                  get_pfn_from_page(buddies[curr_buddy_pos].head),
-                  buddies[curr_buddy_pos].order,
-                  find_buddy(&buddies[curr_buddy_pos]));
+                  curr_buddy_pos, &bb[curr_buddy_pos],
+                  get_pfn_from_page(bb[curr_buddy_pos].head),
+                  bb[curr_buddy_pos].order, find_buddy(&bb[curr_buddy_pos]));
         }
       }
       kprintf("\n");
@@ -93,14 +91,14 @@ void buddy_init(Page **input_pages, BuddyBlock **buddy_ext,
       number_of_blocks *= 2;
     }
     // TODO: Allocate bits, not bytes
-    buddy[curr_order].bitmap =
+    buddy_ext[curr_order].bitmap =
         boot_alloc(sizeof(uint8_t) * number_of_blocks, 1);
-    buddy[curr_order].bitmap_length = number_of_blocks;
+    buddy_ext[curr_order].bitmap_length = number_of_blocks;
 
     if (curr_order == MAX_ORDER)
-      memset(buddy[MAX_ORDER].bitmap, FREE, number_of_blocks);
+      memset(buddy_ext[MAX_ORDER].bitmap, FREE, number_of_blocks);
     else
-      memset(buddy[curr_order].bitmap, USED, number_of_blocks);
+      memset(buddy_ext[curr_order].bitmap, USED, number_of_blocks);
   }
 }
 

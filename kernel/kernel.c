@@ -63,7 +63,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   memory_alloc_init();
   enableKernelPaging();
 
-  kMemCacheInit();
+  //kMemCacheInit();
 
   kPrintOKMessage("Kernel memory inizialized");
   // kPrintOKMessage("Kernel paging enabled");
