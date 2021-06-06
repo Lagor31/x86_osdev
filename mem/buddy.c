@@ -30,12 +30,11 @@ uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc) {
     return ((uint32_t)p - (uint32_t)normal_pages) / sizeof(Page);
 }
 
-void *address_from_pfn(uint32_t pfn, uint8_t kernel_alloc) {
+void *phys_from_pfn(uint32_t pfn, uint8_t kernel_alloc) {
   if (kernel_alloc)
-    return (void *)(pfn * PAGE_SIZE + KERNEL_VIRTUAL_ADDRESS_BASE);
+    return (void *)(pfn * PAGE_SIZE);
   else
-    return (void *)(pfn * PAGE_SIZE + KERNEL_NORMAL_MEMORY_BASE +
-                    phys_normal_offset);
+    return (void *)(pfn * PAGE_SIZE + phys_normal_offset);
 }
 
 Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
@@ -47,22 +46,19 @@ Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
                     (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page));
 }
 
-void *get_page_address(Page *p, uint8_t kernel_alloc) {
-  return address_from_pfn(get_pfn_from_page(p, kernel_alloc), kernel_alloc);
+void *get_page_phys_address(Page *p, uint8_t kernel_alloc) {
+  return phys_from_pfn(get_pfn_from_page(p, kernel_alloc), kernel_alloc);
 }
 
 void *get_free_address(BuddyBlock *b, uint8_t kernel_alloc) {
-  return (BuddyBlock *)address_from_pfn(
-      get_pfn_from_page(b->head, kernel_alloc), kernel_alloc);
+  return (BuddyBlock *)phys_from_pfn(get_pfn_from_page(b->head, kernel_alloc),
+                                     kernel_alloc);
 }
 
 void printBuddy(BuddyBlock *b, uint8_t kernel_alloc) {
   uint32_t physAddr = 0;
-  if (kernel_alloc)
-    physAddr = (uint32_t)PA(get_page_address(b->head, kernel_alloc));
-  else
-    physAddr = (uint32_t)get_page_address(b->head, kernel_alloc) -
-               KERNEL_NORMAL_MEMORY_BASE;
+
+  physAddr = (uint32_t)get_page_phys_address(b->head, kernel_alloc);
   kprintf("[%x]->%x S=%d PagePtr=%x PhysAddr=%x\n", b,
           get_free_address(b, kernel_alloc), b->order, b->head, physAddr);
 }
@@ -136,17 +132,45 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
 }
 
 uint8_t is_buddy_block_free(BuddyBlock *b, uint8_t kernel_alloc) {
-  return buddy[b->order].bitmap[get_buddy_pos(b, kernel_alloc)];
+  if (kernel_alloc) {
+    uint32_t pos = get_buddy_pos(b, kernel_alloc);
+    uint8_t isFree = buddy[b->order].bitmap[pos];
+    kprintf("Kernel Buddy at pos %d, free=%d\n", pos, isFree);
+    return isFree;
+  } else
+    return normal_buddy[b->order].bitmap[get_buddy_pos(b, kernel_alloc)];
+}
+
+uint8_t is_buddy_free_at_order(BuddyBlock *b, uint8_t order,
+                               uint8_t kernel_alloc) {
+  if (kernel_alloc) {
+    uint32_t pos = get_buddy_pos(b, kernel_alloc);
+    uint8_t isFree = buddy[order].bitmap[pos];
+    kprintf("Kernel Buddy at pos %d, o: %d, free=%d\n", pos, order, isFree);
+    return isFree;
+  } else
+    return normal_buddy[order].bitmap[get_buddy_pos(b, kernel_alloc)];
 }
 
 void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc) {
   setColor(LIGHTGREEN);
-  printBuddy(b, kernel_alloc);
+
+  for (int i = b->order; i <= MAX_ORDER; ++i) {
+    if (is_buddy_free_at_order(b, i, kernel_alloc)) {
+      setColor(RED);
+      kprintf("Buddy already freed!\n");
+      resetScreenColors();
+      return;
+    }
+  }
+
+  // printBuddy(b, kernel_alloc);
+
   resetScreenColors();
   BuddyBlock *my_buddy = find_buddy(b, kernel_alloc);
   uint8_t need_to_merge =
       is_buddy_block_free(my_buddy, kernel_alloc) && (b->order != MAX_ORDER);
-  // need to merge and put up
+
   if (need_to_merge) {
     // I set myself and my buddy as used
     set_block_usage(b, b->order, USED, kernel_alloc);
@@ -155,11 +179,17 @@ void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc) {
     list_remove(&my_buddy->item);
     uint8_t higher_order = b->order + 1;
     b->order = higher_order;
-    list_add(&buddy[higher_order].free_list, &b->item);
+    if (kernel_alloc)
+      list_add(&buddy[higher_order].free_list, &b->item);
+    else
+      list_add(&normal_buddy[higher_order].free_list, &b->item);
     set_block_usage(b, b->order, FREE, kernel_alloc);
   } else {
     // Adding block to its free list
-    list_add(&buddy[b->order].free_list, &b->item);
+    if (kernel_alloc)
+      list_add(&buddy[b->order].free_list, &b->item);
+    else
+      list_add(&normal_buddy[b->order].free_list, &b->item);
     // Mark it free
     set_block_usage(b, b->order, FREE, kernel_alloc);
   }
@@ -239,9 +269,14 @@ BuddyBlock *find_buddy(BuddyBlock *me, uint8_t kernel_alloc) {
   return find_buddy_order(me, me->order, kernel_alloc);
 }
 
-void set_block_usage(BuddyBlock *p, int order, int used, uint8_t kernel_alloc) {
+void set_block_usage(BuddyBlock *p, int order, uint8_t used,
+                     uint8_t kernel_alloc) {
   int block_pos =
       get_pfn_from_page(p->head, kernel_alloc) / PAGES_PER_BLOCK(order);
+
+  printBuddy(p, kernel_alloc);
+  kprintf("Setting free: %d\n", used);
+
   if (kernel_alloc)
     buddy[order].bitmap[block_pos] = used;
   else

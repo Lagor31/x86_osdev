@@ -48,7 +48,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  // printBuddy(b, KERNEL_ALLOC);
+  //printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -57,7 +57,7 @@ Page *alloc_pages(int order) {
 
 Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
-  // printBuddy(b, NORMAL_ALLOC);
+  //printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -65,25 +65,25 @@ Page *alloc_normal_pages(int order) {
 }
 
 void free_pages(Page *p) {
-  kprintf(" Free PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
+  kprintf(" Free K PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
   free_buddy_block(get_buddy_from_page(p, KERNEL_ALLOC), KERNEL_ALLOC);
 }
 
 void free_normal_pages(Page *p) {
-  kprintf(" Free PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
+  kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
   free_buddy_block(get_buddy_from_page(p, NORMAL_ALLOC), NORMAL_ALLOC);
 }
 
 void *kmalloc(uint32_t order) {
   Page *p = alloc_pages(order);
   if (p == NULL) return NULL;
-  return get_page_address(p, KERNEL_ALLOC);
+  return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
 
 void *normalAlloc(uint32_t order) {
   Page *p = alloc_normal_pages(order);
   if (p == NULL) return NULL;
-  return get_page_address(p, NORMAL_ALLOC);
+  return get_page_phys_address(p, NORMAL_ALLOC) + KERNEL_NORMAL_MEMORY_BASE;
 }
 
 void kfree(void *ptr) {
@@ -95,11 +95,14 @@ void kfree(void *ptr) {
 void kfreeNormal(void *ptr) {
   if (ptr == NULL) return;
   kprintf("Free ptr %x ", ptr);
-  free_pages(get_page_from_address(ptr, NORMAL_ALLOC));
+  free_normal_pages(get_page_from_address(ptr, NORMAL_ALLOC));
 }
 
 BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {
-  return (BuddyBlock *)(buddies + get_pfn_from_page(p, kernel_alloc));
+  if (kernel_alloc)
+    return (BuddyBlock *)(buddies + get_pfn_from_page(p, kernel_alloc));
+  else
+    return (BuddyBlock *)(normal_buddies + get_pfn_from_page(p, kernel_alloc));
 }
 
 void memory_alloc_init() {
@@ -199,7 +202,7 @@ void *boot_alloc(size_t size, uint8_t align) {
   }
   // kprintf("Free mem pointer 0x%x\n", free_mem_addr);
   void *ret = free_mem_addr;
-  // memset(ret, 0, size);   // Setting the newly allocated memory to 0
+  memset(ret, 0, size);   // Setting the newly allocated memory to 0
   free_mem_addr += size;  // We move up to the next free byte
   return ret;
 }
