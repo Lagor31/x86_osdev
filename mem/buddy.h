@@ -12,6 +12,7 @@
 extern uint32_t total_free_memory;
 extern uint32_t total_kfree_memory;
 extern uint32_t total_nfree_memory;
+extern uint32_t phys_normal_offset;
 
 typedef struct buddy_block {
   Page *head;

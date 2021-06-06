@@ -48,7 +48,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  printBuddy(b, KERNEL_ALLOC);
+  // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -57,7 +57,7 @@ Page *alloc_pages(int order) {
 
 Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
-  printBuddy(b, NORMAL_ALLOC);
+  // printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -110,6 +110,9 @@ void memory_alloc_init() {
   kprintf("Alloc kernel buddy\n");
 
   buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages, KERNEL_ALLOC);
+
+  phys_normal_offset = total_kernel_pages * PAGE_SIZE;
+  kprintf("Physical normal offset : 0x%x\n", phys_normal_offset);
   kprintf("Alloc normal buddy\n");
   buddy_init(&normal_pages, &normal_buddies, normal_buddy, total_normal_pages,
              NORMAL_ALLOC);
@@ -164,8 +167,8 @@ uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
   boot_mmap.highest_mem_addess = max_mem_address;
   boot_mmap.total_pages = (max_mem_address & 0xFFFFF000) / PAGE_SIZE;
   kprintf("High mem addr: %x\n", boot_mmap.highest_mem_addess);
-  kprintf("Total usable bytes %d\n", max_mem_address);
-  kprintf("Total pages [0 - %d]\n", boot_mmap.total_pages);
+  kprintf("Total usable bytes %u\n", max_mem_address);
+  kprintf("Total pages [0 - %u]\n", boot_mmap.total_pages);
   return 0;
 }
 

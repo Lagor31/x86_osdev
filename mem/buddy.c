@@ -12,6 +12,7 @@
 #include "../utils/utils.h"
 Buddy buddy[MAX_ORDER + 1];
 Buddy normal_buddy[MAX_ORDER + 1];
+uint32_t phys_normal_offset = 0;
 
 BuddyBlock *buddies;
 BuddyBlock *normal_buddies;
@@ -21,10 +22,9 @@ uint32_t total_kfree_memory = 0;
 uint32_t total_nfree_memory = 0;
 
 uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc) {
-  /* kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p,
-          kernel_alloc == 1 ? kernel_pages : normal_pages); */
+  // kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p,
+  //        kernel_alloc == 1 ? kernel_pages : normal_pages);
   if (kernel_alloc)
-
     return ((uint32_t)p - (uint32_t)kernel_pages) / sizeof(Page);
   else
     return ((uint32_t)p - (uint32_t)normal_pages) / sizeof(Page);
@@ -34,7 +34,8 @@ void *address_from_pfn(uint32_t pfn, uint8_t kernel_alloc) {
   if (kernel_alloc)
     return (void *)(pfn * PAGE_SIZE + KERNEL_VIRTUAL_ADDRESS_BASE);
   else
-    return (void *)(pfn * PAGE_SIZE + KERNEL_NORMAL_MEMORY_BASE);
+    return (void *)(pfn * PAGE_SIZE + KERNEL_NORMAL_MEMORY_BASE +
+                    phys_normal_offset);
 }
 
 Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
@@ -56,9 +57,14 @@ void *get_free_address(BuddyBlock *b, uint8_t kernel_alloc) {
 }
 
 void printBuddy(BuddyBlock *b, uint8_t kernel_alloc) {
+  uint32_t physAddr = 0;
+  if (kernel_alloc)
+    physAddr = (uint32_t)PA(get_page_address(b->head, kernel_alloc));
+  else
+    physAddr = (uint32_t)get_page_address(b->head, kernel_alloc) -
+               KERNEL_NORMAL_MEMORY_BASE;
   kprintf("[%x]->%x S=%d PagePtr=%x PhysAddr=%x\n", b,
-          get_free_address(b, kernel_alloc), b->order, b->head,
-          PA(get_page_address(b->head, kernel_alloc)));
+          get_free_address(b, kernel_alloc), b->order, b->head, physAddr);
 }
 
 int get_buddy_pos(BuddyBlock *b, uint8_t kernel_alloc) {

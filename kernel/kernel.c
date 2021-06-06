@@ -48,9 +48,9 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   setTextColor(WHITE);
 
   // Installing the Global Descriptor Table for the segments we will need
-  // kprintf("Installing GDT...\n");
+  kprintf("Installing GDT...\n");
   gdt_install();
-  kPrintOKMessage("GTD Installed");
+  kPrintOKMessage("GTD Installed!\n");
 
   // Just setting a couple of pointers in our C variables, nothing special
   // kprintf("Kernel memory initialization...\n");
@@ -62,15 +62,22 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   kfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
   nfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
 
+  kPrintOKMessage("Installing IRQs/ISRs...\n");
   isr_install();
   irq_install();
+  kPrintOKMessage("IRQs/ISRs installed!\n");
 
+  kPrintOKMessage("Init Buddy...\n");
   memory_alloc_init();
+  kPrintOKMessage("Buddy initialized!\n");
+
+  kPrintOKMessage("Enabling kernel paging...");
   enableKernelPaging();
+  kPrintOKMessage("Kernel paging enabled!");
 
   // kMemCacheInit();
 
-  kPrintOKMessage("Kernel memory inizialized");
+  kPrintOKMessage("Kernel inizialized!");
   // kPrintOKMessage("Kernel paging enabled");
 
   // We setup a Page mapping allowing the kernel to transparently use Virtual
