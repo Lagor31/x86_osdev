@@ -9,7 +9,7 @@
 
 #include "../mem/mem.h"
 #include "../utils/list.h"
-
+#include "../utils/utils.h"
 Buddy buddy[MAX_ORDER + 1];
 Buddy normal_buddy[MAX_ORDER + 1];
 
@@ -21,8 +21,8 @@ uint32_t total_kfree_memory = 0;
 uint32_t total_nfree_memory = 0;
 
 uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc) {
-  kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p,
-          kernel_alloc == 1 ? kernel_pages : normal_pages);
+  /* kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p,
+          kernel_alloc == 1 ? kernel_pages : normal_pages); */
   if (kernel_alloc)
 
     return ((uint32_t)p - (uint32_t)kernel_pages) / sizeof(Page);
@@ -68,8 +68,6 @@ int get_buddy_pos(BuddyBlock *b, uint8_t kernel_alloc) {
 void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
                 uint32_t number_of_pages, uint8_t kernel_alloc) {
   // Allocating array of pages
-  kprintf("Bootallocating %d pages, size: %d", number_of_pages,
-          sizeof(Page) * number_of_pages);
   Page *tPage = boot_alloc(sizeof(Page) * number_of_pages, 1);
   *input_pages = tPage;
 
@@ -78,7 +76,8 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
   int curr_order = MAX_ORDER;
   uint32_t number_of_blocks = number_of_pages / PAGES_PER_BLOCK(MAX_ORDER);
   // blocks_number &= 0xFFFFFFFE;
-
+/*   if (!kernel_alloc) hlt();
+ */
   BuddyBlock *bb =
       (BuddyBlock *)boot_alloc(sizeof(BuddyBlock) * number_of_pages, 1);
   // buddies = bb;
@@ -114,6 +113,7 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
     } else {
       number_of_blocks *= 2;
     }
+
     // TODO: Allocate bits, not bytes
     buddy_ext[curr_order].bitmap =
         boot_alloc(sizeof(uint8_t) * number_of_blocks, 1);

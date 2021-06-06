@@ -37,7 +37,7 @@ void gpFaultHandler(registers_t *regs) {
   kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d\n", regs->cs, regs->eip,
           regs->err_code);
   resetScreenColors();
-  asm volatile("hlt");
+  hlt();
 }
 
 void pageFaultHandler(registers_t *regs) {
@@ -58,8 +58,7 @@ void pageFaultHandler(registers_t *regs) {
   // put the present bit to 1 because we have no disk to load pages from
   lastAllocatedEntry++;
   resetScreenColors();
-  asm volatile("hlt");
-
+  hlt();
   if (userMode) {
     user_page_directory[0] &= 0xFFFFFFDF;
     user_page_directory[1] &= 0xFFFFFFDF;
@@ -116,7 +115,7 @@ uint32_t *createPageTable(uint32_t pdRow) {
 }
 /* Old */
 void enableKernelPaging() {
-  int num_entries = (total_kernel_pages >> 10);
+  int num_entries = (total_kernel_pages >> 10) + 1;
   kprintf("Tot: %d Num entried PD: %d\n", total_kernel_pages, num_entries);
   uint16_t i = 0;
   uint32_t s = (uint32_t)free_mem_addr;

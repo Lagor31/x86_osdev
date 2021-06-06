@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 1
+#define ALLOC_NUM 50
 
 struct kmultiboot2info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;

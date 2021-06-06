@@ -20,5 +20,5 @@ void fakeSysLoadingBar(uint32_t loadingTime);
 // RAND_MAX assumed to be 32767
 uint32_t rand(void);
 void srand(uint32_t seed);
-
+void hlt();
 #endif

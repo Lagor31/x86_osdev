@@ -23,6 +23,8 @@ uint32_t rand(void) {
   return (uint32_t)(next / 65536) % RAND_MAX;
 }
 
+void hlt() { asm volatile("hlt"); }
+
 void srand(uint32_t seed) { next = seed; }
 
 void saveMultibootInfo(uint32_t addr, uint32_t magic) {

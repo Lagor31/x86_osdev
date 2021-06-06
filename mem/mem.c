@@ -29,8 +29,10 @@ void printFree() {
   int totFree = total_free_memory / 1024 / 1024;
   int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
   kprintf("Free: %d / %d Mb\nUsed: %dMb\n", totFree, tot, tot - totFree);
-  kprintf("KMem free: %d\n", total_kfree_memory / 1024 / 1024);
-  kprintf("NMem free: %d\n", total_nfree_memory / 1024 / 1024);
+  kprintf("KMem free: %d/%d\n", total_kfree_memory / 1024 / 1024,
+          total_kernel_pages * 4096 / 1024 / 1024);
+  kprintf("NMem free: %d/%d\n", total_nfree_memory / 1024 / 1024,
+          total_normal_pages * 4096 / 1024 / 1024);
 }
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
@@ -46,7 +48,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  printBuddy(b, KERNEL_ALLOC);
+  // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -194,7 +196,7 @@ void *boot_alloc(size_t size, uint8_t align) {
   }
   // kprintf("Free mem pointer 0x%x\n", free_mem_addr);
   void *ret = free_mem_addr;
-  memset(ret, 0, size);   // Setting the newly allocated memory to 0
+  // memset(ret, 0, size);   // Setting the newly allocated memory to 0
   free_mem_addr += size;  // We move up to the next free byte
   return ret;
 }
