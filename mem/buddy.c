@@ -30,8 +30,11 @@ uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc) {
     return ((uint32_t)p - (uint32_t)normal_pages) / sizeof(Page);
 }
 
-void *address_from_pfn(uint32_t pfn) {
-  return (void *)(pfn * PAGE_SIZE + KERNEL_VIRTUAL_ADDRESS_BASE);
+void *address_from_pfn(uint32_t pfn, uint8_t kernel_alloc) {
+  if (kernel_alloc)
+    return (void *)(pfn * PAGE_SIZE + KERNEL_VIRTUAL_ADDRESS_BASE);
+  else
+    return (void *)(pfn * PAGE_SIZE + KERNEL_NORMAL_MEMORY_BASE);
 }
 
 Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
@@ -44,12 +47,12 @@ Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
 }
 
 void *get_page_address(Page *p, uint8_t kernel_alloc) {
-  return address_from_pfn(get_pfn_from_page(p, kernel_alloc));
+  return address_from_pfn(get_pfn_from_page(p, kernel_alloc), kernel_alloc);
 }
 
 void *get_free_address(BuddyBlock *b, uint8_t kernel_alloc) {
   return (BuddyBlock *)address_from_pfn(
-      get_pfn_from_page(b->head, kernel_alloc));
+      get_pfn_from_page(b->head, kernel_alloc), kernel_alloc);
 }
 
 void printBuddy(BuddyBlock *b, uint8_t kernel_alloc) {
@@ -76,8 +79,8 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
   int curr_order = MAX_ORDER;
   uint32_t number_of_blocks = number_of_pages / PAGES_PER_BLOCK(MAX_ORDER);
   // blocks_number &= 0xFFFFFFFE;
-/*   if (!kernel_alloc) hlt();
- */
+  /*   if (!kernel_alloc) hlt();
+   */
   BuddyBlock *bb =
       (BuddyBlock *)boot_alloc(sizeof(BuddyBlock) * number_of_pages, 1);
   // buddies = bb;

@@ -106,7 +106,8 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
 
 uint32_t *createPageTable(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
-  uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
+  // uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
+  uint32_t *pt = kmalloc(0);
   for (uint32_t i = 0; i < 1024; ++i) {
     uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
     pt[i] = curFrameNumber | 3;
@@ -115,10 +116,10 @@ uint32_t *createPageTable(uint32_t pdRow) {
 }
 /* Old */
 void enableKernelPaging() {
-  int num_entries = (total_kernel_pages >> 10) + 1;
+  kprintf("Setting up kernel paging...\n");
+  int num_entries = (total_kernel_pages >> 10);
   kprintf("Tot: %d Num entried PD: %d\n", total_kernel_pages, num_entries);
   uint16_t i = 0;
-  uint32_t s = (uint32_t)free_mem_addr;
   for (i = 0; i < 1024; i++) {
     // Mapping the higher half kernel
     if (i < num_entries) {
@@ -133,7 +134,10 @@ void enableKernelPaging() {
     }
   }
 
-  kprintf("Kernel paging subsystem size = %d bytes\n", free_mem_addr - s);
+  // kprintf("Kernel paging subsystem size = %d bytes\n", free_mem_addr - s);
+  kprintf("Total kernel paging system size: %d Kb\n",
+          num_entries * 4096 / 1024);
+  kprintf("Max kernel  size: %d Mb\n", num_entries * 4);
   pdPhysical = (uint32_t)kernel_page_directory - KERNEL_VIRTUAL_ADDRESS_BASE;
   lastAllocatedEntry = i;
   // kprintf("KPDAdr: 0x%x\nPhysical: 0x%x\n", kernel_page_directory,

@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 50
+#define ALLOC_NUM 3
 
 struct kmultiboot2info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -62,6 +62,9 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   kfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
   nfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
 
+  isr_install();
+  irq_install();
+
   memory_alloc_init();
   enableKernelPaging();
 
@@ -75,8 +78,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // kprintf("Enabling kernel paging...\n");
   // Installing the interrupt/exception handlers
   // kprintf("Installing Interrupts Handlers...\n");
-  isr_install();
-  irq_install();
+
   // kPrintOKMessage("Interrupts Handlers installed...");
 
   // loadUserProcess(getModule(kMultiBootInfo));
@@ -136,20 +138,20 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfrees[i] = kmalloc(10);
+      kfrees[i] = kmalloc(0);
       uint8_t **a = kfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      *a = 1;
+      //*a = 1;
     }
     /* for (int i = 0; i < ALLOC_NUM; ++i) {
       kfree(frees[i]);
     } */
   } else if (!strcmp(input, "nalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      nfrees[i] = normalAlloc(10);
+      nfrees[i] = normalAlloc(0);
       uint8_t **a = nfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      *a = 1;
+      //*a = 1;
     }
     /* for (int i = 0; i < ALLOC_NUM; ++i) {
       kfree(frees[i]);

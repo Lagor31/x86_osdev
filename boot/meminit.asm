@@ -121,6 +121,81 @@ _end_setup_frames4:
 
     mov [BootPageDirectory + 12], edx
     mov [BootPageDirectory + 771 * 4], edx    
+    xor ecx, ecx
+
+
+_setup_frames5:
+
+    xor edx,edx
+    mov edx, ecx
+    add edx, 4096
+    shl edx,12
+    or edx, KPAGE_TABLE_MASK
+    mov [BootPageTable5 + ecx * 4], edx
+    cmp ecx, 1024
+    jge _end_setup_frames5
+    inc ecx
+    jmp _setup_frames5
+
+_end_setup_frames5:
+
+    mov edx, BootPageTable5
+    or edx, KPAGE_TABLE_MASK
+
+    mov [BootPageDirectory + 16], edx
+    mov [BootPageDirectory + 772 * 4], edx    
+
+    xor ecx, ecx
+
+
+
+_setup_frames6:
+
+    xor edx,edx
+    mov edx, ecx
+    add edx, 5120
+    shl edx,12
+    or edx, KPAGE_TABLE_MASK
+    mov [BootPageTable6 + ecx * 4], edx
+    cmp ecx, 1024
+    jge _end_setup_frames6
+    inc ecx
+    jmp _setup_frames6
+
+_end_setup_frames6:
+
+    mov edx, BootPageTable6
+    or edx, KPAGE_TABLE_MASK
+
+    mov [BootPageDirectory + 20], edx
+    mov [BootPageDirectory + 773 * 4], edx    
+
+    xor ecx, ecx
+
+
+_setup_frames7:
+
+    xor edx,edx
+    mov edx, ecx
+    add edx, 6144
+    shl edx,12
+    or edx, KPAGE_TABLE_MASK
+    mov [BootPageTable7 + ecx * 4], edx
+    cmp ecx, 1024
+    jge _end_setup_frames7
+    inc ecx
+    jmp _setup_frames7
+
+_end_setup_frames7:
+
+    mov edx, BootPageTable7
+    or edx, KPAGE_TABLE_MASK
+
+    mov [BootPageDirectory + 24], edx
+    mov [BootPageDirectory + 774 * 4], edx    
+
+
+
 
 	mov eax, BootPageDirectory 
 	mov cr3, eax
@@ -205,6 +280,18 @@ BootPageTable3:
 align 0x1000 ; align to 4KB, the size of a page
 BootPageTable4:
     times 1024 dd 0    
+
+align 0x1000 ; align to 4KB, the size of a page
+BootPageTable5:
+    times 1024 dd 0   
+
+align 0x1000 ; align to 4KB, the size of a page
+BootPageTable6:
+    times 1024 dd 0    
+
+align 0x1000 ; align to 4KB, the size of a page
+BootPageTable7:
+    times 1024 dd 0   
 
 align 4
 global _stack_address

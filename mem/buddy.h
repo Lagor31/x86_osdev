@@ -29,9 +29,9 @@ extern BuddyBlock *buddies;
 extern Buddy buddy[MAX_ORDER + 1];
 extern Buddy normal_buddy[MAX_ORDER + 1];
 extern BuddyBlock *normal_buddies;
-void *address_from_pfn(uint32_t pfn);
+void *address_from_pfn(uint32_t pfn, uint8_t kernel_alloc);
 uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc);
-uint32_t get_pfn_from_address(void *);
+uint32_t get_pfn_from_address(void *, uint8_t kernel_alloc);
 Page *get_page_from_address(void *ptr, uint8_t kernel_alloc);
 void *get_page_address(Page *p, uint8_t kernel_alloc);
 BuddyBlock *find_buddy_order(BuddyBlock *me, int order, uint8_t kernel_alloc);
@@ -41,6 +41,7 @@ BuddyBlock *search_free_block(int order, uint8_t kernel_alloc);
 void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc);
 void set_block_usage(BuddyBlock *p, int order, int used, uint8_t kernel_alloc);
 void printBuddy(BuddyBlock *, uint8_t kernel_alloc);
-void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size, uint8_t kernel_alloc);
+void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size,
+                uint8_t kernel_alloc);
 
 #endif

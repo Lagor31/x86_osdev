@@ -48,7 +48,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  // printBuddy(b, KERNEL_ALLOC);
+  printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
