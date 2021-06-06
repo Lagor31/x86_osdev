@@ -357,10 +357,10 @@ void printModuleInfo(struct multiboot_tag_module *module) {
 }
 
 void printUptime() {
-  /* stdDate_t *uptime = getSystemDate();
-  kprintf("%u days, %02u:%02u:%02u", uptime->days, uptime->hours,
+ /*  stdDate_t *uptime = getSystemDate();
+  kprintf("%u days, %02u:%02u:%02u\n", uptime->days, uptime->hours,
           uptime->minutes, uptime->seconds); */
-  kprintf("Uptime %dms", getUptime());
+  kprintf("Uptime %d s", getUptime() / 1000);
 }
 
 // Enable/Disable non maskable interrupt

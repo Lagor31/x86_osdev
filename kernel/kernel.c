@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 1
+#define ALLOC_NUM 10
 
 struct kmultiboot2info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -72,7 +72,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   kPrintOKMessage("Buddy initialized!\n");
 
   kPrintOKMessage("Enabling kernel paging...");
-  enableKernelPaging();
+  init_kernel_paging();
   kPrintOKMessage("Kernel paging enabled!");
 
   // kMemCacheInit();
@@ -95,9 +95,9 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // Cute but utterly fake loading bar, used just to set the tick count to a
   // meaningful value for srand
 
-  setBackgroundColor(LIGHTGREEN);
-  // fakeSysLoadingBar(1.8 * 1000);
-  resetScreenColors();
+ /*  setBackgroundColor(LIGHTGREEN);
+  fakeSysLoadingBar(100);
+  resetScreenColors(); */
 
   // srand(tickCount);
   // kPrintOKMessage("Kernel loaded successfully!");
@@ -112,6 +112,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // setCursorPos(2, 0);
   kprintf("\n>");
   // runProcess();
+  hlt();
 }
 
 /*
@@ -145,7 +146,7 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfrees[i] = kmalloc(0);
+      kfrees[i] = kmalloc(10);
       uint8_t **a = kfrees[i];
       kprintf("Addr = 0x%x\n", a);
       //*a = 1;
@@ -155,7 +156,7 @@ void user_input(char *input) {
     } */
   } else if (!strcmp(input, "nalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      nfrees[i] = normalAlloc(0);
+      nfrees[i] = normalAlloc(10);
       uint8_t **a = nfrees[i];
       kprintf("Addr = 0x%x\n", a);
       //*a = 1;

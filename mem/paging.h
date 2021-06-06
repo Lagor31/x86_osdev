@@ -11,7 +11,7 @@ extern uint32_t user_page_directory[1024];
 extern void _loadPageDirectory(unsigned int *);
 extern void _enablePaging();
 
-void enableKernelPaging();
+void init_kernel_paging();
 void enableUserModePaging(void *processPhysAddress);
 void pageFaultHandler(registers_t *regs);
 void gpFaultHandler(registers_t *regs);

@@ -28,11 +28,16 @@ BootMmap boot_mmap;
 void printFree() {
   int totFree = total_free_memory / 1024 / 1024;
   int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
+  uint32_t tot_kern_size_mb = total_kernel_pages * 4096 / 1024 / 1024;
+  uint32_t tot_norm_size_mb = total_normal_pages * 4096 / 1024 / 1024;
+  uint32_t tot_free_kern_mb = total_kfree_memory / 1024 / 1024;
+  uint32_t tot_free_norm_mb = total_nfree_memory / 1024 / 1024;
+
   kprintf("Free: %d / %d Mb\nUsed: %dMb\n", totFree, tot, tot - totFree);
-  kprintf("KMem free: %d/%d\n", total_kfree_memory / 1024 / 1024,
-          total_kernel_pages * 4096 / 1024 / 1024);
-  kprintf("NMem free: %d/%d\n", total_nfree_memory / 1024 / 1024,
-          total_normal_pages * 4096 / 1024 / 1024);
+  kprintf("KMem used: %d/%d \n", tot_kern_size_mb - tot_free_kern_mb,
+          tot_kern_size_mb);
+  kprintf("NMem used: %d/%d\n", tot_norm_size_mb - tot_free_norm_mb,
+          tot_norm_size_mb);
 }
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
@@ -48,7 +53,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  //printBuddy(b, KERNEL_ALLOC);
+  // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -57,7 +62,7 @@ Page *alloc_pages(int order) {
 
 Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
-  //printBuddy(b, NORMAL_ALLOC);
+  // printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -106,17 +111,16 @@ BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {
 }
 
 void memory_alloc_init() {
-  total_kernel_pages = (boot_mmap.total_pages / 4) + 1;
+  total_kernel_pages = (boot_mmap.total_pages / KERNEL_RATIO) + 1;
   total_normal_pages = boot_mmap.total_pages - total_kernel_pages;
   kprintf("Total kernel pages %d\nTotal normal pages %d\n", total_kernel_pages,
           total_normal_pages);
-  kprintf("Alloc kernel buddy\n");
-
+  kprintf("Alloc kernel buddy system\n");
   buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages, KERNEL_ALLOC);
 
   phys_normal_offset = total_kernel_pages * PAGE_SIZE;
   kprintf("Physical normal offset : 0x%x\n", phys_normal_offset);
-  kprintf("Alloc normal buddy\n");
+  kprintf("Alloc normal buddy system\n");
   buddy_init(&normal_pages, &normal_buddies, normal_buddy, total_normal_pages,
              NORMAL_ALLOC);
 

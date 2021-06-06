@@ -141,35 +141,16 @@ uint8_t is_buddy_block_free(BuddyBlock *b, uint8_t kernel_alloc) {
     return normal_buddy[b->order].bitmap[get_buddy_pos(b, kernel_alloc)];
 }
 
-uint8_t is_buddy_free_at_order(BuddyBlock *b, uint8_t order,
-                               uint8_t kernel_alloc) {
-  if (kernel_alloc) {
-    uint32_t pos = get_buddy_pos(b, kernel_alloc);
-    uint8_t isFree = buddy[order].bitmap[pos];
-    kprintf("Kernel Buddy at pos %d, o: %d, free=%d\n", pos, order, isFree);
-    return isFree;
-  } else
-    return normal_buddy[order].bitmap[get_buddy_pos(b, kernel_alloc)];
-}
-
 void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc) {
   setColor(LIGHTGREEN);
 
-  for (int i = b->order; i <= MAX_ORDER; ++i) {
-    if (is_buddy_free_at_order(b, i, kernel_alloc)) {
-      setColor(RED);
-      kprintf("Buddy already freed!\n");
-      resetScreenColors();
-      return;
-    }
-  }
-
   // printBuddy(b, kernel_alloc);
 
-  resetScreenColors();
   BuddyBlock *my_buddy = find_buddy(b, kernel_alloc);
   uint8_t need_to_merge =
       is_buddy_block_free(my_buddy, kernel_alloc) && (b->order != MAX_ORDER);
+
+  resetScreenColors();
 
   if (need_to_merge) {
     // I set myself and my buddy as used
@@ -273,9 +254,6 @@ void set_block_usage(BuddyBlock *p, int order, uint8_t used,
                      uint8_t kernel_alloc) {
   int block_pos =
       get_pfn_from_page(p->head, kernel_alloc) / PAGES_PER_BLOCK(order);
-
-  printBuddy(p, kernel_alloc);
-  kprintf("Setting free: %d\n", used);
 
   if (kernel_alloc)
     buddy[order].bitmap[block_pos] = used;
