@@ -53,7 +53,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  // printBuddy(b, KERNEL_ALLOC);
+  printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -62,7 +62,7 @@ Page *alloc_pages(int order) {
 
 Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
-  // printBuddy(b, NORMAL_ALLOC);
+  printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -79,16 +79,16 @@ void free_normal_pages(Page *p) {
   free_buddy_block(get_buddy_from_page(p, NORMAL_ALLOC), NORMAL_ALLOC);
 }
 
-void *kmalloc(uint32_t order) {
+void *kernel_page_alloc(uint32_t order) {
   Page *p = alloc_pages(order);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
 
-void *normalAlloc(uint32_t order) {
+void *normal_page_alloc(uint32_t order) {
   Page *p = alloc_normal_pages(order);
   if (p == NULL) return NULL;
-  return get_page_phys_address(p, NORMAL_ALLOC) + KERNEL_NORMAL_MEMORY_BASE;
+  return get_page_phys_address(p, NORMAL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
 
 void kfree(void *ptr) {
@@ -132,7 +132,7 @@ void memory_alloc_init() {
 
   kprintf("You've used the first %d pages allocating now %d 4Mb pages...\n",
           firstNUsedPages, ++four_megs_pages);
-  for (i = 0; i < four_megs_pages; ++i) kmalloc(10);
+  for (i = 0; i < four_megs_pages; ++i) kernel_page_alloc(10);
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 }
 

@@ -107,7 +107,7 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
 uint32_t *createPageTable(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
   // uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
-  uint32_t *pt = kmalloc(0);
+  uint32_t *pt = kernel_page_alloc(0);
   for (uint32_t i = 0; i < 1024; ++i) {
     uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
     pt[i] = curFrameNumber | 3;

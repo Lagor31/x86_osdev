@@ -28,8 +28,8 @@ void *boot_alloc(size_t size, uint8_t align);
 void memset(uint8_t *dest, uint8_t val, size_t len);
 uint8_t parse_multiboot_info(struct kmultiboot2info *info);
 void memory_alloc_init();
-void *kmalloc(uint32_t order);
-void *normalAlloc(uint32_t order);
+void *kernel_page_alloc(uint32_t order);
+void *normal_page_alloc(uint32_t order);
 void kfreeNormal(void *ptr);
 void printFree();
 #endif

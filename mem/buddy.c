@@ -43,7 +43,10 @@ Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
                     (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page));
   else
     return (Page *)((uint32_t)normal_pages +
-                    (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page));
+                    ((uint32_t)(ptr - KERNEL_NORMAL_MEMORY_BASE -
+                                phys_normal_offset) /
+                     PAGE_SIZE) *
+                        sizeof(Page));
 }
 
 void *get_page_phys_address(Page *p, uint8_t kernel_alloc) {
@@ -61,13 +64,6 @@ void printBuddy(BuddyBlock *b, uint8_t kernel_alloc) {
   physAddr = (uint32_t)get_page_phys_address(b->head, kernel_alloc);
   kprintf("[%x]->%x S=%d PagePtr=%x PhysAddr=%x\n", b,
           get_free_address(b, kernel_alloc), b->order, b->head, physAddr);
-}
-
-int get_buddy_pos(BuddyBlock *b, uint8_t kernel_alloc) {
-  if (kernel_alloc)
-    return ((uint32_t)b - (uint32_t)buddies) / sizeof(BuddyBlock);
-  else
-    return ((uint32_t)b - (uint32_t)normal_buddies) / sizeof(BuddyBlock);
 }
 
 void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
@@ -131,20 +127,69 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
   }
 }
 
-uint8_t is_buddy_block_free(BuddyBlock *b, uint8_t kernel_alloc) {
+uint32_t get_buddy_pos(BuddyBlock *b, uint8_t kernel_alloc) {
+  if (kernel_alloc)
+    return ((uint32_t)b - (uint32_t)buddies) / sizeof(BuddyBlock);
+  else
+    return ((uint32_t)b - (uint32_t)normal_buddies) / sizeof(BuddyBlock);
+}
+
+uint8_t is_buddy_free_at_order(BuddyBlock *b, uint8_t order,
+                               uint8_t kernel_alloc) {
+  int block_pos =
+      get_pfn_from_page(b->head, kernel_alloc) / PAGES_PER_BLOCK(order);
   if (kernel_alloc) {
-    uint32_t pos = get_buddy_pos(b, kernel_alloc);
-    uint8_t isFree = buddy[b->order].bitmap[pos];
-    kprintf("Kernel Buddy at pos %d, free=%d\n", pos, isFree);
+    uint8_t isFree = buddy[order].bitmap[block_pos];
+    kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
+            isFree);
+    return buddy[order].bitmap[block_pos];
+
+  } else {
+    uint8_t isFree = normal_buddy[order].bitmap[block_pos];
+    kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
+            isFree);
+    return normal_buddy[order].bitmap[block_pos];
+  }
+}
+
+uint8_t is_buddy_block_free(BuddyBlock *b, uint8_t kernel_alloc) {
+  int block_pos =
+      get_pfn_from_page(b->head, kernel_alloc) / PAGES_PER_BLOCK(b->order);
+  if (kernel_alloc) {
+    // uint32_t pos = get_buddy_pos(b, kernel_alloc);
+    uint8_t isFree = buddy[b->order].bitmap[block_pos];
+    kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
+            isFree);
     return isFree;
-  } else
-    return normal_buddy[b->order].bitmap[get_buddy_pos(b, kernel_alloc)];
+  } else {
+    uint8_t isFree = buddy[b->order].bitmap[block_pos];
+    kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
+            isFree);
+    return normal_buddy[b->order].bitmap[block_pos];
+  }
 }
 
 void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc) {
   setColor(LIGHTGREEN);
 
-  // printBuddy(b, kernel_alloc);
+/*   if (is_buddy_block_free(b, kernel_alloc)) {
+    setBackgroundColor(WHITE);
+    setTextColor(RED);
+    kprintf("Buddy already freed!!\n");
+    printBuddy(b, kernel_alloc);
+    resetScreenColors();
+    return;
+  } */
+  for (int i = b->order; i <= MAX_ORDER; ++i) {
+    if (is_buddy_free_at_order(b, i, kernel_alloc)) {
+      setBackgroundColor(WHITE);
+      setTextColor(RED);
+      kprintf("Buddy already freed!!\n");
+      printBuddy(b, kernel_alloc);
+      resetScreenColors();
+      return;
+    }
+  }
 
   BuddyBlock *my_buddy = find_buddy(b, kernel_alloc);
   uint8_t need_to_merge =
@@ -227,7 +272,8 @@ BuddyBlock *get_buddy_block(int order, uint8_t kernel_alloc) {
 }
 
 BuddyBlock *find_buddy_order(BuddyBlock *me, int order, uint8_t kernel_alloc) {
-  int block_pos = get_buddy_pos(me, kernel_alloc) / (PAGES_PER_BLOCK(order));
+  uint32_t block_pos =
+      get_buddy_pos(me, kernel_alloc) / (PAGES_PER_BLOCK(order));
   // kprintf("Addr=%x Order=%d Pos=%d\n", me, order, block_pos);
 
   if (block_pos % 2 == 0) {
@@ -267,6 +313,7 @@ BuddyBlock *get_buddy_from_pos(int order, int pos, uint8_t kernel_alloc) {
   else
     return (BuddyBlock *)(normal_buddies + (pos * PAGES_PER_BLOCK(order)));
 }
+
 /*
   Returns the first free block in a given order or NULL
 */

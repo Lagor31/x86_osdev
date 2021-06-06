@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 10
+#define ALLOC_NUM 1
 
 struct kmultiboot2info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -146,17 +146,17 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfrees[i] = kmalloc(10);
+      kfrees[i] = kernel_page_alloc(10);
       uint8_t **a = kfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      //*a = 1;
+      *a = 1;
     }
     /* for (int i = 0; i < ALLOC_NUM; ++i) {
       kfree(frees[i]);
     } */
   } else if (!strcmp(input, "nalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      nfrees[i] = normalAlloc(10);
+      nfrees[i] = normal_page_alloc(10);
       uint8_t **a = nfrees[i];
       kprintf("Addr = 0x%x\n", a);
       //*a = 1;

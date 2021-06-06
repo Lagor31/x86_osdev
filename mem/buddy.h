@@ -40,9 +40,12 @@ BuddyBlock *find_buddy(BuddyBlock *me, uint8_t kernel_alloc);
 BuddyBlock *get_buddy_block(int order, uint8_t kernel_alloc);
 BuddyBlock *search_free_block(int order, uint8_t kernel_alloc);
 void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc);
-void set_block_usage(BuddyBlock *p, int order, uint8_t used, uint8_t kernel_alloc);
+void set_block_usage(BuddyBlock *p, int order, uint8_t used,
+                     uint8_t kernel_alloc);
 void printBuddy(BuddyBlock *, uint8_t kernel_alloc);
 void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size,
                 uint8_t kernel_alloc);
+
+uint32_t get_buddy_pos(BuddyBlock *b, uint8_t kernel_alloc);
 
 #endif
