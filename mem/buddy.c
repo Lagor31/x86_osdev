@@ -43,9 +43,7 @@ Page *get_page_from_address(void *ptr, uint8_t kernel_alloc) {
                     (PA((uint32_t)ptr) / PAGE_SIZE) * sizeof(Page));
   else
     return (Page *)((uint32_t)normal_pages +
-                    ((uint32_t)(ptr - KERNEL_NORMAL_MEMORY_BASE -
-                                phys_normal_offset) /
-                     PAGE_SIZE) *
+                    ((uint32_t)(ptr - phys_normal_offset) / PAGE_SIZE) *
                         sizeof(Page));
 }
 
@@ -172,14 +170,14 @@ uint8_t is_buddy_block_free(BuddyBlock *b, uint8_t kernel_alloc) {
 void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc) {
   setColor(LIGHTGREEN);
 
-/*   if (is_buddy_block_free(b, kernel_alloc)) {
-    setBackgroundColor(WHITE);
-    setTextColor(RED);
-    kprintf("Buddy already freed!!\n");
-    printBuddy(b, kernel_alloc);
-    resetScreenColors();
-    return;
-  } */
+  /*   if (is_buddy_block_free(b, kernel_alloc)) {
+      setBackgroundColor(WHITE);
+      setTextColor(RED);
+      kprintf("Buddy already freed!!\n");
+      printBuddy(b, kernel_alloc);
+      resetScreenColors();
+      return;
+    } */
   for (int i = b->order; i <= MAX_ORDER; ++i) {
     if (is_buddy_free_at_order(b, i, kernel_alloc)) {
       setBackgroundColor(WHITE);

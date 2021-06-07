@@ -100,7 +100,8 @@ void kfree(void *ptr) {
 void kfreeNormal(void *ptr) {
   if (ptr == NULL) return;
   kprintf("Free ptr %x ", ptr);
-  free_normal_pages(get_page_from_address(ptr, NORMAL_ALLOC));
+  free_normal_pages(
+      get_page_from_address(ptr - KERNEL_VIRTUAL_ADDRESS_BASE, NORMAL_ALLOC));
 }
 
 BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {

@@ -139,14 +139,14 @@ void user_input(char *input) {
       kfrees[i] = kernel_page_alloc(10);
       uint8_t *a = kfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      *a = (uint8_t)'f';
+      *a = 'f';
     }
   } else if (!strcmp(input, "nalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       nfrees[i] = normal_page_alloc(10);
       uint8_t *a = nfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      *a = 'f';
+      //*a = 'f';
     }
   } else if (!strcmp(input, "kfree")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
