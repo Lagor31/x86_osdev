@@ -114,7 +114,7 @@ uint32_t *createPageTable(uint32_t pdRow) {
   }
   return pt;
 }
-/* Old */
+
 void init_kernel_paging() {
   kprintf("Setting up kernel paging...\n");
   int num_entries = (total_kernel_pages >> 10);

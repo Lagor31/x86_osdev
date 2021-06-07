@@ -2,6 +2,8 @@
 #define MEM_H
 
 #include "../mem/buddy.h"
+#include "../boot/multiboot.h"
+
 #define STACK_SIZE 0x1000
 #define PHYS_MEM_FRAMES 100
 // 1048576
@@ -26,10 +28,11 @@ void init_memory_subsystem();
 void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);
 void memset(uint8_t *dest, uint8_t val, size_t len);
-uint8_t parse_multiboot_info(struct kmultiboot2info *info);
+uint8_t parse_multiboot_info(KMultiBoot2Info *info);
 void memory_alloc_init();
 void *kernel_page_alloc(uint32_t order);
 void *normal_page_alloc(uint32_t order);
 void kfreeNormal(void *ptr);
+void kfree(void *ptr);
 void printFree();
 #endif

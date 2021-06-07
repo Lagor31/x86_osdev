@@ -10,7 +10,7 @@ typedef struct slab {
   List head;
   char first_free;
   char *free_blocks;
-} Slab __attribute__((packed));
+} Slab;
 
 
 typedef struct mem_cache {

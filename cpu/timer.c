@@ -29,7 +29,7 @@ void syncWait(uint32_t millis) {
   uint64_t startTicks = tickCount;
   uint64_t totalWaitingTicks = millisToTicks(millis);
   while (tickCount < startTicks + totalWaitingTicks) {
-    __asm__("hlt");
+    /* __asm__("hlt"); */
   }
 }
 /* Returns the number of milliseconds since RTC setup */
@@ -43,7 +43,7 @@ inline uint32_t ticksToMillis(uint64_t tickCount) {
   return (uint32_t)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
 
-static void timer_callback(registers_t *regs) {
+/* static void timer_callback(registers_t *regs) {
   uint8_t userMode = FALSE;
   if ((regs->cs & 0b11) == 3) userMode = TRUE;
 
@@ -63,36 +63,39 @@ static void timer_callback(registers_t *regs) {
     _loadPageDirectory((uint32_t *)PA(
         (uint32_t)&user_page_directory));  // REmove A(ccessed) bit
   }
-}
+} */
+
+/*
 
 void initTime(uint32_t freq) {
-  /* Install the function we just wrote */
+  //Install the function we just wrote
   register_interrupt_handler(IRQ0, timer_callback);
 
-  /* Get the PIT value: hardware clock at 1193180 Hz */
+  // Get the PIT value: hardware clock at 1193180 Hz
   uint32_t divisor = 1193180 / freq;
   uint8_t low = (uint8_t)(divisor & 0xFF);
   uint8_t high = (uint8_t)((divisor >> 8) & 0xFF);
-  /* Send the command */
-  outb(0x43, 0x36); /* Command port */
+  // Send the command
+  outb(0x43, 0x36); // Command port
   outb(0x40, low);
   outb(0x40, high);
 }
 
+*/
 void timerHandler(registers_t *regs) {
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
    */
 
   // I was in user mode
-  uint8_t userMode = FALSE;
-  if ((regs->cs & 0b11) == 3) userMode = TRUE;
+  /*  uint8_t userMode = FALSE;
+   if ((regs->cs & 0b11) == 3) userMode = TRUE;
 
-  if (userMode)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
+   if (userMode)
+     _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory)); */
 
   ++tickCount;
-  
+
   UNUSED(regs);
   regs->eflags |= 0x200;
 
@@ -101,8 +104,8 @@ void timerHandler(registers_t *regs) {
   outb(0x70, 0x0C);  // select register C
   inb(0x71);         // just throw away contents
 
-  if (userMode)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory));
+  /*  if (userMode) */
+  // _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory));
 }
 
 void initTimer() {

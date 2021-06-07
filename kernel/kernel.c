@@ -25,7 +25,7 @@
 
 #define ALLOC_NUM 1
 
-struct kmultiboot2info *kMultiBootInfo;
+KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
 struct fileTableEntry *kfileTable;
 
@@ -57,7 +57,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   init_memory_subsystem();
 
   saveMultibootInfo(addr, magic);
-  parse_multiboot_info((struct kmultiboot2info *)kMultiBootInfo);
+  parse_multiboot_info((KMultiBoot2Info *)kMultiBootInfo);
 
   kfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
   nfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
@@ -91,16 +91,6 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   // loadUserProcess(getModule(kMultiBootInfo));
 
   resetScreenColors();
-
-  // Cute but utterly fake loading bar, used just to set the tick count to a
-  // meaningful value for srand
-
- /*  setBackgroundColor(LIGHTGREEN);
-  fakeSysLoadingBar(100);
-  resetScreenColors(); */
-
-  // srand(tickCount);
-  // kPrintOKMessage("Kernel loaded successfully!");
 
   // syncWait(1000);
 
@@ -147,23 +137,17 @@ void user_input(char *input) {
   } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfrees[i] = kernel_page_alloc(10);
-      uint8_t **a = kfrees[i];
+      uint8_t *a = kfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      *a = 1;
+      *a = (uint8_t)'f';
     }
-    /* for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfree(frees[i]);
-    } */
   } else if (!strcmp(input, "nalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       nfrees[i] = normal_page_alloc(10);
-      uint8_t **a = nfrees[i];
+      uint8_t *a = nfrees[i];
       kprintf("Addr = 0x%x\n", a);
-      //*a = 1;
+      *a = 'f';
     }
-    /* for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfree(frees[i]);
-    } */
   } else if (!strcmp(input, "kfree")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfree(kfrees[i]);

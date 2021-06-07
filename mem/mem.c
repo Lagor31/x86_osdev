@@ -34,7 +34,7 @@ void printFree() {
   uint32_t tot_free_norm_mb = total_nfree_memory / 1024 / 1024;
 
   kprintf("Free: %d / %d Mb\nUsed: %dMb\n", totFree, tot, tot - totFree);
-  kprintf("KMem used: %d/%d \n", tot_kern_size_mb - tot_free_kern_mb,
+  kprintf("KMem used: %d/%d\n", tot_kern_size_mb - tot_free_kern_mb,
           tot_kern_size_mb);
   kprintf("NMem used: %d/%d\n", tot_norm_size_mb - tot_free_norm_mb,
           tot_norm_size_mb);

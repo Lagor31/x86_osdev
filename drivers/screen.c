@@ -192,6 +192,7 @@ void activateCursor() {
        0x0A);  // set the cursor start line to 14 and enable cursor visibility
   outb(0x3D5, 0x0C);
 }
+
 void setColor(uint8_t c) { textColor = c; }
 
 int getCursorOffset() {
