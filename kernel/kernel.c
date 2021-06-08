@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 1
+#define ALLOC_NUM 100000
 
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -138,6 +138,7 @@ void user_input(char *input) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfrees[i] = kernel_page_alloc(10);
       uint8_t *a = kfrees[i];
+      if (a == NULL) break;
       kprintf("Addr = 0x%x\n", a);
       *a = 'f';
     }
@@ -145,6 +146,7 @@ void user_input(char *input) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       nfrees[i] = normal_page_alloc(10);
       uint8_t *a = nfrees[i];
+      if (a == NULL) break;
       kprintf("Addr = 0x%x\n", a);
       //*a = 'f';
     }

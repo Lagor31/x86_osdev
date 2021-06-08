@@ -104,7 +104,7 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
   return pt;
 }
 
-uint32_t *createPageTable(uint32_t pdRow) {
+uint32_t *make_kernel_pt(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
   // uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
   uint32_t *pt = kernel_page_alloc(0);
@@ -125,10 +125,10 @@ void init_kernel_paging() {
     if (i < num_entries) {
       // kprintf("KPDG[%d] ", i);
       kernel_page_directory[i] =
-          (((uint32_t)createPageTable(i)) - KERNEL_VIRTUAL_ADDRESS_BASE) | 3;
+          (((uint32_t)make_kernel_pt(i)) - KERNEL_VIRTUAL_ADDRESS_BASE) | 3;
     } else if (i >= 768 && i < 768 + num_entries) {
       kernel_page_directory[i] =
-          (((uint32_t)createPageTable(i - 768)) - KERNEL_VIRTUAL_ADDRESS_BASE) |
+          (((uint32_t)make_kernel_pt(i - 768)) - KERNEL_VIRTUAL_ADDRESS_BASE) |
           3;
       // kprintf("KPDG[%d] ", i);
     }

@@ -180,8 +180,8 @@ void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc) {
     } */
   for (int i = b->order; i <= MAX_ORDER; ++i) {
     if (is_buddy_free_at_order(b, i, kernel_alloc)) {
-      setBackgroundColor(WHITE);
-      setTextColor(RED);
+      setBackgroundColor(RED);
+      setTextColor(WHITE);
       kprintf("Buddy already freed!!\n");
       printBuddy(b, kernel_alloc);
       resetScreenColors();
@@ -233,7 +233,7 @@ BuddyBlock *get_buddy_block(int order, uint8_t kernel_alloc) {
     return found;
   } else {
     if (order == MAX_ORDER) {
-      kprintf("We just ran out of buddy blocks. KernelAlloc=%d", kernel_alloc);
+      kprintf("We just ran out of buddy blocks. KernelAlloc=%d\n", kernel_alloc);
       /* kprintf("List[%d].length = %d\n", order,
               list_length(&buddy[order].free_list)); */
 
