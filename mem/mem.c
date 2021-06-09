@@ -207,7 +207,7 @@ void *boot_alloc(size_t size, uint8_t align) {
   }
   // kprintf("Free mem pointer 0x%x\n", free_mem_addr);
   void *ret = free_mem_addr;
-  memset(ret, 0, size);   // Setting the newly allocated memory to 0
+  //memset(ret, 0, size);   // Setting the newly allocated memory to 0
   free_mem_addr += size;  // We move up to the next free byte
   return ret;
 }

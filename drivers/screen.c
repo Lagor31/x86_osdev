@@ -3,6 +3,7 @@
 #include "../boot/multiboot.h"
 #include "../cpu/ports.h"
 #include "../mem/mem.h"
+#include "../kernel/kernel.h"
 #include "../libc/strings.h"
 
 #include "screen.h"
@@ -254,7 +255,7 @@ void kPrintKOMessage(const char *message) {
 int printChar(char c, char attr) { return printCharAt(-1, -1, c, attr); }
 
 int printCharAt(int row, int col, char c, char attr) {
-  unsigned char *vidmem = (unsigned char *)VGA_ADDRESS;
+  unsigned char *vidmem = (unsigned char *)VA(VGA_ADDRESS);
   if (!attr) attr = DEFAULT_ATTR;
 
   /* Error control: print a red 'E' if the coords aren't right */

@@ -19,15 +19,13 @@
 
 #include "paging.h"
 
-// 5 pages * 4MB = 20MB allocated
-#define PAGE_DIR_ENTRIES_NUM 1024
-#define PAGE_DIR_LINES_ALLOCATED 4
 uint32_t kernel_page_directory[1024] __attribute__((aligned(4096)));
+
+
 uint32_t user_page_directory[1024] __attribute__((aligned(4096)));
 uint32_t pdPhysical = 0;
 
 uint32_t kVirtualNextInstr;
-uint16_t lastAllocatedEntry = 0;
 
 void gpFaultHandler(registers_t *regs) {
   //_loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
@@ -56,9 +54,7 @@ void pageFaultHandler(registers_t *regs) {
        kernel_page_directory[lastAllocatedEntry - 768]; */
   // Very simple page fault handling, the pages are already setup, we just
   // put the present bit to 1 because we have no disk to load pages from
-  lastAllocatedEntry++;
   resetScreenColors();
-  hlt();
   if (userMode) {
     user_page_directory[0] &= 0xFFFFFFDF;
     user_page_directory[1] &= 0xFFFFFFDF;
@@ -104,15 +100,16 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
   return pt;
 }
 
-uint32_t *make_kernel_pt(uint32_t pdRow) {
+Pte *make_kernel_pte(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
-  // uint32_t *pt = boot_alloc(sizeof(uint32_t) * 1024, 1);
-  uint32_t *pt = kernel_page_alloc(0);
-  for (uint32_t i = 0; i < 1024; ++i) {
-    uint32_t curFrameNumber = (baseFrameNumber + i) << 12;
-    pt[i] = curFrameNumber | 3;
+  Pte *pte = kernel_page_alloc(0);
+  for (uint32_t i = 0; i < PT_SIZE; ++i) {
+    // pte[i] = curFrameNumber;
+    setPfn(&pte[i], baseFrameNumber + i);
+    setPresent(&pte[i]);
+    setReadWrite(&pte[i]);
   }
-  return pt;
+  return pte;
 }
 
 void init_kernel_paging() {
@@ -120,17 +117,20 @@ void init_kernel_paging() {
   int num_entries = (total_kernel_pages >> 10);
   kprintf("Tot: %d Num entried PD: %d\n", total_kernel_pages, num_entries);
   uint16_t i = 0;
-  for (i = 0; i < 1024; i++) {
+  for (i = 0; i < PD_SIZE; i++) {
     // Mapping the higher half kernel
-    if (i < num_entries) {
-      // kprintf("KPDG[%d] ", i);
-      kernel_page_directory[i] =
-          (((uint32_t)make_kernel_pt(i)) - KERNEL_VIRTUAL_ADDRESS_BASE) | 3;
+    // Mapping the first page because we have some low addresses
+    // lying around from earlier stages of the kernel
+    if (i == 0) {
+      uint32_t ptePhys = PA((uint32_t)make_kernel_pte(i));
+      setPresent(&ptePhys);
+      setReadWrite(&ptePhys);
+      kernel_page_directory[i] = ptePhys;
     } else if (i >= 768 && i < 768 + num_entries) {
-      kernel_page_directory[i] =
-          (((uint32_t)make_kernel_pt(i - 768)) - KERNEL_VIRTUAL_ADDRESS_BASE) |
-          3;
-      // kprintf("KPDG[%d] ", i);
+      uint32_t ptePhys = PA((uint32_t)make_kernel_pte(i - 768));
+      setPresent(&ptePhys);
+      setReadWrite(&ptePhys);
+      kernel_page_directory[i] = ptePhys;
     }
   }
 
@@ -138,8 +138,7 @@ void init_kernel_paging() {
   kprintf("Total kernel paging system size: %d Kb\n",
           num_entries * 4096 / 1024);
   kprintf("Max kernel  size: %d Mb\n", num_entries * 4);
-  pdPhysical = (uint32_t)kernel_page_directory - KERNEL_VIRTUAL_ADDRESS_BASE;
-  lastAllocatedEntry = i;
+  pdPhysical = PA((uint32_t)kernel_page_directory);
   // kprintf("KPDAdr: 0x%x\nPhysical: 0x%x\n", kernel_page_directory,
   // pdPhysical);
   _loadPageDirectory((uint32_t *)pdPhysical);
