@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 100000
+#define ALLOC_NUM 2
 
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -31,7 +31,7 @@ struct fileTableEntry *kfileTable;
 
 // void (*userProcess)(void);
 void *userProcess;
-
+uint8_t firstTime = 1;
 void **kfrees;
 void **nfrees;
 
@@ -136,20 +136,54 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfrees[i] = kernel_page_alloc(10);
+      kfrees[i] = kernel_page_alloc(0);
       uint8_t *a = kfrees[i];
       if (a == NULL) break;
-      kprintf("Addr = 0x%x\n", a);
-      *a = 'f';
+/* 
+      uint32_t pd_pos = (uint32_t)a >> 22;
+      uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+      Pte *pte = VA((uint32_t)kernel_page_directory[pd_pos]);
+      kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos, pte_pos,
+              ((pte[pte_pos] >> 20) * PAGE_SIZE)); */
+      *a = 'F';
     }
   } else if (!strcmp(input, "nalloc")) {
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      nfrees[i] = normal_page_alloc(10);
-      uint8_t *a = nfrees[i];
-      if (a == NULL) break;
-      kprintf("Addr = 0x%x\n", a);
-      //*a = 'f';
+    if (firstTime) {
+      firstTime = 0;
+      for (int i = 0; i < ALLOC_NUM; ++i) {
+        nfrees[i] = normal_page_alloc(7);
+        uint8_t *a = nfrees[i];
+        if (a < KERNEL_VIRTUAL_ADDRESS_BASE) {
+/*           kprintf("Wrapped around?\n");
+ */          break;
+        }
+       /*  uint32_t pd_pos = (uint32_t)a >> 22;
+        uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+        Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
+        kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos, pte_pos,
+                (pte[pte_pos] >> 12)); */
+
+        *(a) = 'F';
+        *(a + 1) = 0xD;
+      }
+    } else {
+      for (int i = 0; i < ALLOC_NUM; ++i) {
+        nfrees[i] = normal_page_alloc(3);
+        uint8_t *a = nfrees[i];
+        if (a < KERNEL_VIRTUAL_ADDRESS_BASE) {
+/*           kprintf("Wrapped around?\n");
+ */          return;
+        }
+      /*   uint32_t pd_pos = (uint32_t)a >> 22;
+        uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+        Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
+        kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos, pte_pos,
+                (pte[pte_pos] >> 12)); */
+        *(a) = 'X';
+        *(a + 1) = 0xE;
+      }
     }
+
   } else if (!strcmp(input, "kfree")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfree(kfrees[i]);

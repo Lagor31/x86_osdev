@@ -44,22 +44,63 @@ void pageFaultHandler(registers_t *regs) {
   /* if (userMode)
     _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
  */
-  setBackgroundColor(BLUE);
+ /*  setBackgroundColor(BLUE);
   setTextColor(RED);
   kprintf("Page fault EIP 0x%x Code: %d\n", regs->eip, regs->err_code);
-  kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2));
+  kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
+  uint32_t faultAddress = getRegisterValue(CR2);
+  if (faultAddress < KERNEL_VIRTUAL_ADDRESS_BASE) {
+    resetScreenColors();
+    kPrintKOMessage("Not a kernel address!");
+    hlt();
+  }
+
+  uint32_t pd_pos = faultAddress >> 22;
+  uint32_t pte_pos = faultAddress >> 12 & 0x3FF;
+  uint32_t pfn = PA(faultAddress) >> 12;
+  if (kernel_page_directory[pd_pos] != 0) {
+   /*  kprintf(
+        "The 4Mb Page containing the address has already been allocated, "
+        "checking PTE...\n"); */
+    Pte *pte = VA(kernel_page_directory[pd_pos] & 0xFFFFF000);
+    if (pte[pte_pos] == 0) {
+      /* kprintf(
+          "4KB page containing the address is not mapped.\nNeeds to be set to "
+          "pfn %d\n",
+          pfn); */
+      setPfn(&pte[pte_pos], pfn);
+      setPresent(&pte[pte_pos]);
+      setReadWrite(&pte[pte_pos]);
+    }
+  } else {
+/*     kprintf("The 4MB page was NOT allocated!\n");
+ */    Pte *newPte = (Pte *)kernel_page_alloc(0);
+    // memset((uint8_t *)newPte, 0, PAGE_SIZE);
+    setPfn(&newPte[pte_pos], pfn);
+    setPresent(&newPte[pte_pos]);
+    setReadWrite(&newPte[pte_pos]);
+    uint32_t pde_phys = PA((uint32_t)newPte);
+    setReadWrite(&pde_phys);
+    setPresent(&pde_phys);
+    kernel_page_directory[pd_pos] = pde_phys;
+  }
   /*  kernel_page_directory[lastAllocatedEntry] =
        kernel_page_directory[lastAllocatedEntry - 768]; */
   // Very simple page fault handling, the pages are already setup, we just
   // put the present bit to 1 because we have no disk to load pages from
-  resetScreenColors();
-  if (userMode) {
-    user_page_directory[0] &= 0xFFFFFFDF;
-    user_page_directory[1] &= 0xFFFFFFDF;
-    _loadPageDirectory((uint32_t *)PA(
-        (uint32_t)&user_page_directory));  // REmove A(ccessed) bit
-  }
+  /* kprintf("Repairing page fault\nPD[%d] PTE[%d] PHY=%x\n", pd_pos, pte_pos,
+          PA(faultAddress)); */
+  _loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
+/*   kprintf("Repaired!\n");
+ */  resetScreenColors();
+
+  /*  if (userMode) {
+     user_page_directory[0] &= 0xFFFFFFDF;
+     user_page_directory[1] &= 0xFFFFFFDF;
+     _loadPageDirectory((uint32_t *)PA(
+         (uint32_t)&user_page_directory));  // REmove A(ccessed) bit
+   } */
 }
 
 void enableUserModePaging(void *processVA) {
@@ -126,7 +167,8 @@ void init_kernel_paging() {
       setPresent(&ptePhys);
       setReadWrite(&ptePhys);
       kernel_page_directory[i] = ptePhys;
-    } else if (i >= 768 && i < 768 + num_entries) {
+    } else if (i >= KERNEL_LOWEST_PDIR &&
+               i < KERNEL_LOWEST_PDIR + num_entries) {
       uint32_t ptePhys = PA((uint32_t)make_kernel_pte(i - 768));
       setPresent(&ptePhys);
       setReadWrite(&ptePhys);

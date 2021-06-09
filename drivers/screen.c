@@ -234,7 +234,7 @@ void clearRow(int row) {
 }
 
 void clearCharAt(int row, int col) {
-  char *video_memory = (char *)VGA_ADDRESS;
+  char *video_memory = (char *)(VA(VGA_ADDRESS));
   int pos = (row * 80 + col) * 2;
   video_memory[pos] = ' ';
   video_memory[pos + 1] = textColor;
@@ -281,8 +281,8 @@ int printCharAt(int row, int col, char c, char attr) {
   }
 
   if (offset >= VGA_ROWS * VGA_COLUMNS * 2) {
-    memcopy((uint8_t *)VGA_ADDRESS + getOffset(1, 0), (uint8_t *)VGA_ADDRESS,
-            getOffset(VGA_ROWS - 1, VGA_COLUMNS));
+    memcopy((uint8_t *)VA(VGA_ADDRESS) + getOffset(1, 0),
+            (uint8_t *)VA(VGA_ADDRESS), getOffset(VGA_ROWS - 1, VGA_COLUMNS));
     // clearRow(VGA_ROWS - 1);
     offset = getOffset(VGA_ROWS - 1, 0);
   }

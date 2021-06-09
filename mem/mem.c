@@ -53,7 +53,7 @@ void init_memory_subsystem() {
 */
 Page *alloc_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  printBuddy(b, KERNEL_ALLOC);
+  //printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -62,7 +62,7 @@ Page *alloc_pages(int order) {
 
 Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
-  printBuddy(b, NORMAL_ALLOC);
+  //printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -112,7 +112,7 @@ BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {
 }
 
 void memory_alloc_init() {
-  total_kernel_pages = (boot_mmap.total_pages / KERNEL_RATIO) + 1;
+  total_kernel_pages = (boot_mmap.total_pages / KERNEL_RATIO) ;
   total_normal_pages = boot_mmap.total_pages - total_kernel_pages;
   kprintf("Total kernel pages %d\nTotal normal pages %d\n", total_kernel_pages,
           total_normal_pages);
