@@ -21,7 +21,6 @@
 
 uint32_t kernel_page_directory[1024] __attribute__((aligned(4096)));
 
-
 uint32_t user_page_directory[1024] __attribute__((aligned(4096)));
 uint32_t pdPhysical = 0;
 
@@ -103,6 +102,7 @@ uint32_t *createPageTableUser(uint32_t pdRow) {
 Pte *make_kernel_pte(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
   Pte *pte = kernel_page_alloc(0);
+  memset((uint8_t *)pte, 0, PAGE_SIZE);
   for (uint32_t i = 0; i < PT_SIZE; ++i) {
     // pte[i] = curFrameNumber;
     setPfn(&pte[i], baseFrameNumber + i);
