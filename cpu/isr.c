@@ -204,13 +204,6 @@ void scheduler(registers_t *regs) {
     Need to reset the register C otherwise no more RTC interrutps will be sent
    */
 
-  // I was in user mode
-  uint8_t userMode = FALSE;
-  /* if ((regs->cs & 0b11) == 3) userMode = TRUE;
-
-  if (userMode)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory)); */
-
   int prevCurOff = getCursorOffset();
   setCursorPos(1, 0);
   kprintf("Kernel Code (%d)\n\n", rand());
@@ -221,8 +214,7 @@ void scheduler(registers_t *regs) {
   tss.cs = 0x10;
 
   tss.esp0 = getRegisterValue(ESP);
-  if (userMode)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory));
+
   outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C
 }
 

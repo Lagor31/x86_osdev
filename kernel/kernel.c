@@ -29,16 +29,10 @@ KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
 struct fileTableEntry *kfileTable;
 
-// void (*userProcess)(void);
-void *userProcess;
 uint8_t firstTime = 1;
 void **kfrees;
 void **nfrees;
 
-void runProcess() {
-  enableUserModePaging(userProcess);
-  _jump_usermode(0x110);
-}
 
 /*
   After running the content of meminit.asm we get called here
@@ -54,7 +48,7 @@ void kernel_main(uint32_t magic, uint32_t addr) {
 
   // Just setting a couple of pointers in our C variables, nothing special
   // kprintf("Kernel memory initialization...\n");
-  init_memory_subsystem();
+  init_memory_ptrs();
 
   saveMultibootInfo(addr, magic);
   parse_multiboot_info((KMultiBoot2Info *)kMultiBootInfo);
@@ -139,46 +133,48 @@ void user_input(char *input) {
       kfrees[i] = kernel_page_alloc(0);
       uint8_t *a = kfrees[i];
       if (a == NULL) break;
-/* 
-      uint32_t pd_pos = (uint32_t)a >> 22;
-      uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-      Pte *pte = VA((uint32_t)kernel_page_directory[pd_pos]);
-      kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos, pte_pos,
-              ((pte[pte_pos] >> 20) * PAGE_SIZE)); */
+      /*
+            uint32_t pd_pos = (uint32_t)a >> 22;
+            uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+            Pte *pte = VA((uint32_t)kernel_page_directory[pd_pos]);
+            kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos,
+         pte_pos,
+                    ((pte[pte_pos] >> 20) * PAGE_SIZE)); */
       *a = 'F';
     }
   } else if (!strcmp(input, "nalloc")) {
     if (firstTime) {
       firstTime = 0;
       for (int i = 0; i < ALLOC_NUM; ++i) {
-        nfrees[i] = normal_page_alloc(7);
+        nfrees[i] = normal_page_alloc(0);
         uint8_t *a = nfrees[i];
         if (a < KERNEL_VIRTUAL_ADDRESS_BASE) {
-/*           kprintf("Wrapped around?\n");
- */          break;
+          /*           kprintf("Wrapped around?\n");
+           */
+          break;
         }
-       /*  uint32_t pd_pos = (uint32_t)a >> 22;
-        uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-        Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
-        kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos, pte_pos,
-                (pte[pte_pos] >> 12)); */
+        /*  uint32_t pd_pos = (uint32_t)a >> 22;
+         uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+         Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
+         kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos,
+         pte_pos, (pte[pte_pos] >> 12)); */
 
         *(a) = 'F';
         *(a + 1) = 0xD;
       }
     } else {
       for (int i = 0; i < ALLOC_NUM; ++i) {
-        nfrees[i] = normal_page_alloc(3);
+        nfrees[i] = normal_page_alloc(0);
         uint8_t *a = nfrees[i];
         if (a < KERNEL_VIRTUAL_ADDRESS_BASE) {
-/*           kprintf("Wrapped around?\n");
- */          return;
+          kprintf("Wrapped around?\n");
+          return;
         }
-      /*   uint32_t pd_pos = (uint32_t)a >> 22;
-        uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-        Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
-        kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos, pte_pos,
-                (pte[pte_pos] >> 12)); */
+        /*   uint32_t pd_pos = (uint32_t)a >> 22;
+          uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+          Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
+          kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos,
+          pte_pos, (pte[pte_pos] >> 12)); */
         *(a) = 'X';
         *(a + 1) = 0xE;
       }
@@ -192,10 +188,6 @@ void user_input(char *input) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfreeNormal(nfrees[i]);
     }
-  } else if (!strcmp(input, "run")) {
-    kprintf("\n>");
-    input[0] = '\0';
-    runProcess();
   } else if (!strcmp(input, "shutdown")) {
     shutdown();
   } else if (!strcmp(input, "reboot")) {

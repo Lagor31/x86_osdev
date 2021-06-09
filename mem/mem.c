@@ -41,7 +41,7 @@ void printFree() {
 }
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
-void init_memory_subsystem() {
+void init_memory_ptrs() {
   stack_pointer = (uint8_t *)_stack_address;
   kprintf("Stack Pointer: 0x%x\n", (uint32_t)stack_pointer);
   free_mem_addr = stack_pointer;
@@ -51,7 +51,7 @@ void init_memory_subsystem() {
   Returns the pointer of the first available page with the specified order of
   free memory
 */
-Page *alloc_pages(int order) {
+Page *alloc_kernel_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
   //printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
@@ -69,7 +69,7 @@ Page *alloc_normal_pages(int order) {
   return b->head;
 }
 
-void free_pages(Page *p) {
+void free_kernel_pages(Page *p) {
   kprintf(" Free K PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
   free_buddy_block(get_buddy_from_page(p, KERNEL_ALLOC), KERNEL_ALLOC);
 }
@@ -80,7 +80,7 @@ void free_normal_pages(Page *p) {
 }
 
 void *kernel_page_alloc(uint32_t order) {
-  Page *p = alloc_pages(order);
+  Page *p = alloc_kernel_pages(order);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
@@ -94,7 +94,7 @@ void *normal_page_alloc(uint32_t order) {
 void kfree(void *ptr) {
   if (ptr == NULL) return;
   kprintf("Free ptr %x ", ptr);
-  free_pages(get_page_from_address(ptr, KERNEL_ALLOC));
+  free_kernel_pages(get_page_from_address(ptr, KERNEL_ALLOC));
 }
 
 void kfreeNormal(void *ptr) {

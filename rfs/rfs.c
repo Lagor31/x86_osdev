@@ -10,16 +10,6 @@
 
 #include <elf.h>
 
-void loadUserProcess(struct multiboot_tag_module *rfsModule) {
-  size_t diskSize = rfsModule->mod_end - rfsModule->mod_start;
-  size_t test = 5;
-  test++;
-  userProcess = boot_alloc(diskSize, 1);
-  memcopy((uint8_t *)rfsModule->mod_start + KERNEL_VIRTUAL_ADDRESS_BASE,
-          userProcess, diskSize);
-  kprintf("User process loaded at 0x%x\n", (uint32_t)userProcess);
-}
-
 void printRFSInfo() {
   kprintf("RFS File List (%d):\n", krfsHeader->numberOfFile);
 

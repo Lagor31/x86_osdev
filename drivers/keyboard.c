@@ -37,11 +37,8 @@ const char sc_ascii[] = {
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
 static void keyboard_callback(registers_t *regs) {
-  uint8_t userMode = FALSE;
-  if ((regs->cs & 0b11) == 3) userMode = TRUE;
-
-  if (userMode)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
+/*   uint8_t userMode = FALSE;
+  if ((regs->cs & 0b11) == 3) userMode = TRUE; */
 
   outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C
 
@@ -66,12 +63,7 @@ static void keyboard_callback(registers_t *regs) {
   regs->eflags |= 0x200;
   tss.cs = 0x10;
   tss.esp0 = getRegisterValue(ESP);
-  if (userMode) {
-    user_page_directory[0] &= 0xFFFFFFDF;
-    user_page_directory[1] &= 0xFFFFFFDF;
-    _loadPageDirectory((uint32_t *)PA(
-        (uint32_t)&user_page_directory));  // REmove A(ccessed) bit
-  }
+  
 }
 
 void init_keyboard() { register_interrupt_handler(IRQ1, keyboard_callback); }
