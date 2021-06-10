@@ -27,7 +27,7 @@
 #define VGA_COLUMNS 80
 #define VGA_ROWS 25
 
-extern uint8_t textColor;
+extern u8 textColor;
 
 void clearCharAt();
 void clearScreen();
@@ -40,13 +40,13 @@ int printChar(char c, char attr);
 void setCursorPos(int row, int col);
 void setCursorOffset(int offset);
 void clearRow(int row);
-void setTextColor(uint8_t fgColor);
-void setBackgroundColor(uint8_t bgColor);
+void setTextColor(u8 fgColor);
+void setBackgroundColor(u8 bgColor);
 void resetScreenColors();
 int deleteLastChar();
-void setColor(uint8_t);
+void setColor(u8);
 void kprintf(const char *format, ...);
-void kprintfColor(uint8_t color, const char *format, ...);
+void kprintfColor(u8 color, const char *format, ...);
 void activateCursor();
 void kPrintOKMessage(const char *message);
 void kPrintKOMessage(const char *message);

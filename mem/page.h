@@ -9,9 +9,7 @@
 
 typedef struct Page {
   // 8 Bits for various flags
-  char flags;
-  // Usage count
-  int count;
+  u8 flags;
 } Page;
 
 typedef uint32_t Pte;

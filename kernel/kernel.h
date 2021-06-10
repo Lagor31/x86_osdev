@@ -15,11 +15,11 @@ extern struct kmultiboot2info *kMultiBootInfo;
 extern struct rfsHeader *krfsHeader;
 extern struct fileTableEntry *kfileTable;
 
-extern uint32_t kimage_start;
-extern uint32_t kimage_end;
-extern uint32_t kentry_point;
-extern uint32_t _stack_address;
-extern uint32_t _random(void);
+extern u32 kimage_start;
+extern u32 kimage_end;
+extern u32 kentry_point;
+extern u32 _stack_address;
+extern u32 _random(void);
 extern void *userProcess;
 
 void shutdown();

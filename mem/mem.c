@@ -13,9 +13,9 @@
 #define KERNEL_ALLOC 1
 #define NORMAL_ALLOC 0
 
-uint8_t
+u8
     *free_mem_addr;  // Represents the first byte that we can freely allocate
-uint8_t *stack_pointer;  // Top of the kernel stack
+u8 *stack_pointer;  // Top of the kernel stack
 
 uint32_t total_kernel_pages = 0;
 uint32_t total_normal_pages = 0;
@@ -42,7 +42,7 @@ void printFree() {
 /* Getting the _stack_address as set in assembly to denote the beginning of
  * freeily allocatable memory */
 void init_memory_ptrs() {
-  stack_pointer = (uint8_t *)_stack_address;
+  stack_pointer = (u8 *)_stack_address;
   kprintf("Stack Pointer: 0x%x\n", (uint32_t)stack_pointer);
   free_mem_addr = stack_pointer;
   kprintf("Free memory address: 0x%x\n", (uint32_t)free_mem_addr);
@@ -53,7 +53,7 @@ void init_memory_ptrs() {
 */
 Page *alloc_kernel_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
-  //printBuddy(b, KERNEL_ALLOC);
+  // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -62,7 +62,7 @@ Page *alloc_kernel_pages(int order) {
 
 Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
-  //printBuddy(b, NORMAL_ALLOC);
+  // printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
   total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
@@ -104,7 +104,7 @@ void kfreeNormal(void *ptr) {
       get_page_from_address(ptr - KERNEL_VIRTUAL_ADDRESS_BASE, NORMAL_ALLOC));
 }
 
-BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {
+BuddyBlock *get_buddy_from_page(Page *p, u8 kernel_alloc) {
   if (kernel_alloc)
     return (BuddyBlock *)(buddies + get_pfn_from_page(p, kernel_alloc));
   else
@@ -112,7 +112,7 @@ BuddyBlock *get_buddy_from_page(Page *p, uint8_t kernel_alloc) {
 }
 
 void memory_alloc_init() {
-  total_kernel_pages = (boot_mmap.total_pages / KERNEL_RATIO) ;
+  total_kernel_pages = (boot_mmap.total_pages / KERNEL_RATIO);
   total_normal_pages = boot_mmap.total_pages - total_kernel_pages;
   kprintf("Total kernel pages %d\nTotal normal pages %d\n", total_kernel_pages,
           total_normal_pages);
@@ -128,16 +128,17 @@ void memory_alloc_init() {
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
 
   int i = 0;
-  int firstNUsedPages = ((uint32_t)PA(free_mem_addr) / PAGE_SIZE) + 1;
+  int firstNUsedPages = ((u32)PA(free_mem_addr) / PAGE_SIZE) + 1;
   int four_megs_pages = firstNUsedPages / PAGES_PER_BLOCK(10);
 
-  kprintf("You've used the first %d pages allocating now %d 4Mb pages...\n",
+  kprintf("You've used the first %d pages, allocating now %d 4Mb pages...\n",
           firstNUsedPages, ++four_megs_pages);
   for (i = 0; i < four_megs_pages; ++i) kernel_page_alloc(10);
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
+  //After this, you can no longer use boot_alloc
 }
 
-uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
+u8 parse_multiboot_info(struct kmultiboot2info *info) {
   struct multiboot_tag *tag;
 
   /*  Am I booted by a Multiboot-compliant boot loader? */
@@ -181,7 +182,7 @@ uint8_t parse_multiboot_info(struct kmultiboot2info *info) {
 }
 
 // Just copies byte per byte from source to destination
-void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes) {
+void memcopy(byte *source, byte *dest, size_t nbytes) {
   size_t i;
   for (i = 0; i < nbytes; i++) {
     *(dest + i) = *(source + i);
@@ -189,8 +190,8 @@ void memcopy(uint8_t *source, uint8_t *dest, size_t nbytes) {
 }
 
 // Sets len byte to value val starting at address dest
-void memset(uint8_t *dest, uint8_t val, size_t len) {
-  uint8_t *temp = (uint8_t *)dest;
+void memset(u8 *dest, u8 val, size_t len) {
+  u8 *temp = (u8 *)dest;
   for (; len != 0; len--) *temp++ = val;
 }
 
@@ -198,7 +199,7 @@ void memset(uint8_t *dest, uint8_t val, size_t len) {
   Our memory allocator is just a pointer as of now.
   No way to free chunks (there are no chunks).
 */
-void *boot_alloc(size_t size, uint8_t align) {
+void *boot_alloc(size_t size, u8 align) {
   // Pages are aligned to 4K, or 0x1000
   uint32_t isAligned = (uint32_t)free_mem_addr & 0x00000FFF;
   if (align == 1 && isAligned != 0) {
@@ -207,7 +208,7 @@ void *boot_alloc(size_t size, uint8_t align) {
   }
   // kprintf("Free mem pointer 0x%x\n", free_mem_addr);
   void *ret = free_mem_addr;
-  //memset(ret, 0, size);   // Setting the newly allocated memory to 0
+  // memset(ret, 0, size);   // Setting the newly allocated memory to 0
   free_mem_addr += size;  // We move up to the next free byte
   return ret;
 }

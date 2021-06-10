@@ -17,40 +17,40 @@ struct gdt_entry {
  * taken up by the GDT, minus 1.  Again, this NEEDS to be
  * packed */
 struct gdtr {
-  uint16_t limit;
-  uint32_t base;
+  u16 limit;
+  u32 base;
 } __attribute__((packed));
 
 // A struct describing a Task State Segment.
 typedef struct tss_entry_struct {
-  uint32_t prev_tss;  // The previous TSS - if we used hardware task switching
+  u32 prev_tss;  // The previous TSS - if we used hardware task switching
                       // this would form a linked list.
-  uint32_t esp0;  // The stack pointer to load when we change to kernel mode.
-  uint32_t ss0;   // The stack segment to load when we change to kernel mode.
-  uint32_t esp1;  // everything below here is unusued now..
-  uint32_t ss1;
-  uint32_t esp2;
-  uint32_t ss2;
-  uint32_t cr3;
-  uint32_t eip;
-  uint32_t eflags;
-  uint32_t eax;
-  uint32_t ecx;
-  uint32_t edx;
-  uint32_t ebx;
-  uint32_t esp;
-  uint32_t ebp;
-  uint32_t esi;
-  uint32_t edi;
-  uint32_t es;
-  uint32_t cs;
-  uint32_t ss;
-  uint32_t ds;
-  uint32_t fs;
-  uint32_t gs;
-  uint32_t ldt;
-  uint16_t trap;
-  uint16_t iomap_base;
+  u32 esp0;  // The stack pointer to load when we change to kernel mode.
+  u32 ss0;   // The stack segment to load when we change to kernel mode.
+  u32 esp1;  // everything below here is unusued now..
+  u32 ss1;
+  u32 esp2;
+  u32 ss2;
+  u32 cr3;
+  u32 eip;
+  u32 eflags;
+  u32 eax;
+  u32 ecx;
+  u32 edx;
+  u32 ebx;
+  u32 esp;
+  u32 ebp;
+  u32 esi;
+  u32 edi;
+  u32 es;
+  u32 cs;
+  u32 ss;
+  u32 ds;
+  u32 fs;
+  u32 gs;
+  u32 ldt;
+  u16 trap;
+  u16 iomap_base;
 } __attribute__((packed)) tss_entry_t;
 
 /* GDT.C */

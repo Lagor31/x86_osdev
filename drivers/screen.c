@@ -8,12 +8,12 @@
 
 #include "screen.h"
 
-uint8_t textColor = DEFAULT_ATTR;
+u8 textColor = DEFAULT_ATTR;
 
-void setTextColor(uint8_t fgColor) {
+void setTextColor(u8 fgColor) {
   textColor = (textColor >> 4) << 4 | (0x0f & fgColor);
 }
-void setBackgroundColor(uint8_t bgColor) { textColor |= 0xf0 & (bgColor << 4); }
+void setBackgroundColor(u8 bgColor) { textColor |= 0xf0 & (bgColor << 4); }
 
 void resetScreenColors() { textColor = DEFAULT_ATTR; }
 
@@ -55,7 +55,7 @@ static void itoa(char *buf, int base, int d) {
     p2--;
   }
 }
-void kprintfColor(uint8_t color, const char *format, ...) {
+void kprintfColor(u8 color, const char *format, ...) {
   setTextColor(color);
   char **arg = (char **)&format;
   int c;
@@ -194,7 +194,7 @@ void activateCursor() {
   outb(0x3D5, 0x0C);
 }
 
-void setColor(uint8_t c) { textColor = c; }
+void setColor(u8 c) { textColor = c; }
 
 int getCursorOffset() {
   /* Use the VGA ports to get the current cursor position
@@ -281,8 +281,8 @@ int printCharAt(int row, int col, char c, char attr) {
   }
 
   if (offset >= VGA_ROWS * VGA_COLUMNS * 2) {
-    memcopy((uint8_t *)VA(VGA_ADDRESS) + getOffset(1, 0),
-            (uint8_t *)VA(VGA_ADDRESS), getOffset(VGA_ROWS - 1, VGA_COLUMNS));
+    memcopy((u8 *)VA(VGA_ADDRESS) + getOffset(1, 0),
+            (u8 *)VA(VGA_ADDRESS), getOffset(VGA_ROWS - 1, VGA_COLUMNS));
     // clearRow(VGA_ROWS - 1);
     offset = getOffset(VGA_ROWS - 1, 0);
   }

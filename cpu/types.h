@@ -5,17 +5,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
+typedef uint8_t u8;
+typedef u8 byte;
+typedef u8 bool;
+
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
 // Macros to get the top or bottom parts of 32 bits values
 #define low_16(address) (uint16_t)((address)&0xFFFF)
 #define high_16(address) (uint16_t)(((address) >> 16) & 0xFFFF)
 
 /* Struct which aggregates many registers */
 typedef struct {
-  uint32_t ds; /* Data segment selector */
-  uint32_t edi, esi, ebp, useless, ebx, edx, ecx, eax; /* Pushed by pusha. */
-  uint32_t int_no,
+  u32 ds; /* Data segment selector */
+  u32 edi, esi, ebp, useless, ebx, edx, ecx, eax; /* Pushed by pusha. */
+  u32 int_no,
       err_code; /* Interrupt number and error code (if applicable) */
-  uint32_t eip, cs, eflags, esp, ss; /* Pushed by the processor automatically */
+  u32 eip, cs, eflags, esp, ss; /* Pushed by the processor automatically */
 } registers_t;
 
 typedef struct stdDate {

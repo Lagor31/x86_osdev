@@ -21,30 +21,30 @@
    Even at the highest frequency (4096 ticks/s, given by RTC_PHASE = 4) it
    would take 139.4  MILLENNIA to wrap around, i think we're safe...
 */
-uint64_t tickCount = 0;
+u64 tickCount = 0;
 stdDate_t *sysDate;
 
 /*Halts the cpu and stays idle until the timer has expired */
-void syncWait(uint32_t millis) {
-  uint64_t startTicks = tickCount;
-  uint64_t totalWaitingTicks = millisToTicks(millis);
+void syncWait(u32 millis) {
+  u64 startTicks = tickCount;
+  u64 totalWaitingTicks = millisToTicks(millis);
   while (tickCount < startTicks + totalWaitingTicks) {
-    /* __asm__("hlt"); */
+    __asm__("hlt");
   }
 }
 /* Returns the number of milliseconds since RTC setup */
-uint32_t getUptime() { return (uint32_t)ticksToMillis(tickCount); }
+u32 getUptime() { return (u32)ticksToMillis(tickCount); }
 
-inline uint64_t millisToTicks(uint32_t millis) {
+inline u64 millisToTicks(u32 millis) {
   return millis / (((double)1 / (double)RTC_FREQ) * 1000);
 }
 
-inline uint32_t ticksToMillis(uint64_t tickCount) {
-  return (uint32_t)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
+inline u32 ticksToMillis(u64 tickCount) {
+  return (u32)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
 
 /* static void timer_callback(registers_t *regs) {
-  uint8_t userMode = FALSE;
+  u8 userMode = FALSE;
   if ((regs->cs & 0b11) == 3) userMode = TRUE;
 
   if (userMode)
@@ -73,8 +73,8 @@ void initTime(uint32_t freq) {
 
   // Get the PIT value: hardware clock at 1193180 Hz
   uint32_t divisor = 1193180 / freq;
-  uint8_t low = (uint8_t)(divisor & 0xFF);
-  uint8_t high = (uint8_t)((divisor >> 8) & 0xFF);
+  u8 low = (u8)(divisor & 0xFF);
+  u8 high = (u8)((divisor >> 8) & 0xFF);
   // Send the command
   outb(0x43, 0x36); // Command port
   outb(0x40, low);
@@ -88,7 +88,7 @@ void timerHandler(registers_t *regs) {
    */
 
   // I was in user mode
-  /*  uint8_t userMode = FALSE;
+  /*  u8 userMode = FALSE;
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
 
    if (userMode)
@@ -114,7 +114,7 @@ void initTimer() {
   register_interrupt_handler(IRQ8, timerHandler);
 }
 
-void setTimerPhase(uint16_t rate) {
+void setTimerPhase(u16 rate) {
   // NMI_disable();
 
   rate &= 0x0F;  // rate must be above 2 and not over 15

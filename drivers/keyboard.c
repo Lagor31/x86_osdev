@@ -37,13 +37,13 @@ const char sc_ascii[] = {
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
 static void keyboard_callback(registers_t *regs) {
-/*   uint8_t userMode = FALSE;
+/*   u8 userMode = FALSE;
   if ((regs->cs & 0b11) == 3) userMode = TRUE; */
 
   outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C
 
   /* The PIC leaves us the scancode in port 0x60 */
-  uint8_t scancode = inb(0x60);
+  u8 scancode = inb(0x60);
   if (scancode > SC_MAX) return;
   if (scancode == BACKSPACE) {
     if (strlen(key_buffer) > 0) deleteLastChar();

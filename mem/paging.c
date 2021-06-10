@@ -41,16 +41,16 @@ void pageFaultHandler(registers_t *regs) {
    kprintf("Page fault EIP 0x%x Code: %d\n", regs->eip, regs->err_code);
    kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
-  uint32_t faultAddress = getRegisterValue(CR2);
+  u32 faultAddress = getRegisterValue(CR2);
   if (faultAddress < KERNEL_VIRTUAL_ADDRESS_BASE) {
     resetScreenColors();
     kPrintKOMessage("Not a kernel address!");
     hlt();
   }
 
-  uint32_t pd_pos = faultAddress >> 22;
-  uint32_t pte_pos = faultAddress >> 12 & 0x3FF;
-  uint32_t pfn = PA(faultAddress) >> 12;
+  u32 pd_pos = faultAddress >> 22;
+  u32 pte_pos = faultAddress >> 12 & 0x3FF;
+  u32 pfn = PA(faultAddress) >> 12;
   if (isPresent(&kernel_page_directory[pd_pos])) {
     /*  kprintf(
         "The 4Mb Page containing the address has already been allocated, "
@@ -68,18 +68,18 @@ void pageFaultHandler(registers_t *regs) {
     /*     kprintf("The 4MB page was NOT allocated!\n");
      */
     Pte *newPte = (Pte *)kernel_page_alloc(0);
-    memset((uint8_t *)newPte, 0, PAGE_SIZE);
+    memset((u8 *)newPte, 0, PAGE_SIZE);
     setPfn(&newPte[pte_pos], pfn);
     setPresent(&newPte[pte_pos]);
     setReadWrite(&newPte[pte_pos]);
 
-    uint32_t pde_phys = PA((uint32_t)newPte);
+    u32 pde_phys = PA((u32)newPte);
     setReadWrite(&pde_phys);
     setPresent(&pde_phys);
 
     kernel_page_directory[pd_pos] = pde_phys;
   }
-  _loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
+  _loadPageDirectory((u32 *)PA((u32)&kernel_page_directory));
   resetScreenColors();
 }
 

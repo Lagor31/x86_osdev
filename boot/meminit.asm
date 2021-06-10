@@ -35,6 +35,8 @@ _start:
     ; We setup the first 4 Page Directory entries to point to our 4 Page Tables (ultimately mapping the VSpace to the PSpace)
     ; PageDir[768] corresponds to the address 0xC0000000
 
+; We don't do loops because i say they are inefficient but the hard 
+;   truth is that I'm lazy to refactor it
 _setup_frames:
     xor edx,edx
     mov edx, ecx
