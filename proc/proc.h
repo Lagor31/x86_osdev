@@ -2,6 +2,8 @@
 #define PROC_H
 
 #define IDLE_PID 0
+#define MIN_PRIORITY 20
+#define MAX_PRIORITY 0
 
 #include "../utils/list.h"
 #include "../mem/vma.h"

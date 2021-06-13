@@ -5,6 +5,7 @@
 #include "../cpu/types.h"
 #include "../utils/utils.h"
 #include "../drivers/screen.h"
+#include "../libc/functions.h"
 
 List sleep_queue;
 List ready_queue;
@@ -129,18 +130,18 @@ void init_kernel_proc() {
   current_proc = NULL;
   Proc *idle_proc = create_kernel_proc(idle, NULL, "kernel_idle_process");
   idle_proc->pid = IDLE_PID;
-  idle_proc->p = 20;
+  idle_proc->p = MIN_PRIORITY;
+
   wake_up_process(idle_proc);
   load_current_proc(idle_proc);
 
   init_scheduler_timer();
 }
 
-int idle(void *data) {
+int idle() {
   while (TRUE) {
     hlt();
   }
-
   return -1;
 }
 
@@ -160,5 +161,7 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   kernel_process->Vm = kernel_vm;
   kernel_process->regs.eip = (u32)procfunc;
   kernel_process->regs.esp = (u32)kernel_stack;
+
+  UNUSED(data);
   return kernel_process;
 }
