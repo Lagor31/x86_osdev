@@ -1,6 +1,6 @@
 #ifndef TIMER_H
 #define TIMER_H
-
+#include "gdt.h"
 
 #define RTC_PHASE 15
 #define RTC_FREQ (32768 >> (RTC_PHASE - 1))
@@ -16,7 +16,7 @@ extern stdDate_t* sysDate;
 extern tss_entry_t tss;
 
 void timerHandler(registers_t* regs);
-void initTimer();
+void init_scheduler_timer();
 void initTime(uint32_t freq);
 void setTimerPhase(uint16_t hz);
 uint64_t millisToTicks(uint32_t millis);

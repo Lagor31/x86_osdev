@@ -8,13 +8,13 @@
 #include "../boot/multiboot.h"
 #include "../mem/page.h"
 #include "../mem/buddy.h"
+#include "vma.h"
 #include "mem.h"
 
 #define KERNEL_ALLOC 1
 #define NORMAL_ALLOC 0
 
-u8
-    *free_mem_addr;  // Represents the first byte that we can freely allocate
+u8 *free_mem_addr;  // Represents the first byte that we can freely allocate
 u8 *stack_pointer;  // Top of the kernel stack
 
 uint32_t total_kernel_pages = 0;
@@ -135,7 +135,8 @@ void memory_alloc_init() {
           firstNUsedPages, ++four_megs_pages);
   for (i = 0; i < four_megs_pages; ++i) kernel_page_alloc(10);
   kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
-  //After this, you can no longer use boot_alloc
+  init_kernel_vma(KERNEL_VIRTUAL_ADDRESS_BASE + phys_normal_offset);
+  // After this, you can no longer use boot_alloc
 }
 
 u8 parse_multiboot_info(struct kmultiboot2info *info) {

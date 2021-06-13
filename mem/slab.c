@@ -22,7 +22,7 @@ void kMemCacheInit() {
   }
 }
 
-Slab* createSlab(char size) {
+Slab* createSlab(u8 size) {
   Slab* slab = (Slab*)kernel_page_alloc(0);
   slab->size = size;
   return slab;

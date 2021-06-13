@@ -12,6 +12,8 @@
 #include "../libc/constants.h"
 #include "../libc/functions.h"
 #include "../utils/utils.h"
+#include "../proc/proc.h"
+
 #include "isr.h"
 #include "ports.h"
 
@@ -95,6 +97,7 @@ void timerHandler(registers_t *regs) {
      _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory)); */
 
   ++tickCount;
+  do_schedule();
 
   UNUSED(regs);
   regs->eflags |= 0x200;
@@ -108,10 +111,13 @@ void timerHandler(registers_t *regs) {
   // _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory));
 }
 
-void initTimer() {
+void init_scheduler_timer() {
+  asm volatile("cli");
+
   sysDate = (stdDate_t *)boot_alloc(sizeof(stdDate_t), 0);
   setTimerPhase(RTC_PHASE);
   register_interrupt_handler(IRQ8, timerHandler);
+  asm volatile("sti");
 }
 
 void setTimerPhase(u16 rate) {

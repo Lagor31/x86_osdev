@@ -13,6 +13,9 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
+#define TRUE 1
+#define FALSE 0
+
 // Macros to get the top or bottom parts of 32 bits values
 #define low_16(address) (uint16_t)((address)&0xFFFF)
 #define high_16(address) (uint16_t)(((address) >> 16) & 0xFFFF)

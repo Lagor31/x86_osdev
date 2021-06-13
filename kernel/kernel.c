@@ -14,7 +14,7 @@
 #include "../cpu/gdt.h"
 #include "../mem/mem.h"
 #include "../mem/slab.h"
-
+#include "../proc/proc.h"
 #include "../mem/paging.h"
 #include "../mem/slab.h"
 #include "../rfs/rfs.h"
@@ -23,7 +23,8 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 200000
+#define ALLOC_NUM 20
+#define ALLOC_SIZE 0
 
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -68,7 +69,11 @@ void kernel_main(u32 magic, u32 addr) {
   init_kernel_paging();
   kPrintOKMessage("Kernel paging enabled!");
 
-  // kMemCacheInit();
+  kMemCacheInit();
+
+  kPrintOKMessage("Enabling kernel procs...");
+  init_kernel_proc();
+  kPrintOKMessage("Kernel procs enabled!");
 
   kPrintOKMessage("Kernel inizialized!");
   // kPrintOKMessage("Kernel paging enabled");
@@ -92,6 +97,10 @@ void kernel_main(u32 magic, u32 addr) {
   Sort of a kernel level shell that interpets a few of the commands a user can
   give to the terminal
 */
+int simple_k_proc() {
+  while (TRUE) kprintf("Hello from k thread!\n");
+}
+
 void user_input(char *input) {
   if (strcmp(input, "help") == 0)
     printHelp();
@@ -100,6 +109,9 @@ void user_input(char *input) {
     setCursorPos(2, 0);
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "ckp")) {
+    Proc *p = create_kernel_proc(&simple_k_proc, NULL, "kernel-proc");
+    wake_up_process(p);
   } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((struct kmultiboot2info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
@@ -119,7 +131,7 @@ void user_input(char *input) {
     printModuleInfo(getModule(kMultiBootInfo));
   } else if (!strcmp(input, "kalloc")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfrees[i] = kernel_page_alloc(0);
+      kfrees[i] = kernel_page_alloc(ALLOC_SIZE);
       u8 *a = kfrees[i];
       if (a == NULL) break;
       /*
@@ -135,7 +147,7 @@ void user_input(char *input) {
     if (firstTime) {
       firstTime = 0;
       for (int i = 0; i < ALLOC_NUM; ++i) {
-        nfrees[i] = normal_page_alloc(0);
+        nfrees[i] = normal_page_alloc(ALLOC_SIZE);
         u8 *a = nfrees[i];
         if ((u32)a < KERNEL_VIRTUAL_ADDRESS_BASE) {
           kprintf("Wrapped around?\n");
@@ -154,7 +166,7 @@ void user_input(char *input) {
       kPrintOKMessage("Done!");
     } else {
       for (int i = 0; i < ALLOC_NUM; ++i) {
-        nfrees[i] = normal_page_alloc(0);
+        nfrees[i] = normal_page_alloc(ALLOC_SIZE);
         u8 *a = nfrees[i];
         if ((u32)a < KERNEL_VIRTUAL_ADDRESS_BASE) {
           kprintf("Wrapped around?\n");

@@ -10,7 +10,7 @@
 #include "../utils/utils.h"
 #include "../kernel/kernel.h"
 #include "../mem/mem.h"
-
+#include "../mem/vma.h"
 #include <elf.h>
 
 #include "../cpu/gdt.h"
@@ -42,7 +42,7 @@ void pageFaultHandler(registers_t *regs) {
    kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
   u32 faultAddress = getRegisterValue(CR2);
-  if (faultAddress < KERNEL_VIRTUAL_ADDRESS_BASE) {
+  if (!is_valid_va(faultAddress)) {
     resetScreenColors();
     kPrintKOMessage("Not a kernel address!");
     hlt();
@@ -68,7 +68,7 @@ void pageFaultHandler(registers_t *regs) {
     /*     kprintf("The 4MB page was NOT allocated!\n");
      */
     Pte *newPte = (Pte *)kernel_page_alloc(0);
-    memset((u8 *)newPte, 0, PAGE_SIZE);
+    memset((byte *)newPte, 0, PAGE_SIZE);
     setPfn(&newPte[pte_pos], pfn);
     setPresent(&newPte[pte_pos]);
     setReadWrite(&newPte[pte_pos]);
@@ -86,8 +86,8 @@ void pageFaultHandler(registers_t *regs) {
 Pte *make_kernel_pte(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
   Pte *pte = kernel_page_alloc(0);
-  memset((uint8_t *)pte, 0, PAGE_SIZE);
-  for (uint32_t i = 0; i < PT_SIZE; ++i) {
+  memset((byte *)pte, 0, PAGE_SIZE);
+  for (u32 i = 0; i < PT_SIZE; ++i) {
     // pte[i] = curFrameNumber;
     setPfn(&pte[i], baseFrameNumber + i);
     setPresent(&pte[i]);
@@ -100,19 +100,19 @@ void init_kernel_paging() {
   kprintf("Setting up kernel paging...\n");
   int num_entries = (total_kernel_pages >> 10);
   kprintf("Tot: %d Num entried PD: %d\n", total_kernel_pages, num_entries);
-  uint16_t i = 0;
+  u16 i = 0;
   for (i = 0; i < PD_SIZE; i++) {
     // Mapping the higher half kernel
     // Mapping the first page because we have some low addresses
     // lying around from earlier stages of the kernel
     if (i == 0) {
-      uint32_t ptePhys = PA((uint32_t)make_kernel_pte(i));
+      u32 ptePhys = PA((uint32_t)make_kernel_pte(i));
       setPresent(&ptePhys);
       setReadWrite(&ptePhys);
       kernel_page_directory[i] = ptePhys;
     } else if (i >= KERNEL_LOWEST_PDIR &&
                i < KERNEL_LOWEST_PDIR + num_entries) {
-      uint32_t ptePhys = PA((uint32_t)make_kernel_pte(i - 768));
+      u32 ptePhys = PA((u32)make_kernel_pte(i - KERNEL_LOWEST_PDIR));
       setPresent(&ptePhys);
       setReadWrite(&ptePhys);
       kernel_page_directory[i] = ptePhys;
@@ -123,8 +123,8 @@ void init_kernel_paging() {
   kprintf("Total kernel paging system size: %d Kb\n",
           num_entries * 4096 / 1024);
   kprintf("Max kernel  size: %d Mb\n", num_entries * 4);
-  pdPhysical = PA((uint32_t)kernel_page_directory);
+  pdPhysical = PA((u32)kernel_page_directory);
   // kprintf("KPDAdr: 0x%x\nPhysical: 0x%x\n", kernel_page_directory,
   // pdPhysical);
-  _loadPageDirectory((uint32_t *)pdPhysical);
+  _loadPageDirectory((u32 *)pdPhysical);
 }

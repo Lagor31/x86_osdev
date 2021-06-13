@@ -10,8 +10,8 @@ CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -node
 #-Werror
 
 CC = gcc
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c libc/*.c cpu/*.c utils/*.c rfs/*.c mem/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h libc/*h cpu/*.h utils/*.h rfs/*.h mem/*.h)
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c libc/*.c cpu/*.c utils/*.c rfs/*.c mem/*.c proc/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h libc/*h cpu/*.h utils/*.h rfs/*.h mem/*.h proc/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o}
 
@@ -36,9 +36,13 @@ debug-iso: os.iso kernel/kernel.elf
 clean:
 	rm -f *.bin boot/*.bin boot/*.o kernel/*.o  kernel/*.elf kernel/*.bin drivers/*.o cpu/*.o libc/*.o mem/*.o  utils/*.o rfs/*.o *.iso  iso/boot/*.elf asm/*.o 
 
+process:
+	nasm external/lib.asm -f elf32 -o external/lib.o
+	${CC} ${CFLAGS} -c external/prog.c -o external/prog
+	ld -m elf_i386 external/prog external/lib.o -o external/user_program --oformat=elf32-i386
+
 external: external/user_process.asm
 	 nasm -f elf32  external/user_process.asm -o iso/boot/user_process
-
 
 os.iso: kernel/kernel.elf
 	cp $< iso/boot/

@@ -16,3 +16,8 @@ loop_start:
     mov eax, 0x0f31
     jmp loop_start
 ret
+
+
+section .data  progbits  write alloc   
+_variable:
+times 1024 dd 0

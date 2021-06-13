@@ -2,14 +2,12 @@
 #define SLAB_H
 #include "../utils/list.h"
 
-
-
 // Must always be contained in a order 0 buddy block
 typedef struct slab {
-  char size;
+  u8 size;
   List head;
-  char first_free;
-  char *free_blocks;
+  u8 first_free;
+  u8 *free_blocks;
 } Slab;
 
 
@@ -20,6 +18,7 @@ typedef struct mem_cache {
 } MemCache;
 
 extern MemCache kMemCache;
-Slab* createSlab(char size); 
+Slab* createSlab(u8 size); 
+void kMemCacheInit();
 
 #endif
