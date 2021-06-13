@@ -26,17 +26,15 @@ Page *normal_pages;
 BootMmap boot_mmap;
 
 void printFree() {
-  int totFree = total_free_memory / 1024 / 1024;
+  int totFree = total_used_memory / 1024 / 1024;
   int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
   uint32_t tot_kern_size_mb = total_kernel_pages * 4096 / 1024 / 1024;
   uint32_t tot_norm_size_mb = total_normal_pages * 4096 / 1024 / 1024;
-  uint32_t tot_free_kern_mb = total_kfree_memory / 1024 / 1024;
-  uint32_t tot_free_norm_mb = total_nfree_memory / 1024 / 1024;
 
-  kprintf("Free: %d / %d Mb\nUsed: %dMb\n", totFree, tot, tot - totFree);
-  kprintf("KMem used: %d/%d\n", tot_kern_size_mb - tot_free_kern_mb,
+  kprintf("Used: %d / %d Mb\n\n", totFree, tot);
+  kprintf("KMem used: %d/%d\n", total_kused_memory / 1024 / 1024,
           tot_kern_size_mb);
-  kprintf("NMem used: %d/%d\n", tot_norm_size_mb - tot_free_norm_mb,
+  kprintf("NMem used: %d/%d\n", total_nused_memory / 1024 / 1024,
           tot_norm_size_mb);
 }
 /* Getting the _stack_address as set in assembly to denote the beginning of
@@ -55,8 +53,9 @@ Page *alloc_kernel_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
   // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
-  total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
-  total_kfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  u32 allocated = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_used_memory += allocated;
+  total_kused_memory += allocated;
   return b->head;
 }
 
@@ -64,19 +63,28 @@ Page *alloc_normal_pages(int order) {
   BuddyBlock *b = get_buddy_block(order, NORMAL_ALLOC);
   // printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) return NULL;
-  total_free_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
-  total_nfree_memory -= PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  u32 allocated = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_used_memory += allocated;
+  total_nused_memory += allocated;
   return b->head;
 }
 
 void free_kernel_pages(Page *p) {
   // kprintf(" Free K PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
-  free_buddy_block(get_buddy_from_page(p, KERNEL_ALLOC), KERNEL_ALLOC);
+  BuddyBlock *b = get_buddy_from_page(p, KERNEL_ALLOC);
+  u32 released = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_kused_memory -= released;
+  total_used_memory -= released;
+  free_buddy_block(b, KERNEL_ALLOC);
 }
 
 void free_normal_pages(Page *p) {
+  BuddyBlock *b = get_buddy_from_page(p, NORMAL_ALLOC);
+  u32 released = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_nused_memory -= released;
+  total_used_memory -= released;
   // kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
-  free_buddy_block(get_buddy_from_page(p, NORMAL_ALLOC), NORMAL_ALLOC);
+  free_buddy_block(b, NORMAL_ALLOC);
 }
 
 void *kernel_page_alloc(uint32_t order) {
@@ -125,7 +133,7 @@ void memory_alloc_init() {
   buddy_init(&normal_pages, &normal_buddies, normal_buddy, total_normal_pages,
              NORMAL_ALLOC);
 
-  kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
+  kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
 
   int i = 0;
   int firstNUsedPages = ((u32)PA(free_mem_addr) / PAGE_SIZE) + 1;
@@ -134,7 +142,7 @@ void memory_alloc_init() {
   kprintf("You've used the first %d pages, allocating now %d 4Mb pages...\n",
           firstNUsedPages, ++four_megs_pages);
   for (i = 0; i < four_megs_pages; ++i) kernel_page_alloc(10);
-  kprintf("Total free memory=%dMb\n", total_free_memory / 1024 / 1024);
+  kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
   init_kernel_vma(KERNEL_VIRTUAL_ADDRESS_BASE + phys_normal_offset);
   // After this, you can no longer use boot_alloc
 }

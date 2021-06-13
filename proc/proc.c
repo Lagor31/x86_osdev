@@ -51,13 +51,12 @@ void top() {
   setBackgroundColor(WHITE);
   setTextColor(RED);
   kprintf("[STOPPED]\n");
-  resetScreenColors();
-
   list_for_each(l, &stopped_queue) {
     p = list_entry(l, Proc, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
+  resetScreenColors();
 }
 
 void stop_process(Proc *p) {
@@ -82,7 +81,6 @@ void do_schedule() {
   if (create == TRUE) {
     Proc *n = create_kernel_proc(idle, NULL, "kproc-aaaa");
     wake_up_process(n);
-    return;
   }
 
   if (list_length(&stopped_queue) > 0) {
@@ -91,7 +89,6 @@ void do_schedule() {
       bool kill = (rand() % 10) == 0;
       if (kill == TRUE) {
         kill_process(p);
-        return;
       }
     }
   }
@@ -101,12 +98,12 @@ void do_schedule() {
     if (stop == TRUE && current_proc != NULL && current_proc->pid != 0) {
       stop_process(current_proc);
       return;
-    }
-
-    bool sleep = (rand() % 10) == 0;
-    if (sleep == TRUE && current_proc != NULL && current_proc->pid != 0) {
-      sleep_process(current_proc);
-      return;
+    } else {
+      bool sleep = (rand() % 10) == 0;
+      if (sleep == TRUE && current_proc != NULL && current_proc->pid != 0) {
+        sleep_process(current_proc);
+        return;
+      }
     }
   }
 
@@ -127,7 +124,6 @@ void do_schedule() {
       if (current_proc != p && p->p <= current_proc->p) {
         wake_up_process(p);
         load_current_proc(p);
-        return;
       }
     }
   }
@@ -193,10 +189,10 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
 
   kernel_process->name = proc_name;
 
-  kprintf("Created PID %d\n", kernel_process->pid);
-  kprintf("       Proc struct addr: 0x%x\n", (u32)kernel_process);
-  kprintf("       Proc stack addr: 0x%x\n", (u32)kernel_stack);
-  kprintf("       Proc name addr: 0x%x\n", (u32)proc_name);
+  /*   kprintf("Created PID %d\n", kernel_process->pid);
+    kprintf("       Proc struct addr: 0x%x\n", (u32)kernel_process);
+    kprintf("       Proc stack addr: 0x%x\n", (u32)kernel_stack);
+    kprintf("       Proc name addr: 0x%x\n", (u32)proc_name); */
 
   UNUSED(data);
   return kernel_process;
@@ -204,11 +200,11 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
 
 void kill_process(Proc *p) {
   list_remove(&p->head);
-  kprintf("\nKilling PID %d\n", p->pid);
-  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name));
+  /*   kprintf("\nKilling PID %d\n", p->pid);
+    kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
   kfree((void *)p->name);
-  kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack);
+  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   kfree(p->stack);
-  kprintf("      Freeing proc(0x%x)\n", (u32)p);
+  /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
   kfree((void *)p);
 }

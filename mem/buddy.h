@@ -9,9 +9,9 @@
 #define FREE 1
 #define USED 0
 
-extern uint32_t total_free_memory;
-extern uint32_t total_kfree_memory;
-extern uint32_t total_nfree_memory;
+extern uint32_t total_used_memory;
+extern uint32_t total_kused_memory;
+extern uint32_t total_nused_memory;
 extern uint32_t phys_normal_offset;
 
 typedef struct buddy_block {

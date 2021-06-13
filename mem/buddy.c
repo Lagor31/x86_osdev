@@ -17,9 +17,9 @@ u32 phys_normal_offset = 0;
 BuddyBlock *buddies;
 BuddyBlock *normal_buddies;
 
-u32 total_free_memory = 0;
-u32 total_kfree_memory = 0;
-u32 total_nfree_memory = 0;
+u32 total_used_memory = 0;
+u32 total_kused_memory = 0;
+u32 total_nused_memory = 0;
 
 u32 get_pfn_from_page(Page *p, u8 kernel_alloc) {
   // kprintf("Calculating pfn for addr 0x%x - 0x%x\n", p,
@@ -96,11 +96,11 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
         int curr_buddy_pos = i * PAGES_PER_BLOCK(MAX_ORDER);
         bb[curr_buddy_pos].order = MAX_ORDER;
         list_add(&buddy_ext[curr_order].free_list, &bb[curr_buddy_pos].item);
-        total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
-        if (kernel_alloc)
-          total_kfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
-        else
-          total_nfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
+        // total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
+        /*  if (kernel_alloc)
+           total_kfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
+         else
+           total_nfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE; */
         /*  if (i <= 3) {
            kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
                    curr_buddy_pos, &bb[curr_buddy_pos],
@@ -204,7 +204,7 @@ void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
         get_buddy_pos(b, kernel_alloc)) {
       b = my_buddy;
     }
-    
+
     u8 higher_order = b->order + 1;
     b->order = higher_order;
     if (kernel_alloc)
@@ -221,11 +221,11 @@ void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
     // Mark it free
     set_block_usage(b, b->order, FREE, kernel_alloc);
   }
-  total_free_memory += PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+ /*  total_free_memory += PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   if (kernel_alloc)
     total_kfree_memory += PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
-  else
-    total_nfree_memory += PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  else */
+    //total_nused_memory += PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
 }
 
 BuddyBlock *get_buddy_block(int order, u8 kernel_alloc) {
