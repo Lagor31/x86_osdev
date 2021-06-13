@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 20
+#define ALLOC_NUM 2000
 #define ALLOC_SIZE 0
 
 KMultiBoot2Info *kMultiBootInfo;
@@ -109,9 +109,14 @@ void user_input(char *input) {
     setCursorPos(2, 0);
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "top")) {
+    top();
   } else if (!strcmp(input, "ckp")) {
-    Proc *p = create_kernel_proc(&simple_k_proc, NULL, "kernel-proc");
-    wake_up_process(p);
+    for (int i = 0; i < ALLOC_NUM; ++i) {
+      Proc *p = create_kernel_proc(&simple_k_proc, NULL, "kproc-aaaa");
+      wake_up_process(p);
+    }
+
   } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((struct kmultiboot2info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
@@ -134,13 +139,12 @@ void user_input(char *input) {
       kfrees[i] = kernel_page_alloc(ALLOC_SIZE);
       u8 *a = kfrees[i];
       if (a == NULL) break;
-      /*
-            uint32_t pd_pos = (uint32_t)a >> 22;
-            uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-            Pte *pte = VA((uint32_t)kernel_page_directory[pd_pos]);
-            kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos,
-         pte_pos,
-                    ((pte[pte_pos] >> 20) * PAGE_SIZE)); */
+
+      uint32_t pd_pos = (uint32_t)a >> 22;
+      uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
+      Pte *pte = VA((uint32_t)kernel_page_directory[pd_pos]);
+      kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos, pte_pos,
+              ((pte[pte_pos] >> 20) * PAGE_SIZE));
       *a = 'F';
     }
   } else if (!strcmp(input, "nalloc")) {

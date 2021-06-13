@@ -6,66 +6,113 @@
 #include "../utils/utils.h"
 #include "../drivers/screen.h"
 #include "../libc/functions.h"
+#include "../libc/strings.h"
 
 List sleep_queue;
-List ready_queue;
+List running_queue;
 List stopped_queue;
 
 Proc *current_proc = NULL;
 static u32 pid = IDLE_PID;
 
+void top() {
+  List *l;
+  Proc *p;
+  if (current_proc != NULL) {
+    setBackgroundColor(GREEN_ON_BLACK);
+    kprintf("[Current]: \n");
+    printProcSimple(current_proc);
+    resetScreenColors();
+  }
+
+  setBackgroundColor(LIGHTGREEN);
+  setTextColor(BLACK);
+  kprintf("[RUNNING]\n");
+  u32 c = 0;
+  list_for_each(l, &running_queue) {
+    p = list_entry(l, Proc, head);
+    kprintf("[%d] ", c++);
+    printProcSimple(p);
+  }
+  resetScreenColors();
+
+  c = 0;
+  setBackgroundColor(LIGHTCYAN);
+  setTextColor(BLACK);
+  kprintf("[SLEEP]\n");
+  list_for_each(l, &sleep_queue) {
+    p = list_entry(l, Proc, head);
+    kprintf("[%d] ", c++);
+    printProcSimple(p);
+  }
+  resetScreenColors();
+
+  c = 0;
+  setBackgroundColor(WHITE);
+  setTextColor(RED);
+  kprintf("[STOPPED]\n");
+  resetScreenColors();
+
+  list_for_each(l, &stopped_queue) {
+    p = list_entry(l, Proc, head);
+    kprintf("[%d] ", c++);
+    printProcSimple(p);
+  }
+}
+
 void stop_process(Proc *p) {
-  setBackgroundColor(RED);
-  setTextColor(WHITE);
-  kprintf("Stopping proc with PID: %d\n", p->pid);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
   if (current_proc == p) {
     load_current_proc(NULL);
   }
-  resetScreenColors();
 }
 
 void sleep_process(Proc *p) {
-  setBackgroundColor(YELLOW);
-  setTextColor(BLUE);
-  kprintf("Sleeping proc with PID: %d\n", p->pid);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
   if (current_proc == p) {
     load_current_proc(NULL);
   }
-  resetScreenColors();
 }
 
 void do_schedule() {
   List *l;
+  bool create = (rand() % 15) == 0;
+  if (create == TRUE) {
+    Proc *n = create_kernel_proc(idle, NULL, "kproc-aaaa");
+    wake_up_process(n);
+    return;
+  }
+
+  if (list_length(&stopped_queue) > 0) {
+    list_for_each(l, &stopped_queue) {
+      Proc *p = list_entry(l, Proc, head);
+      bool kill = (rand() % 10) == 0;
+      if (kill == TRUE) {
+        kill_process(p);
+        return;
+      }
+    }
+  }
 
   if (current_proc != NULL) {
-    setBackgroundColor(DARKGRAY);
-    kprintf("Current proc PID: %d\n", current_proc->pid);
-    bool stop = (rand() % 20) == 0;
+    bool stop = (rand() % 10) == 0;
     if (stop == TRUE && current_proc != NULL && current_proc->pid != 0) {
       stop_process(current_proc);
-      resetScreenColors();
       return;
     }
 
     bool sleep = (rand() % 10) == 0;
     if (sleep == TRUE && current_proc != NULL && current_proc->pid != 0) {
       sleep_process(current_proc);
-      resetScreenColors();
       return;
     }
   }
 
   if (list_length(&sleep_queue) > 0) {
-    kprintf("SLEEP Q:\n");
-    setBackgroundColor(BLUE);
     list_for_each(l, &sleep_queue) {
       Proc *p = list_entry(l, Proc, head);
-      kprintf("PID: %d\n", p->pid);
-
       bool wakeup = (rand() % 2) == 0;
       if (wakeup == TRUE) {
         wake_up_process(p);
@@ -74,61 +121,38 @@ void do_schedule() {
     }
   }
 
-  if (list_length(&ready_queue) > 0) {
-    kprintf("READY Q:\n");
-    setBackgroundColor(GREEN);
-    setTextColor(BLACK);
-    list_for_each(l, &ready_queue) {
+  if (list_length(&running_queue) > 0) {
+    list_for_each(l, &running_queue) {
       Proc *p = list_entry(l, Proc, head);
-      kprintf("PID: %d\n", p->pid);
       if (current_proc != p && p->p <= current_proc->p) {
-        kprintf("Scheduling new proc with PID:%d\n", p->pid);
         wake_up_process(p);
         load_current_proc(p);
-        break;
+        return;
       }
     }
   }
-  resetScreenColors();
-
-  if (list_length(&stopped_queue) > 0) {
-    kprintf("STOPPED Q:\n");
-    setBackgroundColor(RED);
-    setTextColor(BLUE);
-    list_for_each(l, &stopped_queue) {
-      Proc *p = list_entry(l, Proc, head);
-      kprintf("PID: %d\n", p->pid);
-    }
-  }
-  resetScreenColors();
 }
 
 void load_current_proc(Proc *p) { current_proc = p; }
 void wake_up_process(Proc *p) {
-  resetScreenColors();
-  setBackgroundColor(PURPLE);
-  setTextColor(WHITE);
-  kprintf("Waking proc with PID: %d\n", p->pid);
   list_remove(&p->head);
-  list_add(&ready_queue, &p->head);
-  resetScreenColors();
+  list_add(&running_queue, &p->head);
 }
 
+void printProcSimple(Proc *p) {
+  kprintf("%s - PID: %d - P: %d\n", p->name, p->pid, p->p);
+}
 void printProc(Proc *p) {
-  kprintf(
-      "N: %s - PID: %d - P: %d - isKProc: %d - EIP: %x - ESP: %x - VMR: %x - "
-      "PDIR: "
-      "%x\n",
-      p->name, p->pid, p->p, p->isKernelProc, p->regs.eip, p->regs.esp, p->Vm,
-      p->page_dir);
+  kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
+          p->pid, p->regs.eip, p->regs.esp, p->name, p);
 }
 
 void init_kernel_proc() {
   LIST_INIT(&sleep_queue);
-  LIST_INIT(&ready_queue);
+  LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
   current_proc = NULL;
-  Proc *idle_proc = create_kernel_proc(idle, NULL, "kernel_idle_process");
+  Proc *idle_proc = create_kernel_proc(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
   idle_proc->p = MIN_PRIORITY;
 
@@ -149,19 +173,42 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
                          const char *args, ...) {
   // TODO: cache! chache! cache!
   Proc *kernel_process = kernel_page_alloc(0);
-  void *kernel_stack = kernel_page_alloc(0);
-  const char *proc_name = (const char *)kernel_page_alloc(0);
-  proc_name = args;
+
   kernel_process->isKernelProc = TRUE;
-  kernel_process->name = proc_name;
+
   kernel_process->p = 0;
   kernel_process->pid = pid++;
   LIST_INIT(&kernel_process->head);
   kernel_process->page_dir = (u32 **)&kernel_page_directory;
   kernel_process->Vm = kernel_vm;
   kernel_process->regs.eip = (u32)procfunc;
+
+  void *kernel_stack = kernel_page_alloc(0);
   kernel_process->regs.esp = (u32)kernel_stack;
+  kernel_process->stack = kernel_stack;
+
+  char *proc_name = kernel_page_alloc(0);
+  memcopy(args, proc_name, strlen(args));
+  intToAscii(rand() % 100, &proc_name[6]);
+
+  kernel_process->name = proc_name;
+
+  kprintf("Created PID %d\n", kernel_process->pid);
+  kprintf("       Proc struct addr: 0x%x\n", (u32)kernel_process);
+  kprintf("       Proc stack addr: 0x%x\n", (u32)kernel_stack);
+  kprintf("       Proc name addr: 0x%x\n", (u32)proc_name);
 
   UNUSED(data);
   return kernel_process;
+}
+
+void kill_process(Proc *p) {
+  list_remove(&p->head);
+  kprintf("\nKilling PID %d\n", p->pid);
+  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name));
+  kfree((void *)p->name);
+  kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack);
+  kfree(p->stack);
+  kprintf("      Freeing proc(0x%x)\n", (u32)p);
+  kfree((void *)p);
 }

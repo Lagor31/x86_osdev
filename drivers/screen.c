@@ -208,7 +208,7 @@ int getCursorOffset() {
   return offset * 2; /* Position * size of character cell */
 }
 
-void setCursorPos(int row, int col) { setCursorOffset(getOffset(row, col)); }
+void  setCursorPos(int row, int col) { setCursorOffset(getOffset(row, col)); }
 
 void setCursorOffset(int offset) {
   /* Similar to get_cursor_offset, but instead of reading we write data */

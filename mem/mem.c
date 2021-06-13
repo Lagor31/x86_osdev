@@ -70,12 +70,12 @@ Page *alloc_normal_pages(int order) {
 }
 
 void free_kernel_pages(Page *p) {
-  kprintf(" Free K PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
+  // kprintf(" Free K PN %d\n", get_pfn_from_page(p, KERNEL_ALLOC));
   free_buddy_block(get_buddy_from_page(p, KERNEL_ALLOC), KERNEL_ALLOC);
 }
 
 void free_normal_pages(Page *p) {
-  kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
+  // kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
   free_buddy_block(get_buddy_from_page(p, NORMAL_ALLOC), NORMAL_ALLOC);
 }
 
@@ -93,13 +93,13 @@ void *normal_page_alloc(uint32_t order) {
 
 void kfree(void *ptr) {
   if (ptr == NULL) return;
-  kprintf("Free ptr %x ", ptr);
+  // kprintf("Free ptr %x ", ptr);
   free_kernel_pages(get_page_from_address(ptr, KERNEL_ALLOC));
 }
 
 void kfreeNormal(void *ptr) {
   if (ptr == NULL) return;
-  kprintf("Free ptr %x ", ptr);
+  // kprintf("Free ptr %x ", ptr);
   free_normal_pages(
       get_page_from_address(ptr - KERNEL_VIRTUAL_ADDRESS_BASE, NORMAL_ALLOC));
 }

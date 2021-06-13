@@ -9,9 +9,11 @@
 #include "../mem/vma.h"
 #include "../mem/paging.h"
 
+void top();
 void do_schedule();
 typedef struct process {
-  const char *name;
+  char *name;
+  void *stack;
   u16 pid;
   bool isKernelProc;
   VMRegion *Vm;

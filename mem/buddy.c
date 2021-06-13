@@ -132,20 +132,19 @@ u32 get_buddy_pos(BuddyBlock *b, u8 kernel_alloc) {
     return ((u32)b - (u32)normal_buddies) / sizeof(BuddyBlock);
 }
 
-bool is_buddy_free_at_order(BuddyBlock *b, u8 order,
-                               bool kernel_alloc) {
+bool is_buddy_free_at_order(BuddyBlock *b, u8 order, bool kernel_alloc) {
   int block_pos =
       get_pfn_from_page(b->head, kernel_alloc) / PAGES_PER_BLOCK(order);
   if (kernel_alloc) {
     bool isFree = buddy[order].bitmap[block_pos];
-    kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
-            isFree);
+    /* kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
+            isFree); */
     return buddy[order].bitmap[block_pos];
 
   } else {
     bool isFree = normal_buddy[order].bitmap[block_pos];
-    kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
-            isFree);
+    /*  kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
+             isFree); */
     return normal_buddy[order].bitmap[block_pos];
   }
 }
@@ -156,21 +155,21 @@ bool is_buddy_block_free(BuddyBlock *b, bool kernel_alloc) {
   if (kernel_alloc) {
     // u32 pos = get_buddy_pos(b, kernel_alloc);
     bool isFree = buddy[b->order].bitmap[block_pos];
-    kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
-            isFree);
+    /*  kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
+             isFree); */
     return isFree;
   } else {
-    bool isFree = buddy[b->order].bitmap[block_pos];
-    kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
-            isFree);
+    bool isFree = normal_buddy[b->order].bitmap[block_pos];
+    /*  kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
+             isFree); */
     return normal_buddy[b->order].bitmap[block_pos];
   }
 }
 
 void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
   setColor(LIGHTGREEN);
-
-  /*   if (is_buddy_block_free(b, kernel_alloc)) {
+  /*
+    if (is_buddy_block_free(b, kernel_alloc)) {
       setBackgroundColor(WHITE);
       setTextColor(RED);
       kprintf("Buddy already freed!!\n");
@@ -201,6 +200,11 @@ void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
     set_block_usage(my_buddy, my_buddy->order, USED, kernel_alloc);
     list_remove(&b->item);
     list_remove(&my_buddy->item);
+    if (get_buddy_pos(my_buddy, kernel_alloc) <
+        get_buddy_pos(b, kernel_alloc)) {
+      b = my_buddy;
+    }
+    
     u8 higher_order = b->order + 1;
     b->order = higher_order;
     if (kernel_alloc)
@@ -233,7 +237,8 @@ BuddyBlock *get_buddy_block(int order, u8 kernel_alloc) {
     return found;
   } else {
     if (order == MAX_ORDER) {
-      kprintf("We just ran out of buddy blocks. KernelAlloc=%d\n", kernel_alloc);
+      kprintf("We just ran out of buddy blocks. KernelAlloc=%d\n",
+              kernel_alloc);
       /* kprintf("List[%d].length = %d\n", order,
               list_length(&buddy[order].free_list)); */
 
@@ -264,14 +269,14 @@ BuddyBlock *get_buddy_block(int order, u8 kernel_alloc) {
 
     set_block_usage(found, order, USED, kernel_alloc);
     set_block_usage(foundBuddy, order, FREE, kernel_alloc);
+
     // kprintf("Found block of higher order %d -> %x\n", order + 1, found);
     return found;
   }
 }
 
 BuddyBlock *find_buddy_order(BuddyBlock *me, int order, u8 kernel_alloc) {
-  u32 block_pos =
-      get_buddy_pos(me, kernel_alloc) / (PAGES_PER_BLOCK(order));
+  u32 block_pos = get_buddy_pos(me, kernel_alloc) / (PAGES_PER_BLOCK(order));
   // kprintf("Addr=%x Order=%d Pos=%d\n", me, order, block_pos);
 
   if (block_pos % 2 == 0) {
@@ -294,8 +299,7 @@ BuddyBlock *find_buddy(BuddyBlock *me, u8 kernel_alloc) {
   return find_buddy_order(me, me->order, kernel_alloc);
 }
 
-void set_block_usage(BuddyBlock *p, int order, u8 used,
-                     u8 kernel_alloc) {
+void set_block_usage(BuddyBlock *p, int order, u8 used, u8 kernel_alloc) {
   int block_pos =
       get_pfn_from_page(p->head, kernel_alloc) / PAGES_PER_BLOCK(order);
 

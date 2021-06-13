@@ -137,7 +137,7 @@ char *exception_messages[] = {"Division By Zero",
 void isr_handler(registers_t *r) {
   setTextColor(RED);
   setBackgroundColor(WHITE);
-  //kprintf("received interrupt %d\n", r->int_no);
+  // kprintf("received interrupt %d\n", r->int_no);
   switch (r->int_no) {
     case 14:
       pageFaultHandler(r);
@@ -183,39 +183,20 @@ void IRQ_clear_mask(unsigned char IRQline) {
 }
 
 void irq_handler(registers_t *r) {
-  /* After every interrupt we need to send an EOI to the PICs
-   * or they will not send another interrupt again */
-  if (r->int_no >= IRQ8) outb(0xA0, 0x20); /* slave */
-  outb(0x20, 0x20);                        /* master */
-
   /* Handle the interrupt in a more modular way */
   if (interrupt_handlers[r->int_no] != 0) {
     isr_t handler = interrupt_handlers[r->int_no];
     handler(r);
   }
+
+  /* After every interrupt we need to send an EOI to the PICs
+   * or they will not send another interrupt again */
+  if (r->int_no >= IRQ8) outb(0xA0, 0x20); /* slave */
+  outb(0x20, 0x20);                        /* master */
 }
 
 void register_interrupt_handler(u8 n, isr_t handler) {
   interrupt_handlers[n] = handler;
-}
-
-void scheduler(registers_t *regs) {
-  /*
-    Need to reset the register C otherwise no more RTC interrutps will be sent
-   */
-
-  int prevCurOff = getCursorOffset();
-  setCursorPos(1, 0);
-  kprintf("Kernel Code (%d)\n\n", rand());
-  setCursorPos(getOffsetRow(prevCurOff), getOffsetCol(prevCurOff));
-  ++tickCount;
-
-  regs->eflags |= 0x200;
-  tss.cs = 0x10;
-
-  tss.esp0 = getRegisterValue(ESP);
-
-  outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C
 }
 
 void irq_install() {
@@ -223,7 +204,5 @@ void irq_install() {
   // Setup requested IRQs
   init_keyboard();
   activateCursor();
-  //initTimer();
   asm volatile("sti");
 }
-
