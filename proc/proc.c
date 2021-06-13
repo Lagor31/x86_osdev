@@ -97,15 +97,17 @@ void do_schedule() {
     bool stop = (rand() % 10) == 0;
     if (stop == TRUE && current_proc != NULL && current_proc->pid != 0) {
       stop_process(current_proc);
-      return;
+      goto schedule_proc;
     } else {
       bool sleep = (rand() % 10) == 0;
       if (sleep == TRUE && current_proc != NULL && current_proc->pid != 0) {
         sleep_process(current_proc);
-        return;
+        goto schedule_proc;
       }
     }
   }
+
+schedule_proc:
 
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
@@ -113,7 +115,7 @@ void do_schedule() {
       bool wakeup = (rand() % 2) == 0;
       if (wakeup == TRUE) {
         wake_up_process(p);
-        return;
+        break;
       }
     }
   }
