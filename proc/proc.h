@@ -25,6 +25,7 @@ typedef struct process {
 
 void printProc(Proc *);
 void init_kernel_proc();
+void kill_process(Proc *);
 int idle();
 void load_current_proc(Proc *p);
 void wake_up_process(Proc *p);

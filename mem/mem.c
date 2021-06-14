@@ -125,13 +125,12 @@ void memory_alloc_init() {
   kprintf("Total kernel pages %d\nTotal normal pages %d\n", total_kernel_pages,
           total_normal_pages);
   kprintf("Alloc kernel buddy system\n");
-  buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages, KERNEL_ALLOC);
+  buddy_init(&kernel_pages, &buddies, buddy, total_kernel_pages);
 
   phys_normal_offset = total_kernel_pages * PAGE_SIZE;
   kprintf("Physical normal offset : 0x%x\n", phys_normal_offset);
   kprintf("Alloc normal buddy system\n");
-  buddy_init(&normal_pages, &normal_buddies, normal_buddy, total_normal_pages,
-             NORMAL_ALLOC);
+  buddy_init(&normal_pages, &normal_buddies, normal_buddy, total_normal_pages);
 
   kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
 

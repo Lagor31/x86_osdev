@@ -99,7 +99,7 @@ void do_schedule() {
       stop_process(current_proc);
       goto schedule_proc;
     } else {
-      bool sleep = (rand() % 10) == 0;
+      bool sleep = (rand() % 2) == 0;
       if (sleep == TRUE && current_proc != NULL && current_proc->pid != 0) {
         sleep_process(current_proc);
         goto schedule_proc;
@@ -120,13 +120,12 @@ schedule_proc:
     }
   }
 
-  if (list_length(&running_queue) > 0) {
-    list_for_each(l, &running_queue) {
-      Proc *p = list_entry(l, Proc, head);
-      if (current_proc != p && p->p <= current_proc->p) {
-        wake_up_process(p);
-        load_current_proc(p);
-      }
+  bool c = 0;
+  list_for_each(l, &running_queue) {
+    Proc *p = list_entry(l, Proc, head);
+    if (c++ == 0) load_current_proc(p);
+    if (current_proc != p && p->p <= current_proc->p) {
+      load_current_proc(p);
     }
   }
 }

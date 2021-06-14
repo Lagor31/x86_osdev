@@ -43,8 +43,7 @@ void free_buddy_block(BuddyBlock *b, uint8_t kernel_alloc);
 void set_block_usage(BuddyBlock *p, int order, uint8_t used,
                      uint8_t kernel_alloc);
 void printBuddy(BuddyBlock *, uint8_t kernel_alloc);
-void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size,
-                uint8_t kernel_alloc);
+void buddy_init(Page **, BuddyBlock **, Buddy *, uint32_t size);
 uint32_t get_buddy_pos(BuddyBlock *b, uint8_t kernel_alloc);
 
 #endif

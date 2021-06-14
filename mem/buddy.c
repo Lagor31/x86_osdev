@@ -65,7 +65,7 @@ void printBuddy(BuddyBlock *b, u8 kernel_alloc) {
 }
 
 void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
-                u32 number_of_pages, u8 kernel_alloc) {
+                u32 number_of_pages) {
   // Allocating array of pages
   Page *tPage = boot_alloc(sizeof(Page) * number_of_pages, 1);
   *input_pages = tPage;
@@ -136,13 +136,13 @@ bool is_buddy_free_at_order(BuddyBlock *b, u8 order, bool kernel_alloc) {
   int block_pos =
       get_pfn_from_page(b->head, kernel_alloc) / PAGES_PER_BLOCK(order);
   if (kernel_alloc) {
-    bool isFree = buddy[order].bitmap[block_pos];
+    //bool isFree = buddy[order].bitmap[block_pos];
     /* kprintf("Kernel Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
             isFree); */
     return buddy[order].bitmap[block_pos];
 
   } else {
-    bool isFree = normal_buddy[order].bitmap[block_pos];
+    //bool isFree = normal_buddy[order].bitmap[block_pos];
     /*  kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, order,
              isFree); */
     return normal_buddy[order].bitmap[block_pos];
@@ -159,7 +159,7 @@ bool is_buddy_block_free(BuddyBlock *b, bool kernel_alloc) {
              isFree); */
     return isFree;
   } else {
-    bool isFree = normal_buddy[b->order].bitmap[block_pos];
+    //bool isFree = normal_buddy[b->order].bitmap[block_pos];
     /*  kprintf("Normal Buddy at pos %d, o:%d, free=%d\n", block_pos, b->order,
              isFree); */
     return normal_buddy[b->order].bitmap[block_pos];
