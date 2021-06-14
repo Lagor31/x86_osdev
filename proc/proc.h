@@ -12,7 +12,7 @@
 void top();
 void do_schedule();
 typedef struct process {
-  char *name;
+  const char *name;
   void *stack;
   u16 pid;
   bool isKernelProc;
@@ -29,6 +29,8 @@ void kill_process(Proc *);
 int idle();
 void load_current_proc(Proc *p);
 void wake_up_process(Proc *p);
+void stop_process(Proc *);
+
 
 Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
                          const char *args, ...);

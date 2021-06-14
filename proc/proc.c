@@ -95,12 +95,12 @@ void do_schedule() {
 
   if (current_proc != NULL) {
     bool stop = (rand() % 10) == 0;
-    if (stop == TRUE && current_proc != NULL && current_proc->pid != 0) {
+    if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
       stop_process(current_proc);
       goto schedule_proc;
     } else {
       bool sleep = (rand() % 2) == 0;
-      if (sleep == TRUE && current_proc != NULL && current_proc->pid != 0) {
+      if (sleep == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
         sleep_process(current_proc);
         goto schedule_proc;
       }
