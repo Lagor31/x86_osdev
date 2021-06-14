@@ -170,7 +170,7 @@ int idle() {
 Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
                          const char *args, ...) {
   // TODO: cache! chache! cache!
-  Proc *kernel_process = kernel_page_alloc(0);
+  Proc *kernel_process = normal_page_alloc(0);
 
   kernel_process->isKernelProc = TRUE;
 
@@ -181,11 +181,11 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   kernel_process->Vm = kernel_vm;
   kernel_process->regs.eip = (u32)procfunc;
 
-  void *kernel_stack = kernel_page_alloc(0);
+  void *kernel_stack = normal_page_alloc(0);
   kernel_process->regs.esp = (u32)kernel_stack;
   kernel_process->stack = kernel_stack;
 
-  char *proc_name = kernel_page_alloc(0);
+  char *proc_name = normal_page_alloc(0);
   memcopy(args, proc_name, strlen(args));
   intToAscii(rand() % 100, &proc_name[6]);
 
@@ -204,9 +204,9 @@ void kill_process(Proc *p) {
   list_remove(&p->head);
   /*   kprintf("\nKilling PID %d\n", p->pid);
     kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfree((void *)p->name);
+  kfreeNormal((void *)p->name);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
-  kfree(p->stack);
+  kfreeNormal(p->stack);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfree((void *)p);
+  kfreeNormal((void *)p);
 }

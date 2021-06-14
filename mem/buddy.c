@@ -213,6 +213,7 @@ void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
       list_add(&normal_buddy[higher_order].free_list, &b->item);
     set_block_usage(b, b->order, FREE, kernel_alloc);
   } else {
+    
     // Adding block to its free list
     if (kernel_alloc)
       list_add(&buddy[b->order].free_list, &b->item);
