@@ -3,7 +3,7 @@
 /**
  * Read a byte from the specified port
  */
-unsigned char inb(unsigned short port) {
+inline unsigned char inb(unsigned short port) {
   unsigned char result;
   /* Inline assembler syntax
    * !! Notice how the source and destination registers are switched from NASM
@@ -19,7 +19,7 @@ unsigned char inb(unsigned short port) {
   return result;
 }
 
-void outb(unsigned short port, unsigned char data) {
+inline void outb(unsigned short port, unsigned char data) {
   /* Notice how here both registers are mapped to C variables and
    * nothing is returned, thus, no equals '=' in the asm syntax
    * However we see a comma since there are two variables in the input area

@@ -18,12 +18,6 @@ static u32 pid = IDLE_PID;
 void top() {
   List *l;
   Proc *p;
-  if (current_proc != NULL) {
-    setBackgroundColor(GREEN_ON_BLACK);
-    kprintf("[Current]: \n");
-    printProcSimple(current_proc);
-    resetScreenColors();
-  }
 
   setBackgroundColor(LIGHTGREEN);
   setTextColor(BLACK);
@@ -57,6 +51,13 @@ void top() {
     printProcSimple(p);
   }
   resetScreenColors();
+
+  if (current_proc != NULL) {
+    setBackgroundColor(GREEN_ON_BLACK);
+    kprintf("[Current]: \n");
+    printProcSimple(current_proc);
+    resetScreenColors();
+  }
 }
 
 void stop_process(Proc *p) {
@@ -100,7 +101,8 @@ void do_schedule() {
       goto schedule_proc;
     } else {
       bool sleep = (rand() % 2) == 0;
-      if (sleep == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
+      if (sleep == TRUE && current_proc != NULL &&
+          current_proc->pid != IDLE_PID) {
         sleep_process(current_proc);
         goto schedule_proc;
       }
