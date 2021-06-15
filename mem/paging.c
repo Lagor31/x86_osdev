@@ -44,7 +44,7 @@ void pageFaultHandler(registers_t *regs) {
   u32 faultAddress = getRegisterValue(CR2);
   if (!is_valid_va(faultAddress)) {
     resetScreenColors();
-    kPrintKOMessage("Not a kernel address!");
+    kprintfColor(RED, "0x%x - Not a kernel address!", (u32)faultAddress);
     hlt();
   }
 

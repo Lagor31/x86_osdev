@@ -23,7 +23,7 @@ uint32_t rand(void) {
   return (uint32_t)(next / 65536) % RAND_MAX;
 }
 
-void hlt() { asm volatile("hlt"); }
+inline void hlt() { __asm__ __volatile__("hlt"); }
 
 void srand(uint32_t seed) { next = seed; }
 
@@ -65,7 +65,7 @@ struct multiboot_tag_module *getModule(struct kmultiboot2info *info) {
   return NULL;
 }
 
-uint32_t getRegisterValue(uint8_t reg) {
+inline uint32_t getRegisterValue(uint8_t reg) {
   uint32_t regValue = 0;
   switch (reg) {
     case EAX:
@@ -357,9 +357,9 @@ void printModuleInfo(struct multiboot_tag_module *module) {
 }
 
 void printUptime() {
- /*  stdDate_t *uptime = getSystemDate();
-  kprintf("%u days, %02u:%02u:%02u\n", uptime->days, uptime->hours,
-          uptime->minutes, uptime->seconds); */
+  /*  stdDate_t *uptime = getSystemDate();
+   kprintf("%u days, %02u:%02u:%02u\n", uptime->days, uptime->hours,
+           uptime->minutes, uptime->seconds); */
   kprintf("Uptime %d s", getUptime() / 1000);
 }
 

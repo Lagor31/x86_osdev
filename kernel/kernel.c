@@ -113,7 +113,7 @@ void user_input(char *input) {
     top();
   } else if (!strcmp(input, "ckp")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      Proc *p = create_kernel_proc(&simple_k_proc, NULL, "kproc-aaaa");
+      Proc *p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
       wake_up_process(p);
     }
 
@@ -142,7 +142,7 @@ void user_input(char *input) {
 
       uint32_t pd_pos = (uint32_t)a >> 22;
       uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-      Pte *pte = (Pte *) VA((uint32_t)kernel_page_directory[pd_pos]);
+      Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos]);
       kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos, pte_pos,
               ((pte[pte_pos] >> 20) * PAGE_SIZE));
       *a = 'F';

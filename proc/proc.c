@@ -76,11 +76,16 @@ void sleep_process(Proc *p) {
   }
 }
 
+void k_simple_proc() {
+  while (TRUE) {
+    hlt();
+  }
+}
 void do_schedule() {
   List *l;
   bool create = (rand() % 15) == 0;
   if (create == TRUE) {
-    Proc *n = create_kernel_proc(idle, NULL, "kproc-aaaa");
+    Proc *n = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
     wake_up_process(n);
   }
 
@@ -110,7 +115,6 @@ void do_schedule() {
   }
 
 schedule_proc:
-
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
       Proc *p = list_entry(l, Proc, head);
@@ -183,7 +187,7 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   kernel_process->regs.eip = (u32)procfunc;
 
   void *kernel_stack = normal_page_alloc(0);
-  kernel_process->regs.esp = (u32)kernel_stack;
+  kernel_process->regs.esp = (u32)kernel_stack + PAGE_SIZE;
   kernel_process->stack = kernel_stack;
 
   char *proc_name = normal_page_alloc(0);

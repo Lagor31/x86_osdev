@@ -96,9 +96,17 @@ void timerHandler(registers_t *regs) {
    if (userMode)
      _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory)); */
 
+  if (current_proc != NULL) {
+    current_proc->regs.eip = regs->eip;
+  }
+
   ++tickCount;
   do_schedule();
 
+  if (current_proc != NULL) {
+    regs->eip = current_proc->regs.eip;
+  }
+  
   UNUSED(regs);
   regs->eflags |= 0x200;
 
