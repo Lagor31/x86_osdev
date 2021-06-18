@@ -116,6 +116,7 @@ void user_input(char *input) {
   } else if (!strcmp(input, "ckp")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       Proc *p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+      p->p = rand() % 20;
       wake_up_process(p);
     }
 
@@ -123,7 +124,7 @@ void user_input(char *input) {
     Proc *p = NULL;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
-      p->p = 1;
+      p->p = rand() % 15;
       wake_up_process(p);
     }
 

@@ -76,25 +76,24 @@ void sleep_process(Proc *p) {
 
 void u_simple_proc() {
   while (TRUE) {
-    u32 r = rand() % 10000;
-    if (r == 0) 
-      kprintf("Hello from %s\n", current_proc->name, r);
+    u32 r = rand();
+    if (r % 1000000 == 0) kprintf("Hello from %s %d\n", current_proc->name, r);
   }
 }
 
 void k_simple_proc() {
   while (TRUE) {
-    // __asm__ __volatile__("hlt");
+    __asm__ __volatile__("hlt");
   }
 }
 
 void do_schedule() {
   List *l;
-  bool create = (rand() % 30) == 0;
+  /* bool create = (rand() % 30) == 0;
   if (create == TRUE) {
-    Proc *n = create_user_proc(&k_simple_proc, NULL, "kproc-aaaa");
+    Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
     wake_up_process(n);
-  }
+  } */
 
   if (list_length(&stopped_queue) > 0) {
     list_for_each(l, &stopped_queue) {
@@ -107,7 +106,7 @@ void do_schedule() {
   }
 
   if (current_proc != NULL) {
-    bool stop = (rand() % 30) == 0;
+    bool stop = (rand() % 15) == 0;
     if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
       stop_process(current_proc);
       goto schedule_proc;
@@ -128,7 +127,7 @@ schedule_proc:
       bool wakeup = (rand() % 2) == 0;
       if (wakeup == TRUE) {
         wake_up_process(p);
-        break;
+        goto end;
       }
     }
   }
@@ -136,11 +135,13 @@ schedule_proc:
   bool c = 0;
   list_for_each(l, &running_queue) {
     Proc *p = list_entry(l, Proc, head);
-    if (c++ == 0) load_current_proc(p);
+    // if (c++ == 0) load_current_proc(p);
     if (current_proc != p && p->p <= current_proc->p) {
       load_current_proc(p);
     }
   }
+end:
+  if (current_proc == NULL) goto schedule_proc;
 }
 
 void load_current_proc(Proc *p) { current_proc = p; }
@@ -167,6 +168,7 @@ void init_kernel_proc() {
   idle_proc->pid = IDLE_PID;
   idle_proc->p = MIN_PRIORITY;
   wake_up_process(idle_proc);
+  current_proc = idle_proc;
 }
 
 int idle() {
@@ -179,7 +181,7 @@ int idle() {
 Proc *create_user_proc(int (*procfunc)(void *input), void *data,
                        const char *args, ...) {
   // TODO: cache! chache! cache!
-  Proc *user_process = kernel_page_alloc(0);
+  Proc *user_process = normal_page_alloc(0);
 
   user_process->isKernelProc = FALSE;
 
@@ -190,18 +192,18 @@ Proc *create_user_proc(int (*procfunc)(void *input), void *data,
   user_process->Vm = kernel_vm;
   user_process->regs.eip = (u32)procfunc;
 
-  void *user_stack = kernel_page_alloc(0);
+  void *user_stack = normal_page_alloc(0);
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE;
 
   user_process->stack = user_stack;
   user_process->regs.ds = 0x23;
   user_process->regs.cs = 0x1B;
   user_process->regs.ss = 0x23;
-  void *kernel_stack = kernel_page_alloc(0);
+  void *kernel_stack = normal_page_alloc(0);
   user_process->kernel_stack_top = kernel_stack;
   user_process->esp0 = (u32)kernel_stack + PAGE_SIZE;
 
-  char *proc_name = kernel_page_alloc(0);
+  char *proc_name = normal_page_alloc(0);
   memcopy(args, proc_name, strlen(args));
   intToAscii(rand() % 100, &proc_name[6]);
 
@@ -229,7 +231,7 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   kernel_process->regs.eip = (u32)procfunc;
 
   void *kernel_stack = normal_page_alloc(0);
-  kernel_process->esp0 = kernel_stack;
+  kernel_process->esp0 = kernel_stack + PAGE_SIZE;
   kernel_process->regs.ds = 0x10;
   kernel_process->regs.cs = 0x08;
   kernel_process->regs.ss = 0x10;
@@ -255,10 +257,11 @@ void kill_process(Proc *p) {
   list_remove(&p->head);
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfree((void *)p->name);
+  kfreeNormal((void *)p->name);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
-  kfree(p->stack);
-  kfree(p->kernel_stack_top);
+  kfreeNormal(p->stack);
+  if (p->isKernelProc == FALSE) kfreeNormal(p->kernel_stack_top);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfree((void *)p);
+  kfreeNormal((void *)p);
+  current_proc = NULL;
 }

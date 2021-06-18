@@ -120,6 +120,7 @@ void scheduler_handler(registers_t *regs) {
 
   UNUSED(regs);
   regs->eflags |= 0x200;
+  regs->eflags |= 0x3000;
 
   //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
 
