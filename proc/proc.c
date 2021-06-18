@@ -89,11 +89,11 @@ void k_simple_proc() {
 
 void do_schedule() {
   List *l;
-  /* bool create = (rand() % 30) == 0;
+  bool create = (rand() % 300) == 0;
   if (create == TRUE) {
     Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
     wake_up_process(n);
-  } */
+  }
 
   if (list_length(&stopped_queue) > 0) {
     list_for_each(l, &stopped_queue) {
