@@ -11,6 +11,7 @@
 #include "../kernel/kernel.h"
 #include "../mem/mem.h"
 #include "../mem/vma.h"
+#include "../proc/proc.h"
 #include <elf.h>
 
 #include "../cpu/gdt.h"
@@ -19,9 +20,9 @@
 
 #include "paging.h"
 
-uint32_t kernel_page_directory[1024] __attribute__((aligned(4096)));
-
-uint32_t pdPhysical = 0;
+u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
+u32 user_page_directory[1024] __attribute__((aligned(4096)));
+u32 pdPhysical = 0;
 
 void gpFaultHandler(registers_t *regs) {
   //_loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
@@ -36,10 +37,12 @@ void gpFaultHandler(registers_t *regs) {
 
 void pageFaultHandler(registers_t *regs) {
   UNUSED(regs);
-  /*  setBackgroundColor(BLUE);
-   setTextColor(RED);
-   kprintf("Page fault EIP 0x%x Code: %d\n", regs->eip, regs->err_code);
-   kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
+  setBackgroundColor(BLUE);
+  setTextColor(RED);
+  kprintf("Page fault EIP 0x%x Code: %d\n", regs->eip, regs->err_code);
+  kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2));
+
+  if (current_proc != NULL) printProc(current_proc);
 
   u32 faultAddress = getRegisterValue(CR2);
   if (!is_valid_va(faultAddress)) {
@@ -94,6 +97,40 @@ Pte *make_kernel_pte(uint32_t pdRow) {
     setReadWrite(&pte[i]);
   }
   return pte;
+}
+
+Pte *make_user_pte(uint32_t pdRow) {
+  uint32_t baseFrameNumber = pdRow * 1024;
+  Pte *pte = kernel_page_alloc(0);
+  memset((byte *)pte, 0, PAGE_SIZE);
+  for (u32 i = 0; i < PT_SIZE; ++i) {
+    // pte[i] = curFrameNumber;
+    setPfn(&pte[i], baseFrameNumber + i);
+    setPresent(&pte[i]);
+    setReadWrite(&pte[i]);
+    setUsermode(&pte[i]);
+  }
+  return pte;
+}
+
+void init_test_user_paging() {
+  kprintf("Setting up test user paging...\n");
+  u16 i = 0;
+  for (i = 0; i < PD_SIZE; i++) {
+    // Mapping the higher half kernel
+    // Mapping the first page because we have some low addresses
+    // lying around from earlier stages of the kernel
+    u32 ptePhys;
+    if (i >= KERNEL_LOWEST_PDIR)
+      ptePhys = PA((u32)make_user_pte(i - KERNEL_LOWEST_PDIR));
+    else
+      ptePhys = PA((u32)make_user_pte(i));
+
+    setPresent(&ptePhys);
+    setReadWrite(&ptePhys);
+    setUsermode(&ptePhys);
+    user_page_directory[i] = ptePhys;
+  }
 }
 
 void init_kernel_paging() {

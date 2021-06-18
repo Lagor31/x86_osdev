@@ -84,39 +84,50 @@ void initTime(uint32_t freq) {
 }
 
 */
-void timerHandler(registers_t *regs) {
+void scheduler_handler(registers_t *regs) {
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
    */
 
+  // kprintf("ESP: 0x%x ESP0: 0x%x\n", getRegisterValue(ESP), tss.esp0);
   // I was in user mode
   /*  u8 userMode = FALSE;
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
+*/
 
-   if (userMode)
-     _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory)); */
+  //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
+
+  Proc *prev_proc = current_proc;
 
   if (current_proc != NULL) {
     current_proc->regs.eip = regs->eip;
+    current_proc->regs.esp = regs->esp;
   }
 
   ++tickCount;
   do_schedule();
 
-  if (current_proc != NULL) {
+  if (current_proc != NULL && current_proc != prev_proc) {
+    //kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
     regs->eip = current_proc->regs.eip;
+    regs->esp = current_proc->regs.esp;
+    regs->ss = current_proc->regs.ss;
+    regs->ds = current_proc->regs.ds;
+    regs->cs = current_proc->regs.cs;
+    tss.esp0 = current_proc->esp0;
+    tss.ss0 = 0x10;
   }
-  
+
   UNUSED(regs);
   regs->eflags |= 0x200;
 
-  tss.ss0 = 0x10;
-  tss.esp0 = getRegisterValue(ESP);
+  //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
+
   outb(0x70, 0x0C);  // select register C
   inb(0x71);         // just throw away contents
 
-  /*  if (userMode) */
-  // _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory));
+  if (current_proc != NULL && current_proc->isKernelProc == FALSE)
+    _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory));
 }
 
 void init_scheduler_timer() {
@@ -124,7 +135,7 @@ void init_scheduler_timer() {
 
   sysDate = (stdDate_t *)boot_alloc(sizeof(stdDate_t), 0);
   setTimerPhase(RTC_PHASE);
-  register_interrupt_handler(IRQ8, timerHandler);
+  register_interrupt_handler(IRQ8, scheduler_handler);
   asm volatile("sti");
 }
 

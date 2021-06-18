@@ -30,7 +30,7 @@ kernel/kernel.o: kernel/kernel.c
 
 
 debug-iso: os.iso kernel/kernel.elf
-	qemu-system-i386 -m ${QEMU-MEM} -s -cdrom os.iso &
+	qemu-system-i386 -d cpu_reset  -m ${QEMU-MEM} -s -cdrom os.iso &
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel/kernel.elf"
 
 clean:

@@ -2,7 +2,7 @@
 #define TIMER_H
 #include "gdt.h"
 
-#define RTC_PHASE 2
+#define RTC_PHASE 4
 #define RTC_FREQ (32768 >> (RTC_PHASE - 1))
 #define MILLIS_IN_A_YEAR 3.154E10
 #define MILLIS_IN_A_DAY 8.64E7
@@ -15,7 +15,7 @@ extern uint64_t tickCount;
 extern stdDate_t* sysDate;
 extern tss_entry_t tss;
 
-void timerHandler(registers_t* regs);
+void scheduler_handler(registers_t* regs);
 void init_scheduler_timer();
 void initTime(uint32_t freq);
 void setTimerPhase(uint16_t hz);

@@ -18,6 +18,8 @@ typedef struct process {
   bool isKernelProc;
   VMRegion *Vm;
   registers_t regs;
+  u32 esp0;
+  void *kernel_stack_top;
   u32 **page_dir;
   u8 p;
   List head;
@@ -33,8 +35,11 @@ void load_current_proc(Proc *p);
 void wake_up_process(Proc *p);
 void stop_process(Proc *);
 void k_simple_proc();
+void u_simple_proc();
 
 Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
                          const char *args, ...);
+Proc *create_user_proc(int (*procfunc)(void *input), void *data,
+                       const char *args, ...);
 
 #endif

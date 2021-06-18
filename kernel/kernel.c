@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 100
+#define ALLOC_NUM 1
 #define ALLOC_SIZE 0
 
 KMultiBoot2Info *kMultiBootInfo;
@@ -58,7 +58,6 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Installing IRQs/ISRs...\n");
   isr_install();
-  irq_install();
   kPrintOKMessage("IRQs/ISRs installed!\n");
 
   kPrintOKMessage("Init Buddy...\n");
@@ -67,6 +66,7 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Enabling kernel paging...");
   init_kernel_paging();
+  init_test_user_paging();
   kPrintOKMessage("Kernel paging enabled!");
 
   kMemCacheInit();
@@ -89,6 +89,8 @@ void kernel_main(u32 magic, u32 addr) {
   // external interrupts gives control back to our OS
   // setCursorPos(2, 0);
   kprintf("\n>");
+  irq_install();
+
   // runProcess();
   hlt();
 }
@@ -114,6 +116,14 @@ void user_input(char *input) {
   } else if (!strcmp(input, "ckp")) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       Proc *p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+      wake_up_process(p);
+    }
+
+  } else if (!strcmp(input, "cup")) {
+    Proc *p = NULL;
+    for (int i = 0; i < ALLOC_NUM; ++i) {
+      p = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
+      p->p = 1;
       wake_up_process(p);
     }
 

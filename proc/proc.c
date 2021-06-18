@@ -61,31 +61,38 @@ void top() {
 }
 
 void stop_process(Proc *p) {
+  // kprintf("Stopping process PID %d\n", p->pid);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  if (current_proc == p) {
-    load_current_proc(NULL);
-  }
+  current_proc = NULL;
 }
 
 void sleep_process(Proc *p) {
+  // kprintf("Sleeping process PID %d\n", p->pid);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
-  if (current_proc == p) {
-    load_current_proc(NULL);
+  current_proc = NULL;
+}
+
+void u_simple_proc() {
+  while (TRUE) {
+    u32 r = rand() % 10000;
+    if (r == 0) 
+      kprintf("Hello from %s\n", current_proc->name, r);
   }
 }
 
 void k_simple_proc() {
   while (TRUE) {
-    hlt();
+    // __asm__ __volatile__("hlt");
   }
 }
+
 void do_schedule() {
   List *l;
-  bool create = (rand() % 15) == 0;
+  bool create = (rand() % 30) == 0;
   if (create == TRUE) {
-    Proc *n = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+    Proc *n = create_user_proc(&k_simple_proc, NULL, "kproc-aaaa");
     wake_up_process(n);
   }
 
@@ -100,7 +107,7 @@ void do_schedule() {
   }
 
   if (current_proc != NULL) {
-    bool stop = (rand() % 10) == 0;
+    bool stop = (rand() % 30) == 0;
     if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
       stop_process(current_proc);
       goto schedule_proc;
@@ -138,6 +145,7 @@ schedule_proc:
 
 void load_current_proc(Proc *p) { current_proc = p; }
 void wake_up_process(Proc *p) {
+  // kprintf("Waking up process PID %d\n", p->pid);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
 }
@@ -158,11 +166,7 @@ void init_kernel_proc() {
   Proc *idle_proc = create_kernel_proc(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
   idle_proc->p = MIN_PRIORITY;
-
   wake_up_process(idle_proc);
-  load_current_proc(idle_proc);
-
-  init_scheduler_timer();
 }
 
 int idle() {
@@ -170,6 +174,44 @@ int idle() {
     hlt();
   }
   return -1;
+}
+
+Proc *create_user_proc(int (*procfunc)(void *input), void *data,
+                       const char *args, ...) {
+  // TODO: cache! chache! cache!
+  Proc *user_process = kernel_page_alloc(0);
+
+  user_process->isKernelProc = FALSE;
+
+  user_process->p = 0;
+  user_process->pid = pid++;
+  LIST_INIT(&user_process->head);
+  user_process->page_dir = (u32 **)&user_page_directory;
+  user_process->Vm = kernel_vm;
+  user_process->regs.eip = (u32)procfunc;
+
+  void *user_stack = kernel_page_alloc(0);
+  user_process->regs.esp = (u32)user_stack + PAGE_SIZE;
+
+  user_process->stack = user_stack;
+  user_process->regs.ds = 0x23;
+  user_process->regs.cs = 0x1B;
+  user_process->regs.ss = 0x23;
+  void *kernel_stack = kernel_page_alloc(0);
+  user_process->kernel_stack_top = kernel_stack;
+  user_process->esp0 = (u32)kernel_stack + PAGE_SIZE;
+
+  char *proc_name = kernel_page_alloc(0);
+  memcopy(args, proc_name, strlen(args));
+  intToAscii(rand() % 100, &proc_name[6]);
+
+  user_process->name = proc_name;
+  /*
+    kprintf("Created PID %d\n", user_process->pid);
+    kprintf("       Proc name %s\n", (u32)proc_name); */
+
+  UNUSED(data);
+  return user_process;
 }
 
 Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
@@ -187,9 +229,13 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   kernel_process->regs.eip = (u32)procfunc;
 
   void *kernel_stack = normal_page_alloc(0);
+  kernel_process->esp0 = kernel_stack;
+  kernel_process->regs.ds = 0x10;
+  kernel_process->regs.cs = 0x08;
+  kernel_process->regs.ss = 0x10;
+
   kernel_process->regs.esp = (u32)kernel_stack + PAGE_SIZE;
   kernel_process->stack = kernel_stack;
-
   char *proc_name = normal_page_alloc(0);
   memcopy(args, proc_name, strlen(args));
   intToAscii(rand() % 100, &proc_name[6]);
@@ -207,11 +253,12 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
 
 void kill_process(Proc *p) {
   list_remove(&p->head);
-  /*   kprintf("\nKilling PID %d\n", p->pid);
-    kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfreeNormal((void *)p->name);
+  // kprintf("\nKilling PID %d\n", p->pid);
+  /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
+  kfree((void *)p->name);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
-  kfreeNormal(p->stack);
+  kfree(p->stack);
+  kfree(p->kernel_stack_top);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfreeNormal((void *)p);
+  kfree((void *)p);
 }
