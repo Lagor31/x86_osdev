@@ -17,6 +17,7 @@ Proc *current_proc = NULL;
 Proc *idle_proc;
 static u32 pid = IDLE_PID;
 
+u8 foo(u8 in) { return in; }
 void top() {
   List *l;
   Proc *p;
@@ -79,7 +80,8 @@ void sleep_process(Proc *p) {
 void u_simple_proc() {
   while (TRUE) {
     u32 r = rand();
-    if (r % 1000000 == 0) kprintf("Hello from %s %d\n", current_proc->name, r);
+    if (r % 1000000 == 0) foo(r);
+    // kprintf("Hello from %s %d\n", current_proc->name, r);
   }
 }
 
@@ -108,7 +110,7 @@ void do_schedule() {
   }
 
   if (current_proc != NULL) {
-    bool stop = (rand() % 15) == 0;
+    bool stop = (rand() % 100) == 0;
     if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
       stop_process(current_proc);
       goto schedule_proc;
