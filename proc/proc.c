@@ -80,8 +80,17 @@ void sleep_process(Proc *p) {
 void u_simple_proc() {
   while (TRUE) {
     u32 r = rand();
-    if (r % 1000000 == 0) foo(r);
-    // kprintf("Hello from %s %d\n", current_proc->name, r);
+    if (r % 1000000 == 0) {
+      foo(r);
+      foo(r);
+      foo(r);
+      foo(r);
+      foo(r);
+      //__asm__  foo(r);
+      //__asm__  foo(r);
+      //__asm__  foo(r);
+      foo(30);
+    }
   }
 }
 

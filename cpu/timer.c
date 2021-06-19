@@ -88,9 +88,9 @@ void scheduler_handler(registers_t *regs) {
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
    */
-  if (current_proc != NULL)
+  /* if (current_proc != NULL)
     kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
-            getRegisterValue(ESP), tss.esp0);
+            getRegisterValue(ESP), tss.esp0); */
   // I was in user mode
   /*  u8 userMode = FALSE;
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
@@ -103,6 +103,7 @@ void scheduler_handler(registers_t *regs) {
   if (current_proc != NULL) {
     current_proc->regs.eip = regs->eip;
     current_proc->regs.esp = regs->esp;
+    current_proc->esp0 = tss.esp0;
   }
 
   ++tickCount;
