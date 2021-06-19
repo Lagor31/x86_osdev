@@ -88,8 +88,9 @@ void scheduler_handler(registers_t *regs) {
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
    */
-
-  // kprintf("ESP: 0x%x ESP0: 0x%x\n", getRegisterValue(ESP), tss.esp0);
+/*   if (current_proc != NULL)
+    kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
+            getRegisterValue(ESP), tss.esp0); */
   // I was in user mode
   /*  u8 userMode = FALSE;
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
@@ -106,9 +107,8 @@ void scheduler_handler(registers_t *regs) {
 
   ++tickCount;
   do_schedule();
-
   if (current_proc != NULL && current_proc != prev_proc) {
-    //kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
+    // kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
     regs->eip = current_proc->regs.eip;
     regs->esp = current_proc->regs.esp;
     regs->ss = current_proc->regs.ss;
@@ -134,9 +134,10 @@ void scheduler_handler(registers_t *regs) {
 void init_scheduler_timer() {
   asm volatile("cli");
 
-  sysDate = (stdDate_t *)boot_alloc(sizeof(stdDate_t), 0);
   setTimerPhase(RTC_PHASE);
   register_interrupt_handler(IRQ8, scheduler_handler);
+  tss.esp0 = getRegisterValue(ESP);
+  tss.ss0 = 0x10;
   asm volatile("sti");
 }
 

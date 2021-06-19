@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 1
+#define ALLOC_NUM 10
 #define ALLOC_SIZE 0
 
 KMultiBoot2Info *kMultiBootInfo;

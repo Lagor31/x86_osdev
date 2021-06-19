@@ -7,12 +7,14 @@
 #include "../drivers/screen.h"
 #include "../libc/functions.h"
 #include "../libc/strings.h"
+#include "../libc/constants.h"
 
 List sleep_queue;
 List running_queue;
 List stopped_queue;
 
 Proc *current_proc = NULL;
+Proc *idle_proc;
 static u32 pid = IDLE_PID;
 
 void top() {
@@ -135,13 +137,12 @@ schedule_proc:
   bool c = 0;
   list_for_each(l, &running_queue) {
     Proc *p = list_entry(l, Proc, head);
-    // if (c++ == 0) load_current_proc(p);
     if (current_proc != p && p->p <= current_proc->p) {
-      load_current_proc(p);
+      current_proc = p;
     }
   }
 end:
-  if (current_proc == NULL) goto schedule_proc;
+  if (current_proc == NULL) current_proc = idle_proc;
 }
 
 void load_current_proc(Proc *p) { current_proc = p; }
@@ -164,7 +165,7 @@ void init_kernel_proc() {
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
   current_proc = NULL;
-  Proc *idle_proc = create_kernel_proc(idle, NULL, "idle");
+  idle_proc = create_kernel_proc(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
   idle_proc->p = MIN_PRIORITY;
   wake_up_process(idle_proc);

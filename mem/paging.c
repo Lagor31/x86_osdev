@@ -83,6 +83,7 @@ void pageFaultHandler(registers_t *regs) {
     kernel_page_directory[pd_pos] = pde_phys;
   }
   _loadPageDirectory((u32 *)PA((u32)&kernel_page_directory));
+
   resetScreenColors();
 }
 
