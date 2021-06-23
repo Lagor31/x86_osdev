@@ -13,6 +13,7 @@
 #include "../mem/vma.h"
 #include "../proc/proc.h"
 #include <elf.h>
+#include "../utils/utils.h"
 
 #include "../cpu/gdt.h"
 

@@ -1,5 +1,7 @@
 #include "../cpu/types.h"
 
+#include "../utils/utils.h"
+
 #include "../boot/multiboot.h"
 
 #include "../cpu/isr.h"
@@ -10,7 +12,6 @@
 #include "../libc/strings.h"
 #include "../utils/list.h"
 #include "../utils/shutdown.h"
-#include "../utils/utils.h"
 #include "../cpu/gdt.h"
 #include "../mem/mem.h"
 #include "../mem/slab.h"
@@ -142,9 +143,9 @@ void user_input(char *input) {
     //_switch_to_task(current_proc);
 
   } else if (!strcmp(input, "bootinfo")) {
-    printMultibootInfo((struct kmultiboot2info *)kMultiBootInfo, 0);
+    printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
-    printMultibootInfo((struct kmultiboot2info *)kMultiBootInfo, 1);
+    printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 1);
   } else if (!strcmp(input, "meminfo")) {
     printKernelMemInfo();
   } else if (!strcmp(input, "init")) {

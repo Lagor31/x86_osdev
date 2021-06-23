@@ -1,5 +1,7 @@
 #include "page.h"
+
 #include "../cpu/types.h"
+#include "../utils/utils.h"
 
 #include "buddy.h"
 #include "../kernel/kernel.h"
@@ -9,7 +11,6 @@
 
 #include "../mem/mem.h"
 #include "../utils/list.h"
-#include "../utils/utils.h"
 Buddy buddy[MAX_ORDER + 1];
 Buddy normal_buddy[MAX_ORDER + 1];
 u32 phys_normal_offset = 0;

@@ -1,5 +1,7 @@
 #include "../cpu/types.h"
 #include "../boot/multiboot.h"
+#include "utils.h"
+
 
 #include "../utils/list.h"
 
@@ -12,18 +14,17 @@
 #include "../kernel/kernel.h"
 #include "../libc/constants.h"
 
-#include "utils.h"
 
 static uint64_t next = 1;
 #define RAND_MAX 0xFFFFFF
 // RAND_MAX assumed to be 0xFFFFFF
 
-uint32_t rand(void) {
+u32 rand() {
   next = next * 1103515245 + 313154;
   return (uint32_t)(next / 65536) % RAND_MAX;
 }
 
-inline void hlt() { __asm__ __volatile__("hlt"); }
+void hlt() { __asm__ __volatile__("hlt"); }
 
 void srand(uint32_t seed) { next = seed; }
 

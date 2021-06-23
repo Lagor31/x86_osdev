@@ -148,10 +148,8 @@ void k_simple_proc2() {
   }
 }
 
-u32 created = 0;
-
 void do_schedule() {
-  List *l;
+  // List *l;
   /*   bool create = (rand() % 10000) == 0;
     if (create == TRUE) {
       Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
@@ -159,12 +157,12 @@ void do_schedule() {
       wake_up_process(n);
     } */
 
-  if (created++ < 1) {
-    Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
-    n->p = rand() % 20;
-    wake_up_process(n);
-  }
-
+  /*   if (created++ < 1) {
+      Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
+      n->p = rand() % 20;
+      wake_up_process(n);
+    }
+   */
   /*   if (list_length(&stopped_queue) > 0) {
       list_for_each(l, &stopped_queue) {
         Proc *p = list_entry(l, Proc, head);
@@ -191,7 +189,7 @@ void do_schedule() {
       }
     } */
 
-schedule_proc:
+  // schedule_proc:
   /*   if (list_length(&sleep_queue) > 0) {
       list_for_each(l, &sleep_queue) {
         Proc *p = list_entry(l, Proc, head);
@@ -203,18 +201,17 @@ schedule_proc:
       }
     } */
 
-  bool c = 0;
-  u8 pri = rand() % 20;
-  list_for_each(l, &running_queue) {
-    Proc *p = list_entry(l, Proc, head);
-    if (pri >= p->p && rand() % 4 == 0) {
-      current_proc = p;
-      goto end;
+  /*   u8 pri = rand() % 20;
+    list_for_each(l, &running_queue) {
+      Proc *p = list_entry(l, Proc, head);
+      if (pri >= p->p && rand() % 4 == 0) {
+        current_proc = p;
+        goto end;
+      }
     }
-    //}
-  }
-end:
-  if (current_proc == NULL) current_proc = idle_proc;
+    }
+  end:
+    if (current_proc == NULL) current_proc = idle_proc; */
 }
 
 void load_current_proc(Proc *p) { current_proc = p; }
@@ -246,7 +243,7 @@ void init_kernel_proc() {
   current_proc = idle_proc;
 }
 
-int idle() {
+void idle() {
   while (TRUE) {
     kprintf("Idle!\n");
     u8 i = rand() % 2;
@@ -256,11 +253,9 @@ int idle() {
     _switch_to_task(ping[i]);
     // sleep_process(current_proc);
   }
-  return -1;
 }
 
-Proc *create_user_proc(int (*procfunc)(void *input), void *data,
-                       const char *args, ...) {
+Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
   Proc *user_process = normal_page_alloc(0);
 
@@ -285,7 +280,7 @@ Proc *create_user_proc(int (*procfunc)(void *input), void *data,
   user_process->esp0 = (u32)kernel_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);
-  memcopy(args, proc_name, strlen(args));
+  memcopy((byte *)args, (byte *)proc_name, strlen(args));
   intToAscii(rand() % 100, &proc_name[6]);
 
   user_process->name = proc_name;
@@ -297,8 +292,7 @@ Proc *create_user_proc(int (*procfunc)(void *input), void *data,
   return user_process;
 }
 
-Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
-                         const char *args, ...) {
+Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
   Proc *user_process = normal_page_alloc(0);
 
@@ -313,7 +307,7 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
 
   void *user_stack = normal_page_alloc(0);
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (5 * sizeof(u32));
-  ((u32 *)user_process->regs.esp)[4] = procfunc;
+  ((u32 *)user_process->regs.esp)[4] = (u32)procfunc;
 
   user_process->stack = user_stack;
   user_process->regs.ds = 0x10;
@@ -324,7 +318,7 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   user_process->esp0 = (u32)kernel_stack + PAGE_SIZE - (5 * sizeof(u32));
 
   char *proc_name = normal_page_alloc(0);
-  memcopy(args, proc_name, strlen(args));
+  memcopy((byte *)args, (byte *)proc_name, strlen(args));
   intToAscii(rand() % 100, &proc_name[6]);
 
   user_process->name = proc_name;
@@ -336,48 +330,6 @@ Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
   return user_process;
 }
 
-/* Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
-                         const char *args, ...) {
-  // TODO: cache! chache! cache!
-  Proc *kernel_process = kernel_page_alloc(0);
-
-  kernel_process->isKernelProc = TRUE;
-
-  kernel_process->p = 0;
-  kernel_process->pid = pid++;
-  LIST_INIT(&kernel_process->head);
-  kernel_process->page_dir = (u32 **)&kernel_page_directory;
-  kernel_process->Vm = kernel_vm;
-  kernel_process->regs.eip = (u32)procfunc;
-
-  void *kernel_stack = kernel_page_alloc(0);
-
-
-  kernel_process->esp0 = (u32)kernel_page_alloc(0) + PAGE_SIZE;
-  kernel_process->regs.ds = 0x10;
-  kernel_process->regs.cs = 0x08;
-  kernel_process->regs.ss = 0x10;
-
-  kernel_process->regs.esp = (u32)kernel_stack + PAGE_SIZE - (5 * sizeof(u32));
-  ((u32 *)kernel_process->regs.esp)[4] = procfunc;
-  kernel_process->kernel_stack_top = kernel_process->esp0;
-  kernel_process->stack = kernel_stack;
-  char *proc_name = kernel_page_alloc(0);
-  memcopy(args, proc_name, strlen(args));
-  intToAscii(rand() % 100, &proc_name[6]);
-
-  kernel_process->name = proc_name;
-
-  /*   kprintf("Created PID %d\n", kernel_process->pid);
-    kprintf("       Proc struct addr: 0x%x\n", (u32)kernel_process);
-    kprintf("       Proc stack addr: 0x%x\n", (u32)kernel_stack);
-    kprintf("       Proc name addr: 0x%x\n", (u32)proc_name); */
-
-/*
-UNUSED(data);
-return kernel_process;
-}
- */
 void kill_process(Proc *p) {
   list_remove(&p->head);
   // kprintf("\nKilling PID %d\n", p->pid);
