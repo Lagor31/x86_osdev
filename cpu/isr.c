@@ -183,6 +183,7 @@ void IRQ_clear_mask(unsigned char IRQline) {
 }
 
 void irq_handler(registers_t *r) {
+
   /* Handle the interrupt in a more modular way */
   if (interrupt_handlers[r->int_no] != 0) {
     isr_t handler = interrupt_handlers[r->int_no];
@@ -204,7 +205,7 @@ void irq_install() {
   // Setup requested IRQs
   init_keyboard();
   activateCursor();
-  init_scheduler_timer();
+  //init_scheduler_timer();
 
   asm volatile("sti");
 }

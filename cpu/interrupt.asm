@@ -35,6 +35,9 @@ iret ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 	
 ; Common IRQ code. Identical to ISR code except for the 'call' 
 ; and the 'pop ebx'
+extern _switch_to_task
+extern current_proc
+
 irq_common_stub:
     pusha 
     mov ax, ds
@@ -48,6 +51,7 @@ irq_common_stub:
     cld
 
     call irq_handler ; Different than the ISR code
+
     pop ebx  ; Different than the ISR code
     pop ebx  ; Data segment selector for usermode
     mov ds, bx

@@ -23,7 +23,7 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 100
+#define ALLOC_NUM 2
 #define ALLOC_SIZE 0
 
 KMultiBoot2Info *kMultiBootInfo;
@@ -33,7 +33,7 @@ struct fileTableEntry *kfileTable;
 u8 firstTime = 1;
 void **kfrees;
 void **nfrees;
-
+Proc *ping[2];
 /*
   After running the content of meminit.asm we get called here
 */
@@ -88,6 +88,7 @@ void kernel_main(u32 magic, u32 addr) {
   // Print the prompt and we're done, from now on we hlt the cpu until an
   // external interrupts gives control back to our OS
   // setCursorPos(2, 0);
+
   kprintf("\n>");
   irq_install();
 
@@ -99,9 +100,6 @@ void kernel_main(u32 magic, u32 addr) {
   Sort of a kernel level shell that interpets a few of the commands a user can
   give to the terminal
 */
-int simple_k_proc() {
-  while (TRUE) kprintf("Hello from k thread!\n");
-}
 
 void user_input(char *input) {
   if (strcmp(input, "help") == 0)
@@ -114,19 +112,34 @@ void user_input(char *input) {
   } else if (!strcmp(input, "top")) {
     top();
   } else if (!strcmp(input, "ckp")) {
+    /* Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      Proc *p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+      p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+      p->p = 0;
+      wake_up_process(p);
+    } */
+
+    ping[0] = create_kernel_proc(&k_simple_proc1, NULL, "kproc1-aaaa");
+    wake_up_process(ping[0]);
+
+    ping[1] = create_kernel_proc(&k_simple_proc2, NULL, "kproc2-aaaa");
+    wake_up_process(ping[1]);
+
+    // do_schedule();
+    //load_current_proc(idle_proc);
+    _switch_to_task(ping[0]);
+  } else if (!strcmp(input, "cup")) {
+    Proc *p = NULL;
+
+    for (int i = 0; i < ALLOC_NUM; ++i) {
+      p = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
       p->p = rand() % 20;
       wake_up_process(p);
     }
 
-  } else if (!strcmp(input, "cup")) {
-    Proc *p = NULL;
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
-      p->p = rand() % 15;
-      wake_up_process(p);
-    }
+    // do_schedule();
+
+    //_switch_to_task(current_proc);
 
   } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((struct kmultiboot2info *)kMultiBootInfo, 0);

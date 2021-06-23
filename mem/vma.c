@@ -12,7 +12,7 @@ void init_kernel_vma(u32 base_address) {
 }
 
 bool is_valid_va(u32 va) {
-  kprintf("Checking address %x in [%x - %x]\n", va, kernel_vm->start,
-          kernel_vm->end);
+ /*  kprintf("Checking address %x in [%x - %x]\n", va, kernel_vm->start,
+          kernel_vm->end); */
   return (va <= kernel_vm->end && va >= kernel_vm->start);
 }

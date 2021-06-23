@@ -39,12 +39,13 @@ void gpFaultHandler(registers_t *regs) {
 
 void pageFaultHandler(registers_t *regs) {
   UNUSED(regs);
-  setBackgroundColor(BLUE);
+  /* setBackgroundColor(BLUE);
   setTextColor(RED);
-  kprintf("Page fault EIP 0x%x Code: %d\n", regs->eip, regs->err_code);
-  kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2));
+  kprintf("Page fault CS:EIP 0x%x:0x%x Code: %d\n", regs->cs, regs->eip,
+          regs->err_code);
+  kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
-  if (current_proc != NULL) printProc(current_proc);
+  //if (current_proc != NULL) printProc(current_proc);
 
   u32 faultAddress = getRegisterValue(CR2);
   if (!is_valid_va(faultAddress)) {

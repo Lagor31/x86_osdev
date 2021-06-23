@@ -1,12 +1,15 @@
 #ifndef KERNEL_H
 #define KERNEL_H
+#include "../proc/proc.h"
 
 #define KERNEL_VIRTUAL_ADDRESS_BASE 0xC0000000
 #define KERNEL_NORMAL_MEMORY_BASE 0xD0000000
-#define KERNEL_LOWEST_PDIR  768
+#define KERNEL_LOWEST_PDIR 768
 #define KERNEL_RATIO 8
 #define PA(X) ((X) - (KERNEL_VIRTUAL_ADDRESS_BASE))
 #define VA(X) ((X) + (KERNEL_VIRTUAL_ADDRESS_BASE))
+
+extern Proc *ping[2];
 
 typedef void (*callme)(void);
 

@@ -11,14 +11,15 @@
 
 void top();
 void do_schedule();
+
 typedef struct process {
   const char *name;
+  registers_t regs;
+  u32 esp0;
   void *stack;
   u16 pid;
   bool isKernelProc;
   VMRegion *Vm;
-  registers_t regs;
-  u32 esp0;
   void *kernel_stack_top;
   u32 **page_dir;
   u8 p;
@@ -26,6 +27,9 @@ typedef struct process {
 } Proc;
 
 extern Proc *current_proc;
+extern Proc *idle_proc;
+
+extern void _switch_to_task(Proc *);
 
 void printProc(Proc *);
 void init_kernel_proc();
@@ -34,7 +38,9 @@ int idle();
 void load_current_proc(Proc *p);
 void wake_up_process(Proc *p);
 void stop_process(Proc *);
-void k_simple_proc();
+void k_simple_proc1();
+void k_simple_proc2();
+
 void u_simple_proc();
 
 Proc *create_kernel_proc(int (*procfunc)(void *input), void *data,
