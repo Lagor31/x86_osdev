@@ -87,7 +87,7 @@ _switch_to_task:
  
     mov edi, [current_proc]   ;edi = address of the previous task's "thread control block"
     ;esp offset in the Proc struct
-    mov [edi+ (14 * 4) + 4],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
+    mov [edi + (14 * 4) + 4],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
     
     ;Load next task's state 
     mov esi,eax                 ;esi = address of the next task's "thread control block" (parameter passed on stack)
@@ -95,8 +95,8 @@ _switch_to_task:
  
     mov esp,[esi + 60]         ;Load ESP for next task's kernel stack from the thread's TCB
     ;mov eax,[esi+CR3]         ;eax = address of page directory for next task
-    mov ebx,[esi+68]        ;ebx = address for the top of the next task's kernel stack
-    mov [tss +  4],ebx            ;Adjust the ESP0 field in the TSS (used by CPU for for CPL=3 -> CPL=0 privilege level changes)
+    mov ebx,[esi + 68]        ;ebx = address for the top of the next task's kernel stack
+    mov [tss + 4],ebx            ;Adjust the ESP0 field in the TSS (used by CPU for for CPL=3 -> CPL=0 privilege level changes)
     ;mov ecx,cr3                   ;ecx = previous task's virtual address space
  
     ;cmp eax,ecx                   ;Does the virtual address space need to being changed?
@@ -108,4 +108,5 @@ _switch_to_task:
     pop edi
     pop esi
     pop ebx 
+    sti
 ret  

@@ -13,7 +13,7 @@
 #define ALLOC_SIZE 0
 
 extern Proc *ping[ALLOC_NUM];
-
+extern Proc * topTask;
 extern struct kmultiboot2info *kMultiBootInfo;
 
 extern struct rfsHeader *krfsHeader;

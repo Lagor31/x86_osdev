@@ -87,9 +87,9 @@ void scheduler_handler(registers_t *regs) {
   /*
   Need to reset the register C otherwise no more RTC interrutps will be sent
  */
-  /*if (current_proc != NULL)
+  /* if (current_proc != NULL)
     kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
-            getRegisterValue(ESP), tss.esp0);*/
+            getRegisterValue(ESP), tss.esp0); */
   // I was in user mode
   /*  u8 userMode = FALSE;
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
@@ -119,13 +119,22 @@ void scheduler_handler(registers_t *regs) {
    } */
 
   UNUSED(regs);
-  regs->eflags |= 0x200;
+  //regs->eflags |= 0x200;
   // regs->eflags |= 0x3000;
 
   //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
 
   outb(0x70, 0x0C);  // select register C
   inb(0x71);         // just throw away contents
+  if (current_proc != NULL) {
+    outb(0xA0, 0x20); /* slave */
+    outb(0x20, 0x20); /* master */
+    u32 r = rand();
+    _switch_to_task(ping[r % ALLOC_NUM]);
+  }
+
+  outb(0xA0, 0x20); /* slave */
+  outb(0x20, 0x20); /* master */
   // kprintf("i = %d\n", i);
   //_switch_to_task(ping[rand() % 10]);
   /* if (current_proc != NULL && current_proc->isKernelProc == FALSE)

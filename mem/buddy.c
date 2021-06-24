@@ -11,6 +11,7 @@
 
 #include "../mem/mem.h"
 #include "../utils/list.h"
+
 Buddy buddy[MAX_ORDER + 1];
 Buddy normal_buddy[MAX_ORDER + 1];
 u32 phys_normal_offset = 0;

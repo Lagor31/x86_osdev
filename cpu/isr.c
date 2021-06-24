@@ -207,5 +207,5 @@ void irq_install() {
   activateCursor();
   init_scheduler_timer();
 
-  asm volatile("sti");
+  //asm volatile("sti");
 }

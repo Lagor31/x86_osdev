@@ -32,6 +32,46 @@ u8 firstTime = 1;
 void **kfrees;
 void **nfrees;
 Proc *ping[ALLOC_NUM];
+Proc *topTask;
+
+void k_simple_proc() {
+  int c = 0;
+  while (TRUE) {
+    // kprintf("1) PID %d\n", current_proc->pid);
+    // printProc(current_proc);
+    char *string = normal_page_alloc(5);
+    char *s = "Hey!";
+    memcopy((byte *)s, (byte *)string, strlen(s));
+
+    asm("cli");
+    u32 prevPos = getCursorOffset();
+    setCursorPos(10 + current_proc->pid, 40);
+    kprintf("PID: %d (%d) %s", current_proc->pid, ++c, string);
+    setCursorOffset(prevPos);
+    asm("sti");
+
+    kfreeNormal(string);
+
+    syncWait(50);
+    // u8 i = rand() % ALLOC_NUM;
+    /* wake_up_process(ping[i]);
+    sleep_process(current_proc);
+    _switch_to_task(ping[i]); */
+    /*  wake_up_process(ping[1]);
+     sleep_process(ping[0]);
+
+
+     printProc(ping[1]); */
+    // load_current_proc(ping[0]);
+    //_switch_to_task(ping[1]);
+    // sleep_process(current_proc);
+    // do_schedule();
+    // kprintf("Now scheduling PID: %d\n", current_proc->pid);
+    //_switch_to_task(current_proc);
+    __asm__ __volatile__("hlt");
+  }
+}
+
 /*
   After running the content of meminit.asm we get called here
 */
@@ -87,6 +127,17 @@ void kernel_main(u32 magic, u32 addr) {
   // setCursorPos(2, 0);
 
   kprintf("\n>");
+
+  Proc *p;
+  for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+    p->p = rand() % 20;
+    ping[i] = p;
+    wake_up_process(p);
+  }
+
+  topTask = create_kernel_proc(top, NULL, "toppe-aa");
+
   irq_install();
 
   srand(tickCount);
@@ -99,40 +150,6 @@ void kernel_main(u32 magic, u32 addr) {
   Sort of a kernel level shell that interpets a few of the commands a user can
   give to the terminal
 */
-
-void k_simple_proc() {
-  int c = 0;
-  while (TRUE) {
-    // kprintf("1) PID %d\n", current_proc->pid);
-    // printProc(current_proc);
-    char *string = normal_page_alloc(5);
-    char *s = "Hey!";
-    memcopy((byte *)s, (byte *)string, strlen(s));
-
-    u32 prevPos = getCursorOffset();
-    setCursorPos(10 + current_proc->pid, 40);
-    kprintf("PID: %d (%d) %s", current_proc->pid, ++c, string);
-    setCursorOffset(prevPos);
-    syncWait(5);
-    u8 i = rand() % ALLOC_NUM;
-    wake_up_process(ping[i]);
-    sleep_process(current_proc);
-    _switch_to_task(ping[i]);
-    kfreeNormal(string);
-    /*  wake_up_process(ping[1]);
-     sleep_process(ping[0]);
-
-
-     printProc(ping[1]); */
-    // load_current_proc(ping[0]);
-    //_switch_to_task(ping[1]);
-    // sleep_process(current_proc);
-    // do_schedule();
-    // kprintf("Now scheduling PID: %d\n", current_proc->pid);
-    //_switch_to_task(current_proc);
-    __asm__ __volatile__("hlt");
-  }
-}
 
 void user_input(char *input) {
   if (strcmp(input, "help") == 0)
@@ -152,9 +169,6 @@ void user_input(char *input) {
       ping[i] = p;
       wake_up_process(p);
     }
-
-    // do_schedule();
-    // load_current_proc(idle_proc);
     _switch_to_task(ping[0]);
   } else if (!strcmp(input, "cup")) {
     Proc *p = NULL;
