@@ -91,7 +91,6 @@ void kernel_main(u32 magic, u32 addr) {
 
   srand(tickCount);
 
-
   // runProcess();
   hlt();
 }
@@ -106,17 +105,23 @@ void k_simple_proc() {
   while (TRUE) {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
+    char *string = normal_page_alloc(5);
+    char *s = "Hey!";
+    memcopy((byte *)s, (byte *)string, strlen(s));
+
     u32 prevPos = getCursorOffset();
     setCursorPos(10 + current_proc->pid, 40);
-    kprintf("PID: %d (%d)", current_proc->pid, ++c);
+    kprintf("PID: %d (%d) %s", current_proc->pid, ++c, string);
     setCursorOffset(prevPos);
-    syncWait(50);
+    syncWait(5);
     u8 i = rand() % ALLOC_NUM;
     wake_up_process(ping[i]);
     sleep_process(current_proc);
     _switch_to_task(ping[i]);
+    kfreeNormal(string);
     /*  wake_up_process(ping[1]);
      sleep_process(ping[0]);
+
 
      printProc(ping[1]); */
     // load_current_proc(ping[0]);
