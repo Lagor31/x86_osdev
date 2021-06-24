@@ -24,9 +24,6 @@
 
 #include "kernel.h"
 
-#define ALLOC_NUM 2
-#define ALLOC_SIZE 0
-
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
 struct fileTableEntry *kfileTable;
@@ -34,7 +31,7 @@ struct fileTableEntry *kfileTable;
 u8 firstTime = 1;
 void **kfrees;
 void **nfrees;
-Proc *ping[2];
+Proc *ping[ALLOC_NUM];
 /*
   After running the content of meminit.asm we get called here
 */
@@ -77,7 +74,6 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Kernel procs enabled!");
 
   kPrintOKMessage("Kernel inizialized!");
-  // kPrintOKMessage("Kernel paging enabled");
 
   resetScreenColors();
   /*
@@ -93,6 +89,9 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
   irq_install();
 
+  srand(tickCount);
+
+
   // runProcess();
   hlt();
 }
@@ -101,6 +100,34 @@ void kernel_main(u32 magic, u32 addr) {
   Sort of a kernel level shell that interpets a few of the commands a user can
   give to the terminal
 */
+
+void k_simple_proc() {
+  int c = 0;
+  while (TRUE) {
+    // kprintf("1) PID %d\n", current_proc->pid);
+    // printProc(current_proc);
+    u32 prevPos = getCursorOffset();
+    setCursorPos(10 + current_proc->pid, 40);
+    kprintf("PID: %d (%d)", current_proc->pid, ++c);
+    setCursorOffset(prevPos);
+    syncWait(50);
+    u8 i = rand() % ALLOC_NUM;
+    wake_up_process(ping[i]);
+    sleep_process(current_proc);
+    _switch_to_task(ping[i]);
+    /*  wake_up_process(ping[1]);
+     sleep_process(ping[0]);
+
+     printProc(ping[1]); */
+    // load_current_proc(ping[0]);
+    //_switch_to_task(ping[1]);
+    // sleep_process(current_proc);
+    // do_schedule();
+    // kprintf("Now scheduling PID: %d\n", current_proc->pid);
+    //_switch_to_task(current_proc);
+    __asm__ __volatile__("hlt");
+  }
+}
 
 void user_input(char *input) {
   if (strcmp(input, "help") == 0)
@@ -113,21 +140,16 @@ void user_input(char *input) {
   } else if (!strcmp(input, "top")) {
     top();
   } else if (!strcmp(input, "ckp")) {
-    /* Proc *p;
+    Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
-      p->p = 0;
+      p->p = rand() % 20;
+      ping[i] = p;
       wake_up_process(p);
-    } */
-
-    ping[0] = create_kernel_proc(&k_simple_proc1, NULL, "kproc1-aaaa");
-    wake_up_process(ping[0]);
-
-    ping[1] = create_kernel_proc(&k_simple_proc2, NULL, "kproc2-aaaa");
-    wake_up_process(ping[1]);
+    }
 
     // do_schedule();
-    //load_current_proc(idle_proc);
+    // load_current_proc(idle_proc);
     _switch_to_task(ping[0]);
   } else if (!strcmp(input, "cup")) {
     Proc *p = NULL;

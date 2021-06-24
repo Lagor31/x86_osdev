@@ -205,7 +205,7 @@ void irq_install() {
   // Setup requested IRQs
   init_keyboard();
   activateCursor();
-  //init_scheduler_timer();
+  init_scheduler_timer();
 
   asm volatile("sti");
 }

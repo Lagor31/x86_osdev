@@ -80,15 +80,15 @@ _switch_to_task:
     ;  The task isn't able to change CR3 so it doesn't need to be saved
     ;  Segment registers are constants (while running kernel code) so they don't need to be saved
  
-   ;eax = selected process to run
     push ebx
     push esi
     push edi
     push ebp
  
     mov edi, [current_proc]   ;edi = address of the previous task's "thread control block"
+    ;esp offset in the Proc struct
     mov [edi+ (14 * 4) + 4],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
- 
+    
     ;Load next task's state 
     mov esi,eax                 ;esi = address of the next task's "thread control block" (parameter passed on stack)
     mov [current_proc],esi      ;Current task's TCB is the next task TCB

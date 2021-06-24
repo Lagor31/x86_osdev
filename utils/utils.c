@@ -40,7 +40,7 @@ void saveMultibootInfo(uint32_t addr, uint32_t magic) {
 void fakeSysLoadingBar(uint32_t loadingTime) {
   uint32_t waitForEachBar = loadingTime / VGA_COLUMNS;
   for (uint8_t i = 0; i < VGA_COLUMNS; ++i) {
-    kprintf(" ");
+    kprintf("X");
     syncWait(waitForEachBar);
   }
 }

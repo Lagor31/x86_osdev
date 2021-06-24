@@ -55,6 +55,7 @@ static void itoa(char *buf, int base, int d) {
     p2--;
   }
 }
+
 void kprintfColor(u8 color, const char *format, ...) {
   setTextColor(color);
   char **arg = (char **)&format;

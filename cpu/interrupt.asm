@@ -60,7 +60,7 @@ irq_common_stub:
     mov gs, bx
     popa
     add esp, 8
-    ;or dword [esp + 8], 0x200 ;Set the IF flag in the registers so that interrupts 
+    or dword [esp + 8], 0x200 ;Set the IF flag in the registers so that interrupts 
                                 ;are enabled after
 iret
 

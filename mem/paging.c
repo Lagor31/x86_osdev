@@ -141,7 +141,6 @@ void init_test_user_paging() {
 void init_kernel_paging() {
   kprintf("Setting up kernel paging...\n");
   int num_entries = (total_kernel_pages >> 10);
-  kprintf("Tot: %d Num entried PD: %d\n", total_kernel_pages, num_entries);
   u16 i = 0;
   for (i = 0; i < PD_SIZE; i++) {
     // Mapping the higher half kernel

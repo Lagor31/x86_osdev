@@ -115,13 +115,16 @@ void u_simple_proc() {
 void k_simple_proc1() {
   while (TRUE) {
     kprintf("1) PID %d\n", 1);
-
-    wake_up_process(ping[1]);
+    u8 i = rand() % 2;
+    wake_up_process(ping[i]);
     sleep_process(ping[0]);
+    _switch_to_task(ping[i]);
+    /*  wake_up_process(ping[1]);
+     sleep_process(ping[0]);
 
-    // printProc(ping[1]);
+     printProc(ping[1]); */
     // load_current_proc(ping[0]);
-    _switch_to_task(ping[1]);
+    //_switch_to_task(ping[1]);
     // sleep_process(current_proc);
     // do_schedule();
     // kprintf("Now scheduling PID: %d\n", current_proc->pid);
@@ -130,16 +133,22 @@ void k_simple_proc1() {
   }
 }
 
+
+
 void k_simple_proc2() {
   while (TRUE) {
     kprintf("2) PID %d\n", 2);
+    u8 i = rand() % 2;
 
-    wake_up_process(ping[0]);
+    wake_up_process(ping[i]);
     sleep_process(ping[1]);
-    // printProc(ping[0]);
+    _switch_to_task(ping[i]);
+    /*     wake_up_process(ping[0]);
+        sleep_process(ping[1]);
+        printProc(ping[0]); */
 
     // load_current_proc(ping[1]);
-    _switch_to_task(ping[0]);
+    //_switch_to_task(ping[0]);
     // sleep_process(current_proc);
     // do_schedule();
     // kprintf("Now scheduling PID: %d\n", current_proc->pid);
