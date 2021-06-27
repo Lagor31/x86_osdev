@@ -11,8 +11,8 @@
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"
-#include "../utils/utils.h"
 #include "../proc/proc.h"
+#include "../utils/utils.h"
 
 #include "isr.h"
 #include "ports.h"
@@ -25,6 +25,7 @@
 */
 u64 tickCount = 0;
 stdDate_t *sysDate;
+Proc *next_proc;
 
 /*Halts the cpu and stays idle until the timer has expired */
 void syncWait(u32 millis) {
@@ -106,7 +107,7 @@ void scheduler_handler(registers_t *regs) {
   } */
 
   ++tickCount;
-  // do_schedule();
+  next_proc = (Proc *)do_schedule();
   /*  if (current_proc != NULL && current_proc != prev_proc) {
      // kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
      regs->eip = current_proc->regs.eip;
@@ -119,20 +120,22 @@ void scheduler_handler(registers_t *regs) {
    } */
 
   UNUSED(regs);
-  //regs->eflags |= 0x200;
+  // regs->eflags |= 0x200;
   // regs->eflags |= 0x3000;
 
   //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
 
-  outb(0x70, 0x0C);  // select register C
-  inb(0x71);         // just throw away contents
-  if (current_proc != NULL) {
+  if (current_proc != next_proc) {
+    outb(0x70, 0x0C); // select register C
+    inb(0x71);        // just throw away contents
     outb(0xA0, 0x20); /* slave */
     outb(0x20, 0x20); /* master */
-    u32 r = rand();
-    _switch_to_task(ping[r % ALLOC_NUM]);
+    _switch_to_task(next_proc);
+    return;
   }
 
+  outb(0x70, 0x0C); // select register C
+  inb(0x71);        // just throw away contents
   outb(0xA0, 0x20); /* slave */
   outb(0x20, 0x20); /* master */
   // kprintf("i = %d\n", i);
@@ -155,7 +158,7 @@ void init_scheduler_timer() {
 void setTimerPhase(u16 rate) {
   // NMI_disable();
 
-  rate &= 0x0F;  // rate must be above 2 and not over 15
+  rate &= 0x0F; // rate must be above 2 and not over 15
 
   /* Setting up rate */
   outb(0x70, 0x8A);                 // set index to register A, disable NMI
@@ -165,10 +168,10 @@ void setTimerPhase(u16 rate) {
                                        the bottom 4 bits. */
 
   /* Enabling RTC */
-  outb(0x70, 0x8B);  // select register B, and disable NMI
-  prev = inb(0x71);  // read the current value of register B
-  outb(0x70, 0x8B);  /* set the index again (a read will reset the index to
-                        register D) */
+  outb(0x70, 0x8B); // select register B, and disable NMI
+  prev = inb(0x71); // read the current value of register B
+  outb(0x70, 0x8B); /* set the index again (a read will reset the index to
+                       register D) */
   outb(0x71, prev | 0x40); /* write the previous value ORed with 0x40. This
                             turns on bit 6 of register B */
   // NMI_enable();

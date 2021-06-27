@@ -1,14 +1,14 @@
 #include "proc.h"
 #include "../cpu/timer.h"
-#include "../mem/mem.h"
-#include "../mem/vma.h"
 #include "../cpu/types.h"
-#include "../utils/utils.h"
 #include "../drivers/screen.h"
-#include "../libc/functions.h"
-#include "../libc/strings.h"
 #include "../kernel/kernel.h"
 #include "../libc/constants.h"
+#include "../libc/functions.h"
+#include "../libc/strings.h"
+#include "../mem/mem.h"
+#include "../mem/vma.h"
+#include "../utils/utils.h"
 
 List sleep_queue;
 List running_queue;
@@ -65,9 +65,10 @@ void top() {
 
 void stop_process(Proc *p) {
   // kprintf("Stopping process PID %d\n", p->pid);
+  asm volatile("cli");
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  current_proc = NULL;
+  asm volatile("sti");
 }
 
 void sleep_process(Proc *p) {
@@ -79,7 +80,6 @@ void sleep_process(Proc *p) {
 
   // do_schedule();
   //_switch_to_task(current_proc);
-  // current_proc = NULL;
 }
 
 void u_simple_proc() {
@@ -111,7 +111,9 @@ void u_simple_proc() {
   }
 }
 
-void do_schedule() {
+Proc *do_schedule() {
+  List *l;
+
   // List *l;
   /*   bool create = (rand() % 10000) == 0;
     if (create == TRUE) {
@@ -126,55 +128,64 @@ void do_schedule() {
       wake_up_process(n);
     }
    */
-  /*   if (list_length(&stopped_queue) > 0) {
-      list_for_each(l, &stopped_queue) {
-        Proc *p = list_entry(l, Proc, head);
-        bool kill = (rand() % 10) == 0;
-        if (kill == TRUE) {
-          kill_process(p);
-        }
-      }
-    } */
-  /*
-    if (current_proc != NULL) {
-      bool stop = (rand() % 100000) == 0;
-      if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID)
-    {
-        //stop_process(current_proc);
-        goto schedule_proc;
-      } else {
-        bool sleep = (rand() % 2) == 0;
-        if (sleep == TRUE && current_proc != NULL &&
-            current_proc->pid != IDLE_PID) {
-          sleep_process(current_proc);
-          goto schedule_proc;
-        }
-      }
-    } */
-
-  // schedule_proc:
-  /*   if (list_length(&sleep_queue) > 0) {
-      list_for_each(l, &sleep_queue) {
-        Proc *p = list_entry(l, Proc, head);
-        // bool wakeup = (rand() % 2) == 0;
-        // if (wakeup == TRUE) {
-        wake_up_process(p);
-        //goto end;
-        //}
-      }
-    } */
-
-  /*   u8 pri = rand() % 20;
-    list_for_each(l, &running_queue) {
+  /* if (list_length(&stopped_queue) > 0) {
+    list_for_each(l, &stopped_queue) {
       Proc *p = list_entry(l, Proc, head);
-      if (pri >= p->p && rand() % 4 == 0) {
-        current_proc = p;
-        goto end;
+      bool kill = (rand() % 10) == 0;
+      if (kill == TRUE) {
+        kill_process(p);
       }
     }
+  } */
+
+  if (current_proc != NULL) {
+    bool stop = (rand() % 10000) == 0;
+    if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
+      stop_process(current_proc);
+      goto schedule_proc;
+    } else {
+      bool sleep = (rand() % 200000) == 0;
+      if (sleep == TRUE && current_proc != NULL &&
+          current_proc->pid != IDLE_PID) {
+        sleep_process(current_proc);
+        goto schedule_proc;
+      }
     }
-  end:
-    if (current_proc == NULL) current_proc = idle_proc; */
+  }
+
+schedule_proc:
+  if (list_length(&sleep_queue) > 0) {
+    list_for_each(l, &sleep_queue) {
+      Proc *p = list_entry(l, Proc, head);
+      bool wakeup = (rand() % 20000) == 0;
+      if (wakeup == TRUE) {
+        wake_up_process(p);
+        break;
+      }
+    }
+  }
+
+  if (list_length(&stopped_queue) > 0) {
+    list_for_each(l, &stopped_queue) {
+      Proc *p = list_entry(l, Proc, head);
+      bool wakeup = (rand() % 20000) == 0;
+      if (wakeup == TRUE) {
+        wake_up_process(p);
+        break;
+      }
+    }
+  }
+
+  u32 i = 0;
+  u32 size = list_length(&running_queue);
+  if (size > 1) {
+    u32 sched = rand() % size;
+    list_for_each(l, &running_queue) {
+      if (i++ == sched)
+        return (Proc *)list_entry(l, Proc, head);
+    }
+  }
+  return idle_proc;
 }
 
 void load_current_proc(Proc *p) { current_proc = p; }
@@ -208,13 +219,7 @@ void init_kernel_proc() {
 
 void idle() {
   while (TRUE) {
-    kprintf("Idle!\n");
-    u8 i = rand() % 2;
-    wake_up_process(ping[i]);
-    sleep_process(current_proc);
-    kprintf("Waking up %d\n", i);
-    _switch_to_task(ping[i]);
-    // sleep_process(current_proc);
+    hlt();
   }
 }
 
@@ -300,7 +305,7 @@ void kill_process(Proc *p) {
   kfreeNormal((void *)p->name);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   kfreeNormal(p->stack);
-  if (p->isKernelProc == FALSE) kfreeNormal(p->kernel_stack_top);
+  kfreeNormal(p->kernel_stack_top);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
   kfreeNormal((void *)p);
   // current_proc = NULL;

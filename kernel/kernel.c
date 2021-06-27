@@ -4,21 +4,20 @@
 
 #include "../boot/multiboot.h"
 
+#include "../cpu/gdt.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/strings.h"
-#include "../utils/list.h"
-#include "../utils/shutdown.h"
-#include "../cpu/gdt.h"
 #include "../mem/mem.h"
-#include "../mem/slab.h"
-#include "../proc/proc.h"
 #include "../mem/paging.h"
 #include "../mem/slab.h"
+#include "../proc/proc.h"
 #include "../rfs/rfs.h"
+#include "../utils/list.h"
+#include "../utils/shutdown.h"
 
 #include "../cpu/timer.h"
 
@@ -39,18 +38,49 @@ void k_simple_proc() {
   while (TRUE) {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
+    asm("cli");
+
     char *string = normal_page_alloc(5);
     char *s = "Hey!";
     memcopy((byte *)s, (byte *)string, strlen(s));
 
-    asm("cli");
     u32 prevPos = getCursorOffset();
     setCursorPos(10 + current_proc->pid, 40);
     kprintf("PID: %d (%d) %s", current_proc->pid, ++c, string);
     setCursorOffset(prevPos);
+    kfreeNormal(string);
+
     asm("sti");
 
+    syncWait(50);
+    // u8 i = rand() % ALLOC_NUM;
+    /* wake_up_process(ping[i]);
+    sleep_process(current_proc);
+    _switch_to_task(ping[i]); */
+    /*  wake_up_process(ping[1]);
+     sleep_process(ping[0]);
+
+
+     printProc(ping[1]); */
+    // load_current_proc(ping[0]);
+    //_switch_to_task(ping[1]);
+    // sleep_process(current_proc);
+    // do_schedule();
+    // kprintf("Now scheduling PID: %d\n", current_proc->pid);
+    //_switch_to_task(current_proc);
+    __asm__ __volatile__("hlt");
+  }
+}
+
+void k_simple_proc_no() {
+  while (TRUE) {
+    // kprintf("1) PID %d\n", current_proc->pid);
+    // printProc(current_proc);
+    asm("cli");
+    char *string = normal_page_alloc(5);
+    string[0] = 'F';
     kfreeNormal(string);
+    asm("sti");
 
     syncWait(50);
     // u8 i = rand() % ALLOC_NUM;
@@ -116,30 +146,18 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Kernel inizialized!");
 
   resetScreenColors();
-  /*
-    syncWait(10);
-
-     clearScreen();
-    printInitScreen();
-   */
-  // Print the prompt and we're done, from now on we hlt the cpu until an
-  // external interrupts gives control back to our OS
-  // setCursorPos(2, 0);
 
   kprintf("\n>");
 
   Proc *p;
   for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+    p = create_kernel_proc(&k_simple_proc, NULL, "initp-aaaa");
     p->p = rand() % 20;
     ping[i] = p;
     wake_up_process(p);
   }
 
-  topTask = create_kernel_proc(top, NULL, "toppe-aa");
-
   irq_install();
-
   srand(tickCount);
 
   // runProcess();
@@ -164,12 +182,10 @@ void user_input(char *input) {
   } else if (!strcmp(input, "ckp")) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_kernel_proc(&k_simple_proc, NULL, "kproc-aaaa");
+      p = create_kernel_proc(&k_simple_proc_no, NULL, "kproc-aaaa");
       p->p = rand() % 20;
-      ping[i] = p;
       wake_up_process(p);
     }
-    _switch_to_task(ping[0]);
   } else if (!strcmp(input, "cup")) {
     Proc *p = NULL;
 
@@ -204,7 +220,8 @@ void user_input(char *input) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfrees[i] = kernel_page_alloc(ALLOC_SIZE);
       u8 *a = kfrees[i];
-      if (a == NULL) break;
+      if (a == NULL)
+        break;
 
       uint32_t pd_pos = (uint32_t)a >> 22;
       uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;

@@ -5,12 +5,11 @@
 #define MIN_PRIORITY 20
 #define MAX_PRIORITY 0
 
-#include "../utils/list.h"
-#include "../mem/vma.h"
 #include "../mem/paging.h"
+#include "../mem/vma.h"
+#include "../utils/list.h"
 
 void top();
-void do_schedule();
 
 typedef struct process {
   const char *name;
@@ -41,6 +40,8 @@ void wake_up_process(Proc *p);
 void stop_process(Proc *);
 void k_simple_proc1();
 void k_simple_proc2();
+
+Proc *do_schedule();
 
 void u_simple_proc();
 
