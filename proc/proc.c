@@ -57,7 +57,7 @@ void top() {
 
   if (current_proc != NULL) {
     setBackgroundColor(GREEN_ON_BLACK);
-    kprintf("[Current]: \n");
+    kprintf("[CURRENT]: \n");
     printProcSimple(current_proc);
     resetScreenColors();
   }
@@ -143,13 +143,13 @@ Proc *do_schedule() {
     if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
       stop_process(current_proc);
       goto schedule_proc;
-    } else {
-      bool sleep = (rand() % 200000) == 0;
-      if (sleep == TRUE && current_proc != NULL &&
-          current_proc->pid != IDLE_PID) {
-        sleep_process(current_proc);
-        goto schedule_proc;
-      }
+    }
+
+    bool sleep = (rand() % 200000) == 0;
+    if (sleep == TRUE && current_proc != NULL &&
+        current_proc->pid != IDLE_PID) {
+      sleep_process(current_proc);
+      goto schedule_proc;
     }
   }
 

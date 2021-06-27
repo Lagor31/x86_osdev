@@ -91,7 +91,7 @@ void scheduler_handler(registers_t *regs) {
   /* if (current_proc != NULL)
     kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
             getRegisterValue(ESP), tss.esp0); */
-  // I was in user mode
+  // I was in user mod
   /*  u8 userMode = FALSE;
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
 */
@@ -100,32 +100,19 @@ void scheduler_handler(registers_t *regs) {
 
   /* Proc *prev_proc = current_proc;
 
-  if (current_proc != NULL) {
-    current_proc->regs.eip = regs->eip;
-    current_proc->regs.esp = regs->esp;
-    current_proc->esp0 = tss.esp0;
-  } */
+*/
 
   ++tickCount;
   next_proc = (Proc *)do_schedule();
-  /*  if (current_proc != NULL && current_proc != prev_proc) {
-     // kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
-     regs->eip = current_proc->regs.eip;
-     regs->esp = current_proc->regs.esp;
-     regs->ss = current_proc->regs.ss;
-     regs->ds = current_proc->regs.ds;
-     regs->cs = current_proc->regs.cs;
-     tss.esp0 = current_proc->esp0;
-     tss.ss0 = 0x10;
-   } */
-
+  // srand(tickCount);
   UNUSED(regs);
-  // regs->eflags |= 0x200;
   // regs->eflags |= 0x3000;
 
   //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
+  // next_proc = ping[rand() % ALLOC_NUM];
+  if (next_proc != NULL && next_proc != current_proc && current_proc != NULL) {
+    //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
 
-  if (current_proc != next_proc) {
     outb(0x70, 0x0C); // select register C
     inb(0x71);        // just throw away contents
     outb(0xA0, 0x20); /* slave */
@@ -134,10 +121,32 @@ void scheduler_handler(registers_t *regs) {
     return;
   }
 
+  if (current_proc != NULL) {
+    current_proc->regs.eip = regs->eip;
+    current_proc->regs.esp = regs->esp;
+    current_proc->esp0 = tss.esp0;
+  }
+
+  regs->eflags |= 0x200;
+
+  /*
+    if (current_proc != NULL) {
+      // kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
+      regs->eip = current_proc->regs.eip;
+      regs->esp = current_proc->regs.esp;
+      regs->ss = current_proc->regs.ss;
+      regs->ds = current_proc->regs.ds;
+      regs->cs = current_proc->regs.cs;
+      tss.esp0 = current_proc->esp0;
+      tss.ss0 = 0x10;
+    }
+   */
   outb(0x70, 0x0C); // select register C
   inb(0x71);        // just throw away contents
-  outb(0xA0, 0x20); /* slave */
-  outb(0x20, 0x20); /* master */
+
+  outb(0xA0, 0x20);
+  outb(0x20, 0x20);
+
   // kprintf("i = %d\n", i);
   //_switch_to_task(ping[rand() % 10]);
   /* if (current_proc != NULL && current_proc->isKernelProc == FALSE)

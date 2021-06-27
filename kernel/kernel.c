@@ -52,7 +52,7 @@ void k_simple_proc() {
 
     asm("sti");
 
-    syncWait(50);
+    syncWait(100);
     // u8 i = rand() % ALLOC_NUM;
     /* wake_up_process(ping[i]);
     sleep_process(current_proc);
@@ -82,7 +82,7 @@ void k_simple_proc_no() {
     kfreeNormal(string);
     asm("sti");
 
-    syncWait(50);
+    syncWait(10000);
     // u8 i = rand() % ALLOC_NUM;
     /* wake_up_process(ping[i]);
     sleep_process(current_proc);
@@ -134,7 +134,6 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Enabling kernel paging...");
   init_kernel_paging();
-  init_test_user_paging();
   kPrintOKMessage("Kernel paging enabled!");
 
   kMemCacheInit();
