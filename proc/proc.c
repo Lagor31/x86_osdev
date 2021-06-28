@@ -21,62 +21,65 @@ static u32 pid = IDLE_PID;
 void top() {
   List *l;
   Proc *p;
+  
+  while (TRUE) {
 
-  setBackgroundColor(LIGHTGREEN);
-  setTextColor(BLACK);
-  kprintf("[RUNNING]\n");
-  u32 c = 0;
-  list_for_each(l, &running_queue) {
-    p = list_entry(l, Proc, head);
-    kprintf("[%d] ", c++);
-    printProcSimple(p);
-  }
-  resetScreenColors();
-
-  c = 0;
-  setBackgroundColor(LIGHTCYAN);
-  setTextColor(BLACK);
-  kprintf("[SLEEP]\n");
-  list_for_each(l, &sleep_queue) {
-    p = list_entry(l, Proc, head);
-    kprintf("[%d] ", c++);
-    printProcSimple(p);
-  }
-  resetScreenColors();
-
-  c = 0;
-  setBackgroundColor(WHITE);
-  setTextColor(RED);
-  kprintf("[STOPPED]\n");
-  list_for_each(l, &stopped_queue) {
-    p = list_entry(l, Proc, head);
-    kprintf("[%d] ", c++);
-    printProcSimple(p);
-  }
-  resetScreenColors();
-
-  if (current_proc != NULL) {
-    setBackgroundColor(GREEN_ON_BLACK);
-    kprintf("[CURRENT]: \n");
-    printProcSimple(current_proc);
+    asm volatile("cli");
+    setCursorPos(1, 0);
+    setBackgroundColor(LIGHTGREEN);
+    setTextColor(BLACK);
+    kprintf("[RUNNING]\n");
+    u32 c = 0;
+    list_for_each(l, &running_queue) {
+      p = list_entry(l, Proc, head);
+      kprintf("[%d] ", c++);
+      printProcSimple(p);
+    }
     resetScreenColors();
+
+    c = 0;
+    setBackgroundColor(LIGHTCYAN);
+    setTextColor(BLACK);
+    kprintf("[SLEEP]\n");
+    list_for_each(l, &sleep_queue) {
+      p = list_entry(l, Proc, head);
+      kprintf("[%d] ", c++);
+      printProcSimple(p);
+    }
+    resetScreenColors();
+
+    c = 0;
+    setBackgroundColor(WHITE);
+    setTextColor(RED);
+    kprintf("[STOPPED]\n");
+    list_for_each(l, &stopped_queue) {
+      p = list_entry(l, Proc, head);
+      kprintf("[%d] ", c++);
+      printProcSimple(p);
+    }
+    resetScreenColors();
+
+    if (current_proc != NULL) {
+      setBackgroundColor(GREEN_ON_BLACK);
+      kprintf("[CURRENT]: \n");
+      printProcSimple(current_proc);
+      resetScreenColors();
+    }
+    asm volatile("sti");
+    syncWait(100);
   }
 }
 
 void stop_process(Proc *p) {
   // kprintf("Stopping process PID %d\n", p->pid);
-  asm volatile("cli");
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  asm volatile("sti");
 }
 
 void sleep_process(Proc *p) {
   // kprintf("Sleeping process PID %d\n", p->pid);
-  asm volatile("cli");
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
-  asm volatile("sti");
 
   // do_schedule();
   //_switch_to_task(current_proc);
@@ -157,7 +160,7 @@ schedule_proc:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
       Proc *p = list_entry(l, Proc, head);
-      bool wakeup = (rand() % 20000) == 0;
+      bool wakeup = (rand() % 2000) == 0;
       if (wakeup == TRUE) {
         wake_up_process(p);
         break;
@@ -168,7 +171,7 @@ schedule_proc:
   if (list_length(&stopped_queue) > 0) {
     list_for_each(l, &stopped_queue) {
       Proc *p = list_entry(l, Proc, head);
-      bool wakeup = (rand() % 20000) == 0;
+      bool wakeup = (rand() % 2000) == 0;
       if (wakeup == TRUE) {
         wake_up_process(p);
         break;
@@ -191,10 +194,8 @@ schedule_proc:
 void load_current_proc(Proc *p) { current_proc = p; }
 void wake_up_process(Proc *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
-  asm volatile("cli");
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
-  asm volatile("sti");
 }
 
 void printProcSimple(Proc *p) {
@@ -209,7 +210,6 @@ void init_kernel_proc() {
   LIST_INIT(&sleep_queue);
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
-  current_proc = NULL;
   idle_proc = create_kernel_proc(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
   idle_proc->p = MIN_PRIORITY;

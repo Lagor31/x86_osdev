@@ -115,8 +115,10 @@ void scheduler_handler(registers_t *regs) {
 
     outb(0x70, 0x0C); // select register C
     inb(0x71);        // just throw away contents
-    outb(0xA0, 0x20); /* slave */
-    outb(0x20, 0x20); /* master */
+    if (regs->int_no >= IRQ8) {
+      outb(0xA0, 0x20); /* slave */
+      outb(0x20, 0x20);
+    }
     _switch_to_task(next_proc);
     return;
   }
@@ -144,8 +146,10 @@ void scheduler_handler(registers_t *regs) {
   outb(0x70, 0x0C); // select register C
   inb(0x71);        // just throw away contents
 
-  outb(0xA0, 0x20);
-  outb(0x20, 0x20);
+  /*   if (regs->int_no >= IRQ8) {
+      outb(0xA0, 0x20);
+      outb(0x20, 0x20);
+    } */
 
   // kprintf("i = %d\n", i);
   //_switch_to_task(ping[rand() % 10]);

@@ -40,35 +40,54 @@ void k_simple_proc() {
     // printProc(current_proc);
     asm("cli");
 
-    char *string = normal_page_alloc(5);
+    char *string = normal_page_alloc(10);
     char *s = "Hey!";
     memcopy((byte *)s, (byte *)string, strlen(s));
 
     u32 prevPos = getCursorOffset();
-    setCursorPos(10 + current_proc->pid, 40);
+    setCursorPos(current_proc->pid + 1, 60);
     kprintf("PID: %d (%d) %s", current_proc->pid, ++c, string);
     setCursorOffset(prevPos);
     kfreeNormal(string);
 
+    sleep_process(current_proc);
+    _switch_to_task((Proc *)do_schedule());
+    asm("sti");
+    syncWait(100);
+
+    asm("cli");
+    stop_process(current_proc);
+    _switch_to_task((Proc *)do_schedule());
     asm("sti");
 
-    syncWait(100);
-    // u8 i = rand() % ALLOC_NUM;
-    /* wake_up_process(ping[i]);
-    sleep_process(current_proc);
-    _switch_to_task(ping[i]); */
-    /*  wake_up_process(ping[1]);
-     sleep_process(ping[0]);
-
-
-     printProc(ping[1]); */
-    // load_current_proc(ping[0]);
-    //_switch_to_task(ping[1]);
-    // sleep_process(current_proc);
-    // do_schedule();
-    // kprintf("Now scheduling PID: %d\n", current_proc->pid);
-    //_switch_to_task(current_proc);
     __asm__ __volatile__("hlt");
+  }
+}
+
+void top_bar() {
+  while (TRUE) {
+    // kprintf("1) PID %d\n", current_proc->pid);
+    // printProc(current_proc);
+
+    asm("cli");
+
+    u32 prevPos = getCursorOffset();
+    setCursorPos(0, 0);
+    setBackgroundColor(WHITE);
+    setTextColor(BLUE);
+
+    int totFree = total_used_memory / 1024 / 1024;
+    int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
+
+    const char *title = " Uptime: %ds           Used: %d / %d Mb" 
+                        "                     ProcsRunning: %d ";
+    kprintf(title, getUptime() / 1000, totFree, tot,
+            list_length(&running_queue));
+    setCursorOffset(prevPos);
+    resetScreenColors();
+    asm("sti");
+    syncWait(50);
+    //__asm__ __volatile__("hlt");
   }
 }
 
@@ -77,12 +96,12 @@ void k_simple_proc_no() {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
     asm("cli");
-    char *string = normal_page_alloc(5);
+    char *string = normal_page_alloc(10);
     string[0] = 'F';
     kfreeNormal(string);
     asm("sti");
 
-    syncWait(10000);
+    syncWait(100);
     // u8 i = rand() % ALLOC_NUM;
     /* wake_up_process(ping[i]);
     sleep_process(current_proc);
@@ -146,6 +165,7 @@ void kernel_main(u32 magic, u32 addr) {
 
   resetScreenColors();
 
+  clearScreen();
   kprintf("\n>");
 
   Proc *p;
@@ -155,6 +175,13 @@ void kernel_main(u32 magic, u32 addr) {
     ping[i] = p;
     wake_up_process(p);
   }
+
+  p = create_kernel_proc(&top_bar, NULL, "topb-aaaa");
+  wake_up_process(p);
+
+
+  p = create_kernel_proc(&top, NULL, "proc-aaaa");
+  wake_up_process(p);
 
   irq_install();
   srand(tickCount);

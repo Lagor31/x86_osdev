@@ -27,6 +27,7 @@ typedef struct process {
 
 extern Proc *current_proc;
 extern Proc *idle_proc;
+extern List running_queue;
 
 extern void _switch_to_task(Proc *);
 
@@ -37,6 +38,7 @@ void kill_process(Proc *);
 void idle();
 void load_current_proc(Proc *p);
 void wake_up_process(Proc *p);
+void sleep_process(Proc *p);
 void stop_process(Proc *);
 void k_simple_proc1();
 void k_simple_proc2();

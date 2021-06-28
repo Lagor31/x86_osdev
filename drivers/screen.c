@@ -225,7 +225,7 @@ void clearScreen() {
   for (int r = 0; r < VGA_ROWS; r++) {
     clearRow(r);
   }
-  setCursorPos(0, 0);
+  setCursorPos(1, 0);
 }
 
 void clearRow(int row) {
