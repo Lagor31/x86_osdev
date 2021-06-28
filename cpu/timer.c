@@ -105,7 +105,7 @@ void scheduler_handler(registers_t *regs) {
   else
     next_proc = current_proc;
 
-  // srand(tickCount);
+  srand(tickCount);
   // regs->eflags |= 0x3000;
 
   //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
@@ -129,6 +129,7 @@ void scheduler_handler(registers_t *regs) {
     current_proc->esp0 = tss.esp0;
   }
 
+  //Enable interrupts if no context switch was necessary
   regs->eflags |= 0x200;
 
 

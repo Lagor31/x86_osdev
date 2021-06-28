@@ -197,7 +197,7 @@ schedule_proc:
         continue;
       }
 
-      pTot += p->p;
+      pTot += p->nice;
     }
   } else {
     idle_proc->sched_count = millisToTicks(MIN_QUANTUM_MS);
@@ -210,7 +210,7 @@ schedule_proc:
     list_add(&running_queue, &next->head);
 
     int q = MAX_QUANTUM_MS / proc_num;
-    int penalty = (((int)pAvg - (int)next->p) * P_PENALTY);
+    int penalty = (((int)pAvg - (int)next->nice) * P_PENALTY);
     q += penalty;
 
     if (q <= 0)
@@ -233,7 +233,7 @@ void wake_up_process(Proc *p) {
 }
 
 void printProcSimple(Proc *p) {
-  kprintf("%s - PID: %d - P: %d T: %dms\n", p->name, p->pid, p->p,
+  kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
           ticksToMillis(p->running_ticks));
 }
 void printProc(Proc *p) {
@@ -247,7 +247,7 @@ void init_kernel_proc() {
   LIST_INIT(&stopped_queue);
   idle_proc = create_kernel_proc(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
-  idle_proc->p = MIN_PRIORITY;
+  idle_proc->nice = MIN_PRIORITY;
   wake_up_process(idle_proc);
   current_proc = idle_proc;
 }
@@ -264,7 +264,7 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
 
   user_process->isKernelProc = FALSE;
 
-  user_process->p = 0;
+  user_process->nice = 0;
   user_process->pid = pid++;
   LIST_INIT(&user_process->head);
   user_process->page_dir = (u32 **)&user_page_directory;
@@ -301,7 +301,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 
   user_process->isKernelProc = TRUE;
 
-  user_process->p = 0;
+  user_process->nice = 0;
   user_process->pid = pid++;
   LIST_INIT(&user_process->head);
   user_process->page_dir = (u32 **)&kernel_page_directory;
@@ -322,7 +322,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 
   char *proc_name = normal_page_alloc(0);
   memcopy((byte *)args, (byte *)proc_name, strlen(args));
-  intToAscii(rand() % 100, &proc_name[6]);
+  //intToAscii(rand() % 100, &proc_name[6]);
 
   user_process->name = proc_name;
   user_process->sched_count = 0;

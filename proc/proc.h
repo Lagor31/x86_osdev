@@ -24,7 +24,7 @@ typedef struct process {
   VMRegion *Vm;
   void *kernel_stack_top;
   u32 **page_dir;
-  u8 p;
+  u8 nice;
   u32 running_ticks;
   u32 sched_count;
   List head;

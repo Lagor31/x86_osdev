@@ -23,11 +23,6 @@ KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
 struct fileTableEntry *kfileTable;
 
-u8 firstTime = 1;
-void **kfrees;
-void **nfrees;
-Proc *topTask;
-
 void k_simple_proc() {
   int c = 0;
   while (TRUE) {
@@ -41,7 +36,7 @@ void k_simple_proc() {
 
     u32 prevPos = getCursorOffset();
     setCursorPos(current_proc->pid + 1, 50);
-    kprintf("PID: %d P: %d (%d) %s", current_proc->pid, current_proc->p, ++c,
+    kprintf("PID: %d N: %d (%d) %s", current_proc->pid, current_proc->nice, ++c,
             string);
     // printProcSimple(current_proc);
     setCursorOffset(prevPos);
@@ -68,9 +63,9 @@ void top_bar() {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
 
-    asm("cli");
-
     u32 prevPos = getCursorOffset();
+    asm volatile("cli");
+
     setCursorPos(0, 0);
     setBackgroundColor(BLUE);
     setTextColor(YELLOW);
@@ -85,7 +80,7 @@ void top_bar() {
             list_length(&running_queue));
     setCursorOffset(prevPos);
     resetScreenColors();
-    asm("sti");
+    asm volatile("sti");
     syncWait(10);
     //__asm__ __volatile__("hlt");
   }
@@ -140,9 +135,6 @@ void kernel_main(u32 magic, u32 addr) {
   saveMultibootInfo(addr, magic);
   parse_multiboot_info((KMultiBoot2Info *)kMultiBootInfo);
 
-  kfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
-  nfrees = boot_alloc(ALLOC_NUM * sizeof(void *), 1);
-
   kPrintOKMessage("Installing IRQs/ISRs...\n");
   isr_install();
   kPrintOKMessage("IRQs/ISRs installed!\n");
@@ -169,23 +161,20 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
 
   Proc *p;
-  for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_kernel_proc(&k_simple_proc, NULL, "initp-aaaa");
-    p->p = rand() % 20;
-    wake_up_process(p);
-  }
+  /*  for (int i = 0; i < ALLOC_NUM; ++i) {
+     p = create_kernel_proc(&k_simple_proc, NULL, "initp-aaaa");
+     p->p = rand() % 10;
+     wake_up_process(p);
+   } */
 
-  p = create_kernel_proc(&top_bar, NULL, "topb-aaaa");
-  p->p = 0;
-  wake_up_process(p);
-
-  p = create_kernel_proc(&top, NULL, "proc-aaaa");
-  p->p = 0;
+  p = create_kernel_proc(&top_bar, NULL, "head");
+  p->nice = 0;
   wake_up_process(p);
 
   irq_install();
   srand(tickCount);
-
+  clearScreen();
+  kprintf("\n>");
   // runProcess();
   hlt();
 }
@@ -200,7 +189,6 @@ void user_input(char *input) {
     printHelp();
   else if (!strcmp(input, "clear")) {
     clearScreen();
-    setCursorPos(2, 0);
   } else if (!strcmp(input, "kill")) {
     u32 numProc = list_length(&running_queue);
     u32 killMe = 0;
@@ -218,32 +206,30 @@ void user_input(char *input) {
         break;
       }
     }
+    resetScreenColors();
+    clearScreen();
+    kprintf(">");
     _switch_to_task((Proc *)do_schedule());
 
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "head")) {
+    Proc *p = NULL;
+    p = create_kernel_proc(&top_bar, NULL, "head");
+    p->nice = 0;
+    wake_up_process(p);
   } else if (!strcmp(input, "top")) {
-    top();
+    Proc *p = NULL;
+    p = create_kernel_proc(&top, NULL, "top");
+    p->nice = 0;
+    wake_up_process(p);
   } else if (!strcmp(input, "ckp")) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_kernel_proc(&k_simple_proc_no, NULL, "kproc-aaaa");
-      p->p = rand() % 20;
+      p = create_kernel_proc(&k_simple_proc_no, NULL, "kthread");
+      p->nice = rand() % 20;
       wake_up_process(p);
     }
-  } else if (!strcmp(input, "cup")) {
-    Proc *p = NULL;
-
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
-      p->p = rand() % 20;
-      wake_up_process(p);
-    }
-
-    // do_schedule();
-
-    //_switch_to_task(current_proc);
-
   } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
@@ -261,66 +247,6 @@ void user_input(char *input) {
     printUptime();
   } else if (!strcmp(input, "mods")) {
     printModuleInfo(getModule(kMultiBootInfo));
-  } else if (!strcmp(input, "kalloc")) {
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfrees[i] = kernel_page_alloc(ALLOC_SIZE);
-      u8 *a = kfrees[i];
-      if (a == NULL) break;
-
-      uint32_t pd_pos = (uint32_t)a >> 22;
-      uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-      Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos]);
-      kprintf("Addr = 0x%x PD[%d], PTE[%d] = Phys->0x%x\n", a, pd_pos, pte_pos,
-              ((pte[pte_pos] >> 20) * PAGE_SIZE));
-      *a = 'F';
-    }
-  } else if (!strcmp(input, "nalloc")) {
-    if (firstTime) {
-      firstTime = 0;
-      for (int i = 0; i < ALLOC_NUM; ++i) {
-        nfrees[i] = normal_page_alloc(ALLOC_SIZE);
-        u8 *a = nfrees[i];
-        if ((u32)a < KERNEL_VIRTUAL_ADDRESS_BASE) {
-          kprintf("Wrapped around?\n");
-
-          break;
-        }
-        /*  uint32_t pd_pos = (uint32_t)a >> 22;
-         uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-         Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
-         kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos,
-         pte_pos, (pte[pte_pos] >> 12)); */
-
-        *(a) = 'F';
-        *(a + 1) = 0xD;
-      }
-      kPrintOKMessage("Done!");
-    } else {
-      for (int i = 0; i < ALLOC_NUM; ++i) {
-        nfrees[i] = normal_page_alloc(ALLOC_SIZE);
-        u8 *a = nfrees[i];
-        if ((u32)a < KERNEL_VIRTUAL_ADDRESS_BASE) {
-          kprintf("Wrapped around?\n");
-          return;
-        }
-        /*   uint32_t pd_pos = (uint32_t)a >> 22;
-          uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;
-          Pte *pte = (Pte *)VA((uint32_t)kernel_page_directory[pd_pos] >> 12);
-          kprintf("Addr = 0x%x PD[%d], PTE[%d] = PFN->0x%x\n", a, pd_pos,
-          pte_pos, (pte[pte_pos] >> 12)); */
-        *(a) = 'X';
-        *(a + 1) = 0xE;
-      }
-    }
-
-  } else if (!strcmp(input, "kfree")) {
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfree(kfrees[i]);
-    }
-  } else if (!strcmp(input, "nfree")) {
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      kfreeNormal(nfrees[i]);
-    }
   } else if (!strcmp(input, "shutdown")) {
     shutdown();
   } else if (!strcmp(input, "reboot")) {
