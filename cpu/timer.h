@@ -12,7 +12,6 @@
 
 
 extern uint64_t tickCount;
-extern stdDate_t* sysDate;
 extern tss_entry_t tss;
 
 void scheduler_handler(registers_t* regs);

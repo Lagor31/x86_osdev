@@ -44,17 +44,8 @@ void k_simple_proc() {
 
     sleep_process(current_proc);
     asm("sti");
-
     // syncWait(500);
-
     _switch_to_task((Proc *)do_schedule());
-
-    /*  asm("cli");
-     stop_process(current_proc);
-     _switch_to_task((Proc *)do_schedule());
-     asm("sti"); */
-
-    //__asm__ __volatile__("hlt");
   }
 }
 
@@ -95,23 +86,7 @@ void k_simple_proc_no() {
     string[0] = 'F';
     kfreeNormal(string);
     asm("sti");
-
     syncWait(100);
-    // u8 i = rand() % ALLOC_NUM;
-    /* wake_up_process(ping[i]);
-    sleep_process(current_proc);
-    _switch_to_task(ping[i]); */
-    /*  wake_up_process(ping[1]);
-     sleep_process(ping[0]);
-
-
-     printProc(ping[1]); */
-    // load_current_proc(ping[0]);
-    //_switch_to_task(ping[1]);
-    // sleep_process(current_proc);
-    // do_schedule();
-    // kprintf("Now scheduling PID: %d\n", current_proc->pid);
-    //_switch_to_task(current_proc);
     __asm__ __volatile__("hlt");
   }
 }
@@ -161,11 +136,11 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
 
   Proc *p;
-  /*  for (int i = 0; i < ALLOC_NUM; ++i) {
-     p = create_kernel_proc(&k_simple_proc, NULL, "initp-aaaa");
-     p->p = rand() % 10;
-     wake_up_process(p);
-   } */
+  for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
+    p->nice = rand() % 10;
+    wake_up_process(p);
+  }
 
   p = create_kernel_proc(&top_bar, NULL, "head");
   p->nice = 0;

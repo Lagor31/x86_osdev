@@ -332,11 +332,6 @@ void printGdt() {
   }
 }
 
-stdDate_t *getSystemDate() {
-  uint32_t upMillis = getUptime();
-  getStandardDate(upMillis, sysDate);
-  return sysDate;
-}
 
 void getStandardDate(uint32_t millis, stdDate_t *date) {
   date->seconds = millis / MILLIS_IN_A_SECOND;

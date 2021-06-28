@@ -24,7 +24,6 @@
    would take 139.4  MILLENNIA to wrap around, i think we're safe...
 */
 u64 tickCount = 0;
-stdDate_t *sysDate;
 Proc *next_proc;
 
 /*Halts the cpu and stays idle until the timer has expired */
@@ -35,6 +34,7 @@ void syncWait(u32 millis) {
     __asm__("hlt");
   }
 }
+
 /* Returns the number of milliseconds since RTC setup */
 u32 getUptime() { return (u32)ticksToMillis(tickCount); }
 
@@ -44,55 +44,13 @@ inline u32 ticksToMillis(u64 tickCount) {
   return (u32)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
 
-/* static void timer_callback(registers_t *regs) {
-  u8 userMode = FALSE;
-  if ((regs->cs & 0b11) == 3) userMode = TRUE;
 
-  if (userMode)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
-
-
-  ++tickCount;
-  int prevPos = getCursorOffset();
-  setCursorPos(2, 0);
-  kprintf("Kernel code! (%d)\n", tickCount);
-  setCursorPos(getOffsetRow(prevPos), getOffsetCol(prevPos));
-
-  if (userMode) {
-    user_page_directory[0] &= 0xFFFFFFDF;
-    user_page_directory[1] &= 0xFFFFFFDF;
-    _loadPageDirectory((uint32_t *)PA(
-        (uint32_t)&user_page_directory));  // REmove A(ccessed) bit
-  }
-} */
-
-/*
-
-void initTime(uint32_t freq) {
-  //Install the function we just wrote
-  register_interrupt_handler(IRQ0, timer_callback);
-
-  // Get the PIT value: hardware clock at 1193180 Hz
-  uint32_t divisor = 1193180 / freq;
-  u8 low = (u8)(divisor & 0xFF);
-  u8 high = (u8)((divisor >> 8) & 0xFF);
-  // Send the command
-  outb(0x43, 0x36); // Command port
-  outb(0x40, low);
-  outb(0x40, high);
-}
-
-*/
 u32 i = 0;
 void scheduler_handler(registers_t *regs) {
  
   /*  if (current_proc != NULL)
     kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
             getRegisterValue(ESP), tss.esp0);  */
-  // I was in user mod
-  /*  u8 userMode = FALSE;
-   if ((regs->cs & 0b11) == 3) userMode = TRUE;
-*/
 
   ++tickCount;
   current_proc->running_ticks++;

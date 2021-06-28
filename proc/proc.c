@@ -160,17 +160,17 @@ Proc *do_schedule() {
     }
   } */
 
-schedule_proc:
-  if (list_length(&sleep_queue) > 0) {
+//schedule_proc:
+   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
       Proc *p = list_entry(l, Proc, head);
-      //bool wakeup = (rand() % 2000) == 0;
+      //bool wakeup = (rand() % 200) == 0;
       if (TRUE) {
         wake_up_process(p);
         break;
       }
     }
-  }
+  } 
 /* 
    if (list_length(&stopped_queue) > 0) {
     list_for_each(l, &stopped_queue) {
