@@ -1,12 +1,11 @@
-#include "../cpu/types.h"
-
-#include "../utils/utils.h"
+#include "kernel.h"
 
 #include "../boot/multiboot.h"
-
 #include "../cpu/gdt.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
+#include "../cpu/timer.h"
+#include "../cpu/types.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
@@ -18,10 +17,7 @@
 #include "../rfs/rfs.h"
 #include "../utils/list.h"
 #include "../utils/shutdown.h"
-
-#include "../cpu/timer.h"
-
-#include "kernel.h"
+#include "../utils/utils.h"
 
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
@@ -54,9 +50,9 @@ void k_simple_proc() {
     sleep_process(current_proc);
     asm("sti");
 
-    _switch_to_task((Proc *)do_schedule());
+    // syncWait(500);
 
-    syncWait(10);
+    _switch_to_task((Proc *)do_schedule());
 
     /*  asm("cli");
      stop_process(current_proc);
@@ -76,20 +72,21 @@ void top_bar() {
 
     u32 prevPos = getCursorOffset();
     setCursorPos(0, 0);
-    setBackgroundColor(WHITE);
-    setTextColor(BLUE);
+    setBackgroundColor(BLUE);
+    setTextColor(YELLOW);
 
     int totFree = total_used_memory / 1024 / 1024;
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
-    const char *title = " Uptime: %ds           Used: %d / %d Mb"
-                        "                     ProcsRunning: %d ";
+    const char *title =
+        " Uptime: %04ds          Used: %03d / %04d Mb"
+        "                    ProcsRunning: %02d ";
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
     setCursorOffset(prevPos);
     resetScreenColors();
     asm("sti");
-    syncWait(50);
+    syncWait(10);
     //__asm__ __volatile__("hlt");
   }
 }
@@ -249,8 +246,7 @@ void user_input(char *input) {
     for (int i = 0; i < ALLOC_NUM; ++i) {
       kfrees[i] = kernel_page_alloc(ALLOC_SIZE);
       u8 *a = kfrees[i];
-      if (a == NULL)
-        break;
+      if (a == NULL) break;
 
       uint32_t pd_pos = (uint32_t)a >> 22;
       uint32_t pte_pos = (uint32_t)a >> 12 & 0x3FF;

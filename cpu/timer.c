@@ -97,6 +97,8 @@ void scheduler_handler(registers_t *regs) {
 */
 
   ++tickCount;
+  current_proc->running_ticks++;
+
   if (current_proc != NULL && current_proc->sched_count-- <= 0)
     // reschedule
     next_proc = (Proc *)do_schedule();
@@ -129,7 +131,6 @@ void scheduler_handler(registers_t *regs) {
 
   regs->eflags |= 0x200;
 
-  current_proc->running_ticks++;
 
   /*
     if (current_proc != NULL) {
@@ -159,13 +160,10 @@ void scheduler_handler(registers_t *regs) {
 }
 
 void init_scheduler_timer() {
-  //asm volatile("cli");
-
   setTimerPhase(RTC_PHASE);
   register_interrupt_handler(IRQ8, scheduler_handler);
   tss.esp0 = getRegisterValue(ESP);
   tss.ss0 = 0x10;
-  //asm volatile("sti");
 }
 
 void setTimerPhase(u16 rate) {
