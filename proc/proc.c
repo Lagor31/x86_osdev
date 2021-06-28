@@ -71,12 +71,16 @@ void top() {
 }
 
 void stop_process(Proc *p) {
+   if(p->pid == IDLE_PID)
+    return;
   // kprintf("Stopping process PID %d\n", p->pid);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
 }
 
 void sleep_process(Proc *p) {
+  if(p->pid == IDLE_PID)
+    return;
   // kprintf("Sleeping process PID %d\n", p->pid);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
@@ -141,7 +145,7 @@ Proc *do_schedule() {
     }
   } */
 
-  if (current_proc != NULL) {
+  /* if (current_proc != NULL) {
     bool stop = (rand() % 10000) == 0;
     if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
       stop_process(current_proc);
@@ -154,7 +158,7 @@ Proc *do_schedule() {
       sleep_process(current_proc);
       goto schedule_proc;
     }
-  }
+  } */
 
 schedule_proc:
   if (list_length(&sleep_queue) > 0) {
@@ -167,8 +171,8 @@ schedule_proc:
       }
     }
   }
-
-  if (list_length(&stopped_queue) > 0) {
+/* 
+   if (list_length(&stopped_queue) > 0) {
     list_for_each(l, &stopped_queue) {
       Proc *p = list_entry(l, Proc, head);
       bool wakeup = (rand() % 2000) == 0;
@@ -177,7 +181,7 @@ schedule_proc:
         break;
       }
     }
-  }
+  }  */
 
   u32 i = 0;
   u32 pAvg = 0;
@@ -332,6 +336,8 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 }
 
 void kill_process(Proc *p) {
+   if(p->pid == IDLE_PID)
+    return;
   list_remove(&p->head);
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */

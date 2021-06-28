@@ -79,8 +79,8 @@ void top_bar() {
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
     const char *title =
-        " Uptime: %4ds          Used: %4d / %4d Mb"
-        "                  ProcsRunning: %3d ";
+        " Uptime: %4ds             Used: %4d / %4d Mb"
+        "               ProcsRunning: %3d ";
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
     setCursorOffset(prevPos);
@@ -201,6 +201,25 @@ void user_input(char *input) {
   else if (!strcmp(input, "clear")) {
     clearScreen();
     setCursorPos(2, 0);
+  } else if (!strcmp(input, "kill")) {
+    u32 numProc = list_length(&running_queue);
+    u32 killMe = 0;
+
+    killMe = rand() % numProc;
+
+    List *l;
+    u32 i = 0;
+    Proc *p = NULL;
+    list_for_each(l, &running_queue) {
+      p = list_entry(l, Proc, head);
+      if (i++ == killMe) {
+        kprintf("Stopping PID: %d\n", p->pid);
+        stop_process(p);
+        break;
+      }
+    }
+    _switch_to_task((Proc *)do_schedule());
+
   } else if (!strcmp(input, "free")) {
     printFree();
   } else if (!strcmp(input, "top")) {
