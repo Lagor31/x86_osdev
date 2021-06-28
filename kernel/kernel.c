@@ -30,7 +30,6 @@ struct fileTableEntry *kfileTable;
 u8 firstTime = 1;
 void **kfrees;
 void **nfrees;
-Proc *ping[ALLOC_NUM];
 Proc *topTask;
 
 void k_simple_proc() {
@@ -45,7 +44,7 @@ void k_simple_proc() {
     memcopy((byte *)s, (byte *)string, strlen(s));
 
     u32 prevPos = getCursorOffset();
-    setCursorPos(current_proc->pid + 1, 40);
+    setCursorPos(current_proc->pid + 1, 50);
     kprintf("PID: %d P: %d (%d) %s", current_proc->pid, current_proc->p, ++c,
             string);
     // printProcSimple(current_proc);
@@ -175,7 +174,6 @@ void kernel_main(u32 magic, u32 addr) {
   for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_kernel_proc(&k_simple_proc, NULL, "initp-aaaa");
     p->p = rand() % 20;
-    ping[i] = p;
     wake_up_process(p);
   }
 

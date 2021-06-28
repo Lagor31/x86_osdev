@@ -4,7 +4,7 @@
 #define IDLE_PID 0
 #define MIN_PRIORITY 20
 #define MAX_PRIORITY 0
-#define MAX_QUANTUM_MS 100
+#define MAX_QUANTUM_MS 200
 #define MIN_QUANTUM_MS 1
 #define P_PENALTY 5
 
@@ -25,6 +25,7 @@ typedef struct process {
   void *kernel_stack_top;
   u32 **page_dir;
   u8 p;
+  u32 running_ticks;
   u32 sched_count;
   List head;
 } Proc;

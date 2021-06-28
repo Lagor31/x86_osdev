@@ -97,7 +97,6 @@ void scheduler_handler(registers_t *regs) {
 */
 
   ++tickCount;
-
   if (current_proc != NULL && current_proc->sched_count-- <= 0)
     // reschedule
     next_proc = (Proc *)do_schedule();
@@ -129,6 +128,8 @@ void scheduler_handler(registers_t *regs) {
   }
 
   regs->eflags |= 0x200;
+
+  current_proc->running_ticks++;
 
   /*
     if (current_proc != NULL) {

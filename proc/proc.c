@@ -228,7 +228,8 @@ void wake_up_process(Proc *p) {
 }
 
 void printProcSimple(Proc *p) {
-  kprintf("%s - PID: %d - P: %d\n", p->name, p->pid, p->p);
+  kprintf("%s - PID: %d - P: %d T: %dms\n", p->name, p->pid, p->p,
+          ticksToMillis(p->running_ticks));
 }
 void printProc(Proc *p) {
   kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
@@ -320,6 +321,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 
   user_process->name = proc_name;
   user_process->sched_count = 0;
+  user_process->running_ticks = 0;
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */
