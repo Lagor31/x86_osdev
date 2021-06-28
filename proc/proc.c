@@ -160,8 +160,8 @@ schedule_proc:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
       Proc *p = list_entry(l, Proc, head);
-      bool wakeup = (rand() % 2000) == 0;
-      if (wakeup == TRUE) {
+      //bool wakeup = (rand() % 2000) == 0;
+      if (TRUE) {
         wake_up_process(p);
         break;
       }
@@ -188,8 +188,10 @@ schedule_proc:
     // u32 sched = rand() % size;
     list_for_each(l, &running_queue) {
       Proc *p = (Proc *)list_entry(l, Proc, head);
-      if (i++ == 0)
+      if (i++ == 0) {
         next = p;
+        continue;
+      }
 
       pTot += p->p;
     }
@@ -197,8 +199,7 @@ schedule_proc:
     idle_proc->sched_count = millisToTicks(MIN_QUANTUM_MS);
     return idle_proc;
   }
-
-  pAvg = pTot / proc_num;
+  pAvg = pTot / (proc_num - 1);
 
   if (next != NULL) {
     list_remove(&next->head);

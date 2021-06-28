@@ -51,11 +51,12 @@ void k_simple_proc() {
     setCursorOffset(prevPos);
     kfreeNormal(string);
 
-    /*     sleep_process(current_proc);
-        _switch_to_task((Proc *)do_schedule());
-     */
+    sleep_process(current_proc);
     asm("sti");
-    //syncWait(1000);
+
+    _switch_to_task((Proc *)do_schedule());
+
+    syncWait(10);
 
     /*  asm("cli");
      stop_process(current_proc);
