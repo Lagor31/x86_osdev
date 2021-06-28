@@ -85,9 +85,7 @@ void initTime(uint32_t freq) {
 */
 u32 i = 0;
 void scheduler_handler(registers_t *regs) {
-  /*
-  Need to reset the register C otherwise no more RTC interrutps will be sent
- */
+ 
   /*  if (current_proc != NULL)
     kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
             getRegisterValue(ESP), tss.esp0);  */
@@ -106,10 +104,7 @@ void scheduler_handler(registers_t *regs) {
     next_proc = current_proc;
 
   srand(tickCount);
-  // regs->eflags |= 0x3000;
 
-  //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
-  // next_proc = ping[rand() % ALLOC_NUM];
   if (next_proc != NULL && next_proc != current_proc && current_proc != NULL) {
     //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
 
@@ -132,32 +127,11 @@ void scheduler_handler(registers_t *regs) {
   //Enable interrupts if no context switch was necessary
   regs->eflags |= 0x200;
 
-
   /*
-    if (current_proc != NULL) {
-      // kprintf("Scheduled new proc PID: %d\n", current_proc->pid);
-      regs->eip = current_proc->regs.eip;
-      regs->esp = current_proc->regs.esp;
-      regs->ss = current_proc->regs.ss;
-      regs->ds = current_proc->regs.ds;
-      regs->cs = current_proc->regs.cs;
-      tss.esp0 = current_proc->esp0;
-      tss.ss0 = 0x10;
-    }
-   */
+    Need to reset the register C otherwise no more RTC interrutps will be sent
+  */
   outb(0x70, 0x0C); // select register C
   inb(0x71);        // just throw away contents
-
-  /*   if (regs->int_no >= IRQ8) {
-      outb(0xA0, 0x20);
-      outb(0x20, 0x20);
-    } */
-
-  // kprintf("i = %d\n", i);
-  //_switch_to_task(ping[rand() % 10]);
-  /* if (current_proc != NULL && current_proc->isKernelProc == FALSE)
-    _loadPageDirectory((uint32_t *)PA((uint32_t)&user_page_directory)); */
-  // if (current_proc != NULL) _switch_to_task(current_proc);
 }
 
 void init_scheduler_timer() {
