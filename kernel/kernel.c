@@ -79,8 +79,8 @@ void top_bar() {
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
     const char *title =
-        " Uptime: %04ds          Used: %03d / %04d Mb"
-        "                    ProcsRunning: %02d ";
+        " Uptime: %4ds          Used: %4d / %4d Mb"
+        "                  ProcsRunning: %3d ";
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
     setCursorOffset(prevPos);
