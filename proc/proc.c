@@ -21,7 +21,7 @@ static u32 pid = IDLE_PID;
 void top() {
   List *l;
   Proc *p;
-  
+
   while (TRUE) {
 
     asm volatile("cli");
@@ -148,7 +148,7 @@ Proc *do_schedule() {
       goto schedule_proc;
     }
 
-    bool sleep = (rand() % 200000) == 0;
+    bool sleep = (rand() % 20000) == 0;
     if (sleep == TRUE && current_proc != NULL &&
         current_proc->pid != IDLE_PID) {
       sleep_process(current_proc);
@@ -180,14 +180,43 @@ schedule_proc:
   }
 
   u32 i = 0;
-  u32 size = list_length(&running_queue);
-  if (size > 1) {
-    u32 sched = rand() % size;
+  u32 pAvg = 0;
+  u32 pTot = 0;
+  Proc *next = NULL;
+  u32 proc_num = list_length(&running_queue);
+  if (proc_num > 1) {
+    // u32 sched = rand() % size;
     list_for_each(l, &running_queue) {
-      if (i++ == sched)
-        return (Proc *)list_entry(l, Proc, head);
+      Proc *p = (Proc *)list_entry(l, Proc, head);
+      if (i++ == 0)
+        next = p;
+
+      pTot += p->p;
     }
+  } else {
+    idle_proc->sched_count = millisToTicks(MIN_QUANTUM_MS);
+    return idle_proc;
   }
+
+  pAvg = pTot / proc_num;
+
+  if (next != NULL) {
+    list_remove(&next->head);
+    list_add(&running_queue, &next->head);
+
+    int q = MAX_QUANTUM_MS / proc_num;
+    int penalty = (((int)pAvg - (int)next->p) * P_PENALTY);
+    q += penalty;
+
+    if (q <= 0)
+      next->sched_count = millisToTicks(MIN_QUANTUM_MS);
+    else
+      next->sched_count = millisToTicks((u32)q);
+
+    return next;
+  }
+
+  idle_proc->sched_count = millisToTicks(MIN_QUANTUM_MS);
   return idle_proc;
 }
 
@@ -290,6 +319,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   intToAscii(rand() % 100, &proc_name[6]);
 
   user_process->name = proc_name;
+  user_process->sched_count = 0;
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */

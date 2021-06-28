@@ -96,16 +96,15 @@ void scheduler_handler(registers_t *regs) {
    if ((regs->cs & 0b11) == 3) userMode = TRUE;
 */
 
-  //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
-
-  /* Proc *prev_proc = current_proc;
-
-*/
-
   ++tickCount;
-  next_proc = (Proc *)do_schedule();
+
+  if (current_proc != NULL && current_proc->sched_count-- <= 0)
+    // reschedule
+    next_proc = (Proc *)do_schedule();
+  else
+    next_proc = current_proc;
+
   // srand(tickCount);
-  UNUSED(regs);
   // regs->eflags |= 0x3000;
 
   //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));

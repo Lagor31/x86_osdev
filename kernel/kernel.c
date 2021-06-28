@@ -45,22 +45,25 @@ void k_simple_proc() {
     memcopy((byte *)s, (byte *)string, strlen(s));
 
     u32 prevPos = getCursorOffset();
-    setCursorPos(current_proc->pid + 1, 60);
-    kprintf("PID: %d (%d) %s", current_proc->pid, ++c, string);
+    setCursorPos(current_proc->pid + 1, 40);
+    kprintf("PID: %d P: %d (%d) %s", current_proc->pid, current_proc->p, ++c,
+            string);
+    // printProcSimple(current_proc);
     setCursorOffset(prevPos);
     kfreeNormal(string);
 
-    sleep_process(current_proc);
-    _switch_to_task((Proc *)do_schedule());
+    /*     sleep_process(current_proc);
+        _switch_to_task((Proc *)do_schedule());
+     */
     asm("sti");
-    syncWait(100);
+    //syncWait(1000);
 
-    asm("cli");
-    stop_process(current_proc);
-    _switch_to_task((Proc *)do_schedule());
-    asm("sti");
+    /*  asm("cli");
+     stop_process(current_proc);
+     _switch_to_task((Proc *)do_schedule());
+     asm("sti"); */
 
-    __asm__ __volatile__("hlt");
+    //__asm__ __volatile__("hlt");
   }
 }
 
@@ -79,7 +82,7 @@ void top_bar() {
     int totFree = total_used_memory / 1024 / 1024;
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
-    const char *title = " Uptime: %ds           Used: %d / %d Mb" 
+    const char *title = " Uptime: %ds           Used: %d / %d Mb"
                         "                     ProcsRunning: %d ";
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
@@ -177,10 +180,11 @@ void kernel_main(u32 magic, u32 addr) {
   }
 
   p = create_kernel_proc(&top_bar, NULL, "topb-aaaa");
+  p->p = 0;
   wake_up_process(p);
 
-
   p = create_kernel_proc(&top, NULL, "proc-aaaa");
+  p->p = 0;
   wake_up_process(p);
 
   irq_install();
