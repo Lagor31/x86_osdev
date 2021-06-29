@@ -30,22 +30,16 @@ void k_simple_proc() {
     // printProc(current_proc);
     asm("cli");
 
-    char *string = normal_page_alloc(10);
-    char *s = "Hey!";
-    memcopy((byte *)s, (byte *)string, strlen(s));
-
     u32 prevPos = getCursorOffset();
     setCursorPos(current_proc->pid + 1, 50);
-    kprintf("PID: %d N: %d (%d) %s", current_proc->pid, current_proc->nice, ++c,
-            string);
+    kprintf("PID: %d N: %d (%d)", current_proc->pid, current_proc->nice, ++c);
     // printProcSimple(current_proc);
     setCursorOffset(prevPos);
-    kfreeNormal(string);
 
-    sleep_process(current_proc);
+    //sleep_process(current_proc);
     asm("sti");
     // syncWait(500);
-    _switch_to_task((Proc *)do_schedule());
+    //_switch_to_task((Proc *)do_schedule());
   }
 }
 
@@ -64,9 +58,8 @@ void top_bar() {
     int totFree = total_used_memory / 1024 / 1024;
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
-    const char *title =
-        " Uptime: %4ds             Used: %4d / %4d Mb"
-        "               ProcsRunning: %3d ";
+    const char *title = " Uptime: %4ds             Used: %4d / %4d Mb"
+                        "               ProcsRunning: %3d ";
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
     setCursorOffset(prevPos);
@@ -147,7 +140,7 @@ void kernel_main(u32 magic, u32 addr) {
   wake_up_process(p);
 
   irq_install();
-  srand(tickCount);
+  // srand(tickCount);
   clearScreen();
   kprintf("\n>");
   // runProcess();
@@ -198,6 +191,8 @@ void user_input(char *input) {
     p = create_kernel_proc(&top, NULL, "top");
     p->nice = 0;
     wake_up_process(p);
+
+    // printTop();
   } else if (!strcmp(input, "ckp")) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {

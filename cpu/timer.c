@@ -44,16 +44,14 @@ inline u32 ticksToMillis(u64 tickCount) {
   return (u32)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
 
-
 u32 i = 0;
 void scheduler_handler(registers_t *regs) {
- 
-  /*  if (current_proc != NULL)
+
+  /* if (current_proc != NULL)
     kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
-            getRegisterValue(ESP), tss.esp0);  */
+            getRegisterValue(ESP), tss.esp0); */
 
   ++tickCount;
-  current_proc->running_ticks++;
 
   if (current_proc != NULL && current_proc->sched_count-- <= 0)
     // reschedule
@@ -61,7 +59,8 @@ void scheduler_handler(registers_t *regs) {
   else
     next_proc = current_proc;
 
-  srand(tickCount);
+  next_proc->running_ticks++;
+  // srand(tickCount);
 
   if (next_proc != NULL && next_proc != current_proc && current_proc != NULL) {
     //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
@@ -82,7 +81,7 @@ void scheduler_handler(registers_t *regs) {
     current_proc->esp0 = tss.esp0;
   }
 
-  //Enable interrupts if no context switch was necessary
+  // Enable interrupts if no context switch was necessary
   regs->eflags |= 0x200;
 
   /*
@@ -93,10 +92,12 @@ void scheduler_handler(registers_t *regs) {
 }
 
 void init_scheduler_timer() {
+  // asm  volatile("cli");
   setTimerPhase(RTC_PHASE);
   register_interrupt_handler(IRQ8, scheduler_handler);
   tss.esp0 = getRegisterValue(ESP);
   tss.ss0 = 0x10;
+  // asm  volatile("sti");
 }
 
 void setTimerPhase(u16 rate) {

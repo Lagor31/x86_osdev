@@ -15,7 +15,7 @@
 void top();
 
 typedef struct process {
-  const char *name;
+  char *name;
   registers_t regs;
   u32 esp0;
   void *stack;
@@ -37,6 +37,8 @@ extern List running_queue;
 extern void _switch_to_task(Proc *);
 
 void printProc(Proc *);
+void printTop();
+
 void printProcSimple(Proc *);
 void init_kernel_proc();
 void kill_process(Proc *);

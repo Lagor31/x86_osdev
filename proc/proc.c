@@ -19,59 +19,65 @@ Proc *idle_proc;
 static u32 pid = IDLE_PID;
 
 void top() {
-  List *l;
-  Proc *p;
-
   while (TRUE) {
-
     asm volatile("cli");
+    // u32 prevCur = getCursorOffset();
     setCursorPos(1, 0);
-    setBackgroundColor(LIGHTGREEN);
-    setTextColor(BLACK);
-    kprintf("[RUNNING]\n");
-    u32 c = 0;
-    list_for_each(l, &running_queue) {
-      p = list_entry(l, Proc, head);
-      kprintf("[%d] ", c++);
-      printProcSimple(p);
-    }
-    resetScreenColors();
-
-    c = 0;
-    setBackgroundColor(LIGHTCYAN);
-    setTextColor(BLACK);
-    kprintf("[SLEEP]\n");
-    list_for_each(l, &sleep_queue) {
-      p = list_entry(l, Proc, head);
-      kprintf("[%d] ", c++);
-      printProcSimple(p);
-    }
-    resetScreenColors();
-
-    c = 0;
-    setBackgroundColor(WHITE);
-    setTextColor(RED);
-    kprintf("[STOPPED]\n");
-    list_for_each(l, &stopped_queue) {
-      p = list_entry(l, Proc, head);
-      kprintf("[%d] ", c++);
-      printProcSimple(p);
-    }
-    resetScreenColors();
-
-    if (current_proc != NULL) {
-      setBackgroundColor(GREEN_ON_BLACK);
-      kprintf("[CURRENT]: \n");
-      printProcSimple(current_proc);
-      resetScreenColors();
-    }
+    printTop();
+    // setCursorOffset(prevCur);
     asm volatile("sti");
-    syncWait(100);
+    syncWait(200);
   }
 }
 
+void printTop() {
+  List *l;
+  Proc *p;
+
+  setBackgroundColor(GREEN);
+  setTextColor(BLACK);
+  kprintf("[RUNNING]\n");
+  u32 c = 0;
+  list_for_each(l, &running_queue) {
+    p = list_entry(l, Proc, head);
+    kprintf("[%d] ", c++);
+    printProcSimple(p);
+  }
+  resetScreenColors();
+
+  c = 0;
+  setBackgroundColor(CYAN);
+  setTextColor(BLACK);
+  kprintf("[SLEEP]\n");
+  list_for_each(l, &sleep_queue) {
+    p = list_entry(l, Proc, head);
+    kprintf("[%d] ", c++);
+    printProcSimple(p);
+  }
+  resetScreenColors();
+
+  c = 0;
+  setBackgroundColor(GRAY);
+  setTextColor(RED);
+  kprintf("[STOPPED]\n");
+  list_for_each(l, &stopped_queue) {
+    p = list_entry(l, Proc, head);
+    kprintf("[%d] ", c++);
+    printProcSimple(p);
+  }
+  resetScreenColors();
+
+  if (current_proc != NULL) {
+    setBackgroundColor(BLACK);
+    setTextColor(GREEN);
+    kprintf("[CURRENT]: \n");
+    printProcSimple(current_proc);
+  }
+  resetScreenColors();
+}
+
 void stop_process(Proc *p) {
-   if(p->pid == IDLE_PID)
+  if (p->pid == IDLE_PID)
     return;
   // kprintf("Stopping process PID %d\n", p->pid);
   list_remove(&p->head);
@@ -79,7 +85,7 @@ void stop_process(Proc *p) {
 }
 
 void sleep_process(Proc *p) {
-  if(p->pid == IDLE_PID)
+  if (p->pid == IDLE_PID)
     return;
   // kprintf("Sleeping process PID %d\n", p->pid);
   list_remove(&p->head);
@@ -160,28 +166,28 @@ Proc *do_schedule() {
     }
   } */
 
-//schedule_proc:
-   if (list_length(&sleep_queue) > 0) {
+  // schedule_proc:
+  if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
       Proc *p = list_entry(l, Proc, head);
-      //bool wakeup = (rand() % 200) == 0;
+      // bool wakeup = (rand() % 200) == 0;
       if (TRUE) {
         wake_up_process(p);
         break;
       }
     }
-  } 
-/* 
-   if (list_length(&stopped_queue) > 0) {
-    list_for_each(l, &stopped_queue) {
-      Proc *p = list_entry(l, Proc, head);
-      bool wakeup = (rand() % 2000) == 0;
-      if (wakeup == TRUE) {
-        wake_up_process(p);
-        break;
+  }
+  /*
+     if (list_length(&stopped_queue) > 0) {
+      list_for_each(l, &stopped_queue) {
+        Proc *p = list_entry(l, Proc, head);
+        bool wakeup = (rand() % 2000) == 0;
+        if (wakeup == TRUE) {
+          wake_up_process(p);
+          break;
+        }
       }
-    }
-  }  */
+    }  */
 
   u32 i = 0;
   u32 pAvg = 0;
@@ -321,8 +327,10 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   user_process->esp0 = (u32)kernel_stack + PAGE_SIZE - (5 * sizeof(u32));
 
   char *proc_name = normal_page_alloc(0);
-  memcopy((byte *)args, (byte *)proc_name, strlen(args));
-  //intToAscii(rand() % 100, &proc_name[6]);
+  u32 name_length = strlen(args);
+  memcopy((byte *)args, (byte *)proc_name, name_length);
+  // intToAscii(rand() % 100, &proc_name[6]);
+  proc_name[name_length] = '\0';
 
   user_process->name = proc_name;
   user_process->sched_count = 0;
@@ -336,7 +344,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 }
 
 void kill_process(Proc *p) {
-   if(p->pid == IDLE_PID)
+  if (p->pid == IDLE_PID)
     return;
   list_remove(&p->head);
   // kprintf("\nKilling PID %d\n", p->pid);
