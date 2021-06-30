@@ -8,6 +8,7 @@
 #define MIN_QUANTUM_MS 1
 #define P_PENALTY 5
 
+#include "../lock/lock.h"
 #include "../mem/paging.h"
 #include "../mem/vma.h"
 #include "../utils/list.h"
@@ -27,6 +28,8 @@ typedef struct process {
   u8 nice;
   u32 running_ticks;
   u32 sched_count;
+  SpinLock *sleeping_lock;
+  u32 sleep_timer;
   List head;
 } Proc;
 
@@ -49,10 +52,12 @@ void sleep_process(Proc *p);
 void stop_process(Proc *);
 void k_simple_proc1();
 void k_simple_proc2();
+void wake_up_all();
 
 Proc *do_schedule();
 
 void u_simple_proc();
+void sleep_ms(u32 ms);
 
 Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...);
 Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...);

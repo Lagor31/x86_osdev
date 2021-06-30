@@ -76,6 +76,13 @@ void printTop() {
   resetScreenColors();
 }
 
+void sleep_ms(u32 ms) {
+  current_proc->sleep_timer = millisToTicks(ms) + tickCount;
+  current_proc->sched_count = 0;
+  sleep_process(current_proc);
+  _switch_to_task((Proc *)do_schedule());
+}
+
 void stop_process(Proc *p) {
   if (p->pid == IDLE_PID)
     return;
@@ -167,27 +174,6 @@ Proc *do_schedule() {
   } */
 
   // schedule_proc:
-  if (list_length(&sleep_queue) > 0) {
-    list_for_each(l, &sleep_queue) {
-      Proc *p = list_entry(l, Proc, head);
-      // bool wakeup = (rand() % 200) == 0;
-      if (TRUE) {
-        wake_up_process(p);
-        break;
-      }
-    }
-  }
-  /*
-     if (list_length(&stopped_queue) > 0) {
-      list_for_each(l, &stopped_queue) {
-        Proc *p = list_entry(l, Proc, head);
-        bool wakeup = (rand() % 2000) == 0;
-        if (wakeup == TRUE) {
-          wake_up_process(p);
-          break;
-        }
-      }
-    }  */
 
   u32 i = 0;
   u32 pAvg = 0;
@@ -231,6 +217,26 @@ Proc *do_schedule() {
   return idle_proc;
 }
 
+void wake_up_all() {
+  List *l;
+wake_up:
+  if (list_length(&sleep_queue) > 0) {
+    list_for_each(l, &sleep_queue) {
+      Proc *p = list_entry(l, Proc, head);
+      if (p->sleeping_lock != NULL && p->sleeping_lock->state == LOCK_FREE) {
+        p->sleeping_lock = NULL;
+        wake_up_process(p);
+        goto wake_up;
+
+      } else if (p->sleep_timer != 0 && tickCount >= p->sleep_timer) {
+        p->sleep_timer = 0;
+        wake_up_process(p);
+        goto wake_up;
+      }
+    }
+  }
+}
+
 void load_current_proc(Proc *p) { current_proc = p; }
 void wake_up_process(Proc *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
@@ -239,8 +245,8 @@ void wake_up_process(Proc *p) {
 }
 
 void printProcSimple(Proc *p) {
-  kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
-          ticksToMillis(p->running_ticks));
+  kprintf("%s - PID: %d - N: %d T: %dms W: %d\n", p->name, p->pid, p->nice,
+          ticksToMillis(p->running_ticks), p->sleep_timer);
 }
 void printProc(Proc *p) {
   kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
@@ -293,6 +299,7 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   intToAscii(rand() % 100, &proc_name[6]);
 
   user_process->name = proc_name;
+
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */
@@ -331,6 +338,9 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   memcopy((byte *)args, (byte *)proc_name, name_length);
   // intToAscii(rand() % 100, &proc_name[6]);
   proc_name[name_length] = '\0';
+
+  user_process->sleeping_lock = NULL;
+  user_process->sleep_timer = 0;
 
   user_process->name = proc_name;
   user_process->sched_count = 0;

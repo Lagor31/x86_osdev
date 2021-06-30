@@ -64,6 +64,22 @@ _try_spin_lock:
 ret                 ; Return to the calling function.
 
 
+global _test_spin_lock
+_test_spin_lock:
+
+    push  ebp         ; Save the stack-frame base pointer (of the calling function).
+    mov   ebp, esp    ; Set the stack-frame base pointer to be the current
+                        ; location on the stack.
+    mov ebx, [ebp + 8]
+
+_test_try_spin_lock:
+    mov eax, 1
+    xchg eax, [ebx]
+    
+            
+    pop   ebp         ; Restore the calling function's stack frame.
+ret                 ; Return to the calling function.
+
 global _free_lock
 _free_lock:
     push  ebp         ; Save the stack-frame base pointer (of the calling function).

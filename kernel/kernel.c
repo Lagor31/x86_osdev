@@ -27,22 +27,31 @@ u32 kernel_spin_lock = 0;
 
 void k_simple_proc() {
   int c = 0;
+  sleep_ms(rand() % 3000);
   while (TRUE) {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
 
-    kprintf("Getting lock 0x%x\n", &kernel_spin_lock);
-    _spin_lock(&kernel_spin_lock);
+    // kprintf("Trying lock 0x%x PID: %d\n", &kernel_spin_lock,
+    // current_proc->pid);
+    /* while (_test_spin_lock(&kernel_spin_lock) == LOCK_LOCKED) {
+      sleep_process(current_proc);
+      _switch_to_task((Proc *)do_schedule());
+    } */
+    lock_sleep(screen_lock);
+    //_spin_lock(&kernel_spin_lock);
     // u32 prevPos = getCursorOffset();
-    // setCursorPos(current_proc->pid + 1, 10);
-    kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
+    setCursorPos(current_proc->pid + 1, 50);
+    // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
     kprintf("PID: %d N: %d (%d)\n", current_proc->pid, current_proc->nice, ++c);
-    printProcSimple(current_proc);
+    // printProcSimple(current_proc);
     // setCursorOffset(prevPos);
-    //kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
+    // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    _free_lock(&kernel_spin_lock);
-    syncWait(1000);
+    //sleep_ms(100);
+
+    free_spin(screen_lock);
+    sleep_ms(1000);
 
     // sleep_process(current_proc);
     //_switch_to_task((Proc *)do_schedule());
@@ -159,6 +168,8 @@ void kernel_main(u32 magic, u32 addr) {
   init_kernel_proc();
   kPrintOKMessage("Kernel procs enabled!");
 
+  init_kernel_locks();
+
   kPrintOKMessage("Kernel inizialized!");
 
   resetScreenColors();
@@ -169,11 +180,15 @@ void kernel_main(u32 magic, u32 addr) {
   Proc *p;
   for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
-    p->nice = rand() % 10;
+    p->nice = 0;
     wake_up_process(p);
   }
 
   p = create_kernel_proc(&top_bar, NULL, "head");
+  p->nice = 0;
+  wake_up_process(p);
+
+  p = create_kernel_proc(&top, NULL, "top");
   p->nice = 0;
   wake_up_process(p);
 
