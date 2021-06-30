@@ -20,12 +20,12 @@ static u32 pid = IDLE_PID;
 
 void top() {
   while (TRUE) {
-    asm volatile("cli");
+    lock_sleep(screen_lock);
     // u32 prevCur = getCursorOffset();
     setCursorPos(1, 0);
     printTop();
     // setCursorOffset(prevCur);
-    asm volatile("sti");
+    free_spin(screen_lock);
     syncWait(200);
   }
 }

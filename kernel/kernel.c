@@ -27,7 +27,7 @@ u32 kernel_spin_lock = 0;
 
 void k_simple_proc() {
   int c = 0;
-  sleep_ms(rand() % 3000);
+  sleep_ms(rand() % 300);
   while (TRUE) {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
@@ -39,22 +39,41 @@ void k_simple_proc() {
       _switch_to_task((Proc *)do_schedule());
     } */
     lock_sleep(screen_lock);
-    //_spin_lock(&kernel_spin_lock);
-    // u32 prevPos = getCursorOffset();
-    setCursorPos(current_proc->pid + 1, 50);
+
+    // setCursorPos(current_proc->pid + 1, 50);
     // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
     kprintf("PID: %d N: %d (%d)\n", current_proc->pid, current_proc->nice, ++c);
     // printProcSimple(current_proc);
     // setCursorOffset(prevPos);
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    //sleep_ms(100);
+    sleep_ms(1000);
 
     free_spin(screen_lock);
-    sleep_ms(1000);
+    sleep_ms(10);
 
     // sleep_process(current_proc);
     //_switch_to_task((Proc *)do_schedule());
+  }
+}
+
+void shell() {
+
+  char *my_buf = normal_page_alloc(0);
+  memset((byte *)my_buf, '\0', PAGE_SIZE);
+  while (TRUE) {
+    char read = read_stdin();
+    if (read == '\n') {
+      lock_sleep(screen_lock);
+      kprintf("\nInserted command: %s\n>", my_buf);
+      free_spin(screen_lock);
+      memset((byte *)my_buf, '\0', PAGE_SIZE);
+    } else {
+      append(my_buf, read);
+      lock_sleep(screen_lock);
+      kprintf("%c", read);
+      free_spin(screen_lock);
+    }
   }
 }
 
@@ -64,7 +83,8 @@ void top_bar() {
     // printProc(current_proc);
 
     u32 prevPos = getCursorOffset();
-    asm volatile("cli");
+
+    lock_sleep(screen_lock);
 
     setCursorPos(0, 0);
     setBackgroundColor(BLUE);
@@ -79,7 +99,8 @@ void top_bar() {
             list_length(&running_queue));
     setCursorOffset(prevPos);
     resetScreenColors();
-    asm volatile("sti");
+    free_spin(screen_lock);
+
     syncWait(10);
     //__asm__ __volatile__("hlt");
   }
@@ -169,6 +190,7 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Kernel procs enabled!");
 
   init_kernel_locks();
+  init_stdin();
 
   kPrintOKMessage("Kernel inizialized!");
 
@@ -178,24 +200,28 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
 
   Proc *p;
-  for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
-    p->nice = 0;
-    wake_up_process(p);
-  }
+  /*  for (int i = 0; i < ALLOC_NUM; ++i) {
+     p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
+     p->nice = 0;
+     wake_up_process(p);
+   } */
 
   p = create_kernel_proc(&top_bar, NULL, "head");
+  p->nice = 10;
+  wake_up_process(p);
+
+  p = create_kernel_proc(&shell, NULL, "shell");
   p->nice = 0;
   wake_up_process(p);
 
-  p = create_kernel_proc(&top, NULL, "top");
-  p->nice = 0;
-  wake_up_process(p);
+  /* p = create_kernel_proc(&top, NULL, "top");
+  p->nice = 10;
+  wake_up_process(p); */
 
   irq_install();
   // srand(tickCount);
-  clearScreen();
-  kprintf("\n>");
+  /*   clearScreen();
+    kprintf("\n>"); */
   // runProcess();
   hlt();
 }

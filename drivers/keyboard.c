@@ -5,10 +5,10 @@
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../kernel/kernel.h"
-#include "../mem/paging.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"
 #include "../libc/strings.h"
+#include "../mem/paging.h"
 #include "../utils/utils.h"
 
 #include "../cpu/gdt.h"
@@ -17,7 +17,17 @@
 
 #include "keyboard.h"
 
-static char key_buffer[256];
+Stdin stdin;
+
+void init_stdin() {
+  // 16 Kb
+  stdin.buffer = (char *)normal_page_alloc(2);
+  memset((byte *)stdin.buffer, 0, PAGE_SIZE * 2);
+  stdin.read_lock = make_lock();
+  stdin.read_lock->state = LOCK_LOCKED;
+  stdin.available = 0;
+  stdin.last = 0;
+}
 
 #define SC_MAX 57
 const char *sc_name[] = {
@@ -36,34 +46,62 @@ const char sc_ascii[] = {
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z',
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
-static void keyboard_callback(registers_t *regs) {
-/*   u8 userMode = FALSE;
-  if ((regs->cs & 0b11) == 3) userMode = TRUE; */
+char read_stdin() {
+  lock_sleep(stdin.read_lock);
 
-  outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C
+  char out = stdin.buffer[stdin.last++];
+  stdin.available--;
+  if (stdin.available <= 0) {
+    memset((byte *)stdin.buffer, '\0', PAGE_SIZE * 2);
+    stdin.last = 0;
+  } else
+    free_spin(stdin.read_lock);
+
+  return out;
+
+  /*   char *out_string = normal_page_alloc(2);
+    memcopy((byte *)stdin.buffer, (byte *)out_string, stdin.available + 1);
+    memset((byte *)stdin.buffer, 0, PAGE_SIZE * 2);
+    out_string[stdin.available + 1] = '\0';
+    stdin.available = 0;
+    return out_string; */
+}
+
+static void keyboard_callback(registers_t *regs) {
+  /*   u8 userMode = FALSE;
+    if ((regs->cs & 0b11) == 3) userMode = TRUE; */
+
+  outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD); // select register C
 
   /* The PIC leaves us the scancode in port 0x60 */
   u8 scancode = inb(0x60);
-  if (scancode > SC_MAX) return;
-  if (scancode == BACKSPACE) {
-    if (strlen(key_buffer) > 0) deleteLastChar();
-    backspace(key_buffer);
-  } else if (scancode == ENTER) {
-    kprintf("\n");
-    user_input(key_buffer); /* kernel-controlled function */
-    key_buffer[0] = '\0';
+  if (scancode > SC_MAX)
+    return;
+
+  /*  if (scancode == BACKSPACE) {
+
+     if (strlen(stdin.buffer) > 0) {
+       backspace(stdin.buffer);
+       stdin.available--;
+       stdin.last--;
+     }
+
+   } else */
+  if (scancode == ENTER) {
+    append(stdin.buffer, '\n');
+    stdin.available++;
   } else {
     char letter = sc_ascii[(int)scancode];
     /* Remember that kprint only accepts char[] */
-    char str[2] = {letter, '\0'};
-    append(key_buffer, letter);
-    kprintf(str);
+    append(stdin.buffer, letter);
+    stdin.available++;
   }
+  // Free lock means there's bytes to be read
+  free_spin(stdin.read_lock);
 
   regs->eflags |= 0x200;
   tss.cs = 0x10;
   tss.esp0 = getRegisterValue(ESP);
-  
 }
 
 void init_keyboard() { register_interrupt_handler(IRQ1, keyboard_callback); }

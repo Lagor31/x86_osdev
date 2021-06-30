@@ -7,9 +7,9 @@ typedef struct spin_lock_t {
   u32 state;
   u32 id;
   List head;
-} SpinLock;
+} Lock;
 
-extern SpinLock *screen_lock;
+extern Lock *screen_lock;
 
 #define LOCK_FREE 0
 #define LOCK_LOCKED 1
@@ -18,9 +18,9 @@ extern void _spin_lock(u32 *state);
 extern void _free_lock(u32 *state);
 extern u32 _test_spin_lock(u32 *state);
 
-SpinLock *make_spinlock();
+Lock *make_lock();
 void init_kernel_locks();
-void lock_spin(SpinLock *);
-void free_spin(SpinLock *);
-void lock_sleep(SpinLock *l);
+void lock_spin(Lock *);
+void free_spin(Lock *);
+void lock_sleep(Lock *l);
 #endif

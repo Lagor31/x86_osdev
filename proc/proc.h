@@ -28,7 +28,7 @@ typedef struct process {
   u8 nice;
   u32 running_ticks;
   u32 sched_count;
-  SpinLock *sleeping_lock;
+  Lock *sleeping_lock;
   u32 sleep_timer;
   List head;
 } Proc;

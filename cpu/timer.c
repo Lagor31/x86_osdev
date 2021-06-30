@@ -52,8 +52,9 @@ void scheduler_handler(registers_t *regs) {
             getRegisterValue(ESP), tss.esp0); */
 
   ++tickCount;
+  // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
-  
+
   if (current_proc != NULL && current_proc->sched_count-- <= 0)
     // reschedule
     next_proc = (Proc *)do_schedule();
