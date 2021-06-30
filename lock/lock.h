@@ -10,6 +10,8 @@ typedef struct spin_lock_t {
 } Lock;
 
 extern Lock *screen_lock;
+extern Lock *mem_lock;
+
 
 #define LOCK_FREE 0
 #define LOCK_LOCKED 1

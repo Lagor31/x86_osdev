@@ -20,13 +20,14 @@ static u32 pid = IDLE_PID;
 
 void top() {
   while (TRUE) {
-    lock_sleep(screen_lock);
-    // u32 prevCur = getCursorOffset();
+    u32 prevCur = getCursorOffset();
     setCursorPos(1, 0);
+    lock_sleep(screen_lock);
+
     printTop();
-    // setCursorOffset(prevCur);
+    setCursorOffset(prevCur);
     free_spin(screen_lock);
-    syncWait(200);
+    sleep_ms(200);
   }
 }
 
@@ -34,6 +35,7 @@ void printTop() {
   List *l;
   Proc *p;
 
+  
   setBackgroundColor(GREEN);
   setTextColor(BLACK);
   kprintf("[RUNNING]\n");

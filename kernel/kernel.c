@@ -76,8 +76,6 @@ void shell() {
         backspace(my_buf);
         deleteLastChar();
       }
-
-      // kprintf("%s", my_buf);
     } else {
       append(my_buf, read);
       lock_sleep(screen_lock);
@@ -94,8 +92,6 @@ void top_bar() {
 
     u32 prevPos = getCursorOffset();
 
-    lock_sleep(screen_lock);
-
     setCursorPos(0, 0);
     setBackgroundColor(BLUE);
     setTextColor(YELLOW);
@@ -105,14 +101,16 @@ void top_bar() {
 
     const char *title = " Uptime: %4ds             Used: %4d / %4d Mb"
                         "               ProcsRunning: %3d ";
+    lock_sleep(screen_lock);
+
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
-    setCursorOffset(prevPos);
-    resetScreenColors();
     free_spin(screen_lock);
 
-    syncWait(10);
-    //__asm__ __volatile__("hlt");
+    setCursorOffset(prevPos);
+    resetScreenColors();
+
+    sleep_ms(100);
   }
 }
 
@@ -150,15 +148,17 @@ void itaFlag() {
 }
 void k_simple_proc_no() {
   while (TRUE) {
-    // kprintf("1) PID %d\n", current_proc->pid);
-    // printProc(current_proc);
-    asm("cli");
+
+    lock_sleep(mem_lock);
     char *string = normal_page_alloc(10);
+    free_spin(mem_lock);
+
+    sleep_ms(400);
     string[0] = 'F';
+
+    lock_sleep(mem_lock);
     kfreeNormal(string);
-    asm("sti");
-    syncWait(100);
-    __asm__ __volatile__("hlt");
+    free_spin(mem_lock);
   }
 }
 
@@ -224,9 +224,9 @@ void kernel_main(u32 magic, u32 addr) {
   p->nice = 0;
   wake_up_process(p);
 
-  /* p = create_kernel_proc(&top, NULL, "top");
+  p = create_kernel_proc(&top, NULL, "top");
   p->nice = 10;
-  wake_up_process(p); */
+  wake_up_process(p);
 
   irq_install();
   // srand(tickCount);
@@ -251,7 +251,7 @@ void user_input(char *input) {
     itaFlag();
     asm volatile("sti");
 
-  } else if (!strcmp(input, "kill")) {
+  } else if (!strcmp(input, "stop")) {
     u32 numProc = list_length(&running_queue);
     u32 killMe = 0;
 
@@ -269,7 +269,7 @@ void user_input(char *input) {
       }
     }
     resetScreenColors();
-    clearScreen();
+    // clearScreen();
     kprintf(">");
     _switch_to_task((Proc *)do_schedule());
 
@@ -291,7 +291,7 @@ void user_input(char *input) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_kernel_proc(&k_simple_proc_no, NULL, "kthread");
-      p->nice = rand() % 20;
+      p->nice = 15;
       wake_up_process(p);
     }
   } else if (!strcmp(input, "bootinfo")) {

@@ -8,10 +8,12 @@ List kernel_locks;
 u32 locks_id = 0;
 
 Lock *screen_lock;
+Lock *mem_lock;
 
 void init_kernel_locks() {
   LIST_INIT(&kernel_locks);
   screen_lock = make_lock();
+  mem_lock = make_lock();
 }
 
 Lock *make_lock() {
