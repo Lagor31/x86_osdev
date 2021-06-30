@@ -10,6 +10,7 @@
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/strings.h"
+#include "../lock/lock.h"
 #include "../mem/mem.h"
 #include "../mem/paging.h"
 #include "../mem/slab.h"
@@ -22,23 +23,28 @@
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
 struct fileTableEntry *kfileTable;
+u32 kernel_spin_lock = 0;
 
 void k_simple_proc() {
   int c = 0;
   while (TRUE) {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
-    asm("cli");
 
-    u32 prevPos = getCursorOffset();
-    setCursorPos(current_proc->pid + 1, 50);
-    kprintf("PID: %d N: %d (%d)", current_proc->pid, current_proc->nice, ++c);
-    // printProcSimple(current_proc);
-    setCursorOffset(prevPos);
+    kprintf("Getting lock 0x%x\n", &kernel_spin_lock);
+    _spin_lock(&kernel_spin_lock);
+    // u32 prevPos = getCursorOffset();
+    // setCursorPos(current_proc->pid + 1, 10);
+    kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
+    kprintf("PID: %d N: %d (%d)\n", current_proc->pid, current_proc->nice, ++c);
+    printProcSimple(current_proc);
+    // setCursorOffset(prevPos);
+    //kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    //sleep_process(current_proc);
-    asm("sti");
-    // syncWait(500);
+    _free_lock(&kernel_spin_lock);
+    syncWait(1000);
+
+    // sleep_process(current_proc);
     //_switch_to_task((Proc *)do_schedule());
   }
 }
@@ -70,6 +76,38 @@ void top_bar() {
   }
 }
 
+void itaFlag() {
+  clearScreen();
+
+  setCursorPos(1, 0);
+  u32 r = 0;
+  u32 c = 0;
+  for (r = 0; r < VGA_ROWS; ++r) {
+    resetScreenColors();
+
+    setTextColor(GREEN);
+    setBackgroundColor(GREEN);
+    for (c = 0; c < 26; ++c)
+      kprintf(" ");
+
+    resetScreenColors();
+
+    setTextColor(WHITE);
+    setBackgroundColor(WHITE);
+    for (c = 0; c < 27; ++c)
+      kprintf(" ");
+
+    resetScreenColors();
+
+    setTextColor(RED);
+    setBackgroundColor(RED);
+    for (c = 0; c < 26; ++c)
+      kprintf(" ");
+    kprintf("\n");
+  }
+  resetScreenColors();
+  // clearScreen();
+}
 void k_simple_proc_no() {
   while (TRUE) {
     // kprintf("1) PID %d\n", current_proc->pid);
@@ -157,6 +195,11 @@ void user_input(char *input) {
     printHelp();
   else if (!strcmp(input, "clear")) {
     clearScreen();
+  } else if (!strcmp(input, "flag")) {
+    asm volatile("cli");
+    itaFlag();
+    asm volatile("sti");
+
   } else if (!strcmp(input, "kill")) {
     u32 numProc = list_length(&running_queue);
     u32 killMe = 0;

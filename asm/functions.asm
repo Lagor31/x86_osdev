@@ -44,6 +44,37 @@ _loadPageDirectory:
     pop ebp
 ret
 
+global _spin_lock
+_spin_lock:
+
+    push  ebp         ; Save the stack-frame base pointer (of the calling function).
+    mov   ebp, esp    ; Set the stack-frame base pointer to be the current
+                        ; location on the stack.
+    mov ebx, [ebp + 8]
+
+_try_spin_lock:
+    mov eax, 1
+    xchg eax, [ebx]
+    cmp eax, 0
+    jne _try_spin_lock
+    
+    ;mov   esp, ebp    ; Put the stack pointer back where it was when this function
+                    ; was called.
+    pop   ebp         ; Restore the calling function's stack frame.
+ret                 ; Return to the calling function.
+
+
+global _free_lock
+_free_lock:
+    push  ebp         ; Save the stack-frame base pointer (of the calling function).
+    mov   ebp, esp    ; Set the stack-frame base pointer to be the current
+                        ; location on the stack.
+    mov ebx, [ebp + 8]
+    mov [ebx], DWORD 0
+    pop ebp
+    ;mov   esp, ebp    ; Put the stack pointer back where it was when this function
+                    ; was called.
+ret
 
 global _switch_to_task
 extern current_proc
