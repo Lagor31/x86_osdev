@@ -65,9 +65,19 @@ void shell() {
     char read = read_stdin();
     if (read == '\n') {
       lock_sleep(screen_lock);
-      kprintf("\nInserted command: %s\n>", my_buf);
+      kprintf("\n");
+
+      user_input(my_buf);
       free_spin(screen_lock);
+
       memset((byte *)my_buf, '\0', PAGE_SIZE);
+    } else if (read == BACKSPACE) {
+      if (strlen(my_buf) > 0) {
+        backspace(my_buf);
+        deleteLastChar();
+      }
+
+      // kprintf("%s", my_buf);
     } else {
       append(my_buf, read);
       lock_sleep(screen_lock);
@@ -207,7 +217,7 @@ void kernel_main(u32 magic, u32 addr) {
    } */
 
   p = create_kernel_proc(&top_bar, NULL, "head");
-  p->nice = 10;
+  p->nice = 20;
   wake_up_process(p);
 
   p = create_kernel_proc(&shell, NULL, "shell");
@@ -271,12 +281,12 @@ void user_input(char *input) {
     p->nice = 0;
     wake_up_process(p);
   } else if (!strcmp(input, "top")) {
-    Proc *p = NULL;
+    /* Proc *p = NULL;
     p = create_kernel_proc(&top, NULL, "top");
     p->nice = 0;
     wake_up_process(p);
-
-    // printTop();
+ */
+    printTop();
   } else if (!strcmp(input, "ckp")) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {

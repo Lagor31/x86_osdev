@@ -78,16 +78,10 @@ static void keyboard_callback(registers_t *regs) {
   if (scancode > SC_MAX)
     return;
 
-  /*  if (scancode == BACKSPACE) {
-
-     if (strlen(stdin.buffer) > 0) {
-       backspace(stdin.buffer);
-       stdin.available--;
-       stdin.last--;
-     }
-
-   } else */
-  if (scancode == ENTER) {
+  if (scancode == BACKSPACE) {
+    append(stdin.buffer, (char)BACKSPACE);
+    stdin.available++;
+  } else if (scancode == ENTER) {
     append(stdin.buffer, '\n');
     stdin.available++;
   } else {
