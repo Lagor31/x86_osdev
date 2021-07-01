@@ -20,10 +20,9 @@ static u32 pid = IDLE_PID;
 
 void top() {
   while (TRUE) {
+    get_lock(screen_lock);
     u32 prevCur = getCursorOffset();
     setCursorPos(1, 0);
-    get_lock(screen_lock);
-
     printTop();
     setCursorOffset(prevCur);
     unlock(screen_lock);
@@ -35,7 +34,6 @@ void printTop() {
   List *l;
   Proc *p;
 
-  
   setBackgroundColor(GREEN);
   setTextColor(BLACK);
   kprintf("[RUNNING]\n");
@@ -136,47 +134,6 @@ void u_simple_proc() {
 Proc *do_schedule() {
   List *l;
 
-  // List *l;
-  /*   bool create = (rand() % 10000) == 0;
-    if (create == TRUE) {
-      Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
-      n->p = rand() % 20;
-      wake_up_process(n);
-    } */
-
-  /*   if (created++ < 1) {
-      Proc *n = create_user_proc(&u_simple_proc, NULL, "uproc-aaaa");
-      n->p = rand() % 20;
-      wake_up_process(n);
-    }
-   */
-  /* if (list_length(&stopped_queue) > 0) {
-    list_for_each(l, &stopped_queue) {
-      Proc *p = list_entry(l, Proc, head);
-      bool kill = (rand() % 10) == 0;
-      if (kill == TRUE) {
-        kill_process(p);
-      }
-    }
-  } */
-
-  /* if (current_proc != NULL) {
-    bool stop = (rand() % 10000) == 0;
-    if (stop == TRUE && current_proc != NULL && current_proc->pid != IDLE_PID) {
-      stop_process(current_proc);
-      goto schedule_proc;
-    }
-
-    bool sleep = (rand() % 20000) == 0;
-    if (sleep == TRUE && current_proc != NULL &&
-        current_proc->pid != IDLE_PID) {
-      sleep_process(current_proc);
-      goto schedule_proc;
-    }
-  } */
-
-  // schedule_proc:
-
   u32 i = 0;
   u32 pAvg = 0;
   u32 pTot = 0;
@@ -247,8 +204,8 @@ void wake_up_process(Proc *p) {
 }
 
 void printProcSimple(Proc *p) {
-  kprintf("%s - PID: %d - N: %d T: %dms W: %d\n", p->name, p->pid, p->nice,
-          ticksToMillis(p->running_ticks), p->sleep_timer);
+  kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
+          ticksToMillis(p->running_ticks));
 }
 void printProc(Proc *p) {
   kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,

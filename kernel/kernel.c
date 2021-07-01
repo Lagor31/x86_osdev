@@ -29,25 +29,16 @@ void k_simple_proc() {
   int c = 0;
   sleep_ms(rand() % 300);
   while (TRUE) {
-    // kprintf("1) PID %d\n", current_proc->pid);
-    // printProc(current_proc);
-
-    // kprintf("Trying lock 0x%x PID: %d\n", &kernel_spin_lock,
-    // current_proc->pid);
-    /* while (_test_spin_lock(&kernel_spin_lock) == LOCK_LOCKED) {
-      sleep_process(current_proc);
-      _switch_to_task((Proc *)do_schedule());
-    } */
     get_lock(screen_lock);
-
-    // setCursorPos(current_proc->pid + 1, 50);
+    u32 prevPos = getCursorOffset();
+    setCursorPos(current_proc->pid + 1, 50);
     // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
     kprintf("PID: %d N: %d (%d)\n", current_proc->pid, current_proc->nice, ++c);
     // printProcSimple(current_proc);
-    // setCursorOffset(prevPos);
+    setCursorOffset(prevPos);
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    sleep_ms(1000);
+    //sleep_ms(100);
 
     unlock(screen_lock);
     sleep_ms(10);
@@ -89,25 +80,24 @@ void top_bar() {
     // kprintf("1) PID %d\n", current_proc->pid);
     // printProc(current_proc);
 
-    u32 prevPos = getCursorOffset();
-
-    setCursorPos(0, 0);
-    setBackgroundColor(BLUE);
-    setTextColor(YELLOW);
-
     int totFree = total_used_memory / 1024 / 1024;
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
     const char *title = " Uptime: %4ds             Used: %4d / %4d Mb"
                         "               ProcsRunning: %3d ";
     get_lock(screen_lock);
+    u32 prevPos = getCursorOffset();
 
+    setCursorPos(0, 0);
+    setBackgroundColor(BLUE);
+    setTextColor(YELLOW);
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
-    unlock(screen_lock);
 
     setCursorOffset(prevPos);
     resetScreenColors();
+
+    unlock(screen_lock);
 
     sleep_ms(100);
   }
@@ -192,7 +182,9 @@ void kernel_main(u32 magic, u32 addr) {
   init_kernel_paging();
   kPrintOKMessage("Kernel paging enabled!");
 
+  kPrintOKMessage("Enabling chaching...");
   kMemCacheInit();
+  kPrintOKMessage("Kernel caching enabled!");
 
   kPrintOKMessage("Enabling kernel procs...");
   init_kernel_proc();
@@ -209,11 +201,11 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
 
   Proc *p;
-  /*  for (int i = 0; i < ALLOC_NUM; ++i) {
-     p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
-     p->nice = 0;
-     wake_up_process(p);
-   } */
+  for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
+    p->nice = rand() % 20;
+    wake_up_process(p);
+  }
 
   p = create_kernel_proc(&top_bar, NULL, "head");
   p->nice = 20;
@@ -223,15 +215,14 @@ void kernel_main(u32 magic, u32 addr) {
   p->nice = 0;
   wake_up_process(p);
 
-  p = create_kernel_proc(&top, NULL, "top");
-  p->nice = 10;
-  wake_up_process(p);
+  /*   p = create_kernel_proc(&top, NULL, "top");
+    p->nice = 10;
+    wake_up_process(p); */
 
   irq_install();
-  // srand(tickCount);
-  /*   clearScreen();
-    kprintf("\n>"); */
-  // runProcess();
+  srand(tickCount);
+  clearScreen();
+  kprintf("\n>");
   hlt();
 }
 
@@ -279,13 +270,13 @@ void user_input(char *input) {
     p = create_kernel_proc(&top_bar, NULL, "head");
     p->nice = 0;
     wake_up_process(p);
+  } else if (!strcmp(input, "printtop")) {
+    printTop();
   } else if (!strcmp(input, "top")) {
-    /* Proc *p = NULL;
+    Proc *p = NULL;
     p = create_kernel_proc(&top, NULL, "top");
     p->nice = 0;
     wake_up_process(p);
- */
-    printTop();
   } else if (!strcmp(input, "ckp")) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
