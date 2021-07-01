@@ -22,11 +22,11 @@ void top() {
   while (TRUE) {
     u32 prevCur = getCursorOffset();
     setCursorPos(1, 0);
-    lock_sleep(screen_lock);
+    get_lock(screen_lock);
 
     printTop();
     setCursorOffset(prevCur);
-    free_spin(screen_lock);
+    unlock(screen_lock);
     sleep_ms(200);
   }
 }

@@ -22,7 +22,7 @@ extern u32 _test_spin_lock(u32 *state);
 
 Lock *make_lock();
 void init_kernel_locks();
-void lock_spin(Lock *);
-void free_spin(Lock *);
-void lock_sleep(Lock *l);
+void spin_lock(Lock *);
+void unlock(Lock *);
+void get_lock(Lock *l);
 #endif

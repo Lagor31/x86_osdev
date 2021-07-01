@@ -47,7 +47,7 @@ const char sc_ascii[] = {
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
 char read_stdin() {
-  lock_sleep(stdin.read_lock);
+  get_lock(stdin.read_lock);
 
   char out = stdin.buffer[stdin.last++];
   stdin.available--;
@@ -55,7 +55,7 @@ char read_stdin() {
     memset((byte *)stdin.buffer, '\0', PAGE_SIZE * 2);
     stdin.last = 0;
   } else
-    free_spin(stdin.read_lock);
+    unlock(stdin.read_lock);
 
   return out;
 
@@ -91,7 +91,7 @@ static void keyboard_callback(registers_t *regs) {
     stdin.available++;
   }
   // Free lock means there's bytes to be read
-  free_spin(stdin.read_lock);
+  unlock(stdin.read_lock);
 
   regs->eflags |= 0x200;
   tss.cs = 0x10;

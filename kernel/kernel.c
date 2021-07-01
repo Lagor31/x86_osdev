@@ -38,7 +38,7 @@ void k_simple_proc() {
       sleep_process(current_proc);
       _switch_to_task((Proc *)do_schedule());
     } */
-    lock_sleep(screen_lock);
+    get_lock(screen_lock);
 
     // setCursorPos(current_proc->pid + 1, 50);
     // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
@@ -49,7 +49,7 @@ void k_simple_proc() {
 
     sleep_ms(1000);
 
-    free_spin(screen_lock);
+    unlock(screen_lock);
     sleep_ms(10);
 
     // sleep_process(current_proc);
@@ -64,11 +64,10 @@ void shell() {
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
-      lock_sleep(screen_lock);
+      get_lock(screen_lock);
       kprintf("\n");
-
       user_input(my_buf);
-      free_spin(screen_lock);
+      unlock(screen_lock);
 
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
@@ -78,9 +77,9 @@ void shell() {
       }
     } else {
       append(my_buf, read);
-      lock_sleep(screen_lock);
+      get_lock(screen_lock);
       kprintf("%c", read);
-      free_spin(screen_lock);
+      unlock(screen_lock);
     }
   }
 }
@@ -101,11 +100,11 @@ void top_bar() {
 
     const char *title = " Uptime: %4ds             Used: %4d / %4d Mb"
                         "               ProcsRunning: %3d ";
-    lock_sleep(screen_lock);
+    get_lock(screen_lock);
 
     kprintf(title, getUptime() / 1000, totFree, tot,
             list_length(&running_queue));
-    free_spin(screen_lock);
+    unlock(screen_lock);
 
     setCursorOffset(prevPos);
     resetScreenColors();
@@ -149,16 +148,16 @@ void itaFlag() {
 void k_simple_proc_no() {
   while (TRUE) {
 
-    lock_sleep(mem_lock);
+    get_lock(mem_lock);
     char *string = normal_page_alloc(10);
-    free_spin(mem_lock);
+    unlock(mem_lock);
 
     sleep_ms(400);
     string[0] = 'F';
 
-    lock_sleep(mem_lock);
+    get_lock(mem_lock);
     kfreeNormal(string);
-    free_spin(mem_lock);
+    unlock(mem_lock);
   }
 }
 

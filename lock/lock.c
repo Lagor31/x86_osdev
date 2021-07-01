@@ -24,9 +24,9 @@ Lock *make_lock() {
   return outSpin;
 }
 
-void lock_spin(Lock *l) { _spin_lock(&l->state); }
+void spin_lock(Lock *l) { _spin_lock(&l->state); }
 
-void lock_sleep(Lock *l) {
+void get_lock(Lock *l) {
   while (_test_spin_lock(&l->state) == LOCK_LOCKED) {
     current_proc->sleeping_lock = l;
     sleep_process(current_proc);
@@ -35,7 +35,7 @@ void lock_sleep(Lock *l) {
   current_proc->sleeping_lock = NULL;
 }
 
-void free_spin(Lock *l) {
+void unlock(Lock *l) {
   // current_proc->sleeping_lock = NULL;
   _free_lock(&l->state);
 }
