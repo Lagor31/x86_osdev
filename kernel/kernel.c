@@ -23,7 +23,6 @@
 KMultiBoot2Info *kMultiBootInfo;
 struct rfsHeader *krfsHeader;
 struct fileTableEntry *kfileTable;
-u32 kernel_spin_lock = 0;
 
 void k_simple_proc() {
   int c = 0;
@@ -38,7 +37,7 @@ void k_simple_proc() {
     setCursorOffset(prevPos);
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    //sleep_ms(100);
+    // sleep_ms(100);
 
     unlock(screen_lock);
     sleep_ms(10);
@@ -136,19 +135,19 @@ void itaFlag() {
   // clearScreen();
 }
 void k_simple_proc_no() {
-  while (TRUE) {
 
-    get_lock(mem_lock);
+  /*   get_lock(mem_lock);
     char *string = normal_page_alloc(10);
     unlock(mem_lock);
+ */
 
-    sleep_ms(400);
-    string[0] = 'F';
+  sleep_ms(5000 + rand() % 1000);
+  exit(0);
+  /*   string[0] = 'F';
 
     get_lock(mem_lock);
     kfreeNormal(string);
-    unlock(mem_lock);
-  }
+    unlock(mem_lock); */
 }
 
 /*
@@ -201,12 +200,12 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
 
   Proc *p;
-  for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
-    p->nice = rand() % 20;
-    wake_up_process(p);
-  }
-
+  /*   for (int i = 0; i < ALLOC_NUM; ++i) {
+      p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
+      p->nice = rand() % 20;
+      wake_up_process(p);
+    }
+   */
   p = create_kernel_proc(&top_bar, NULL, "head");
   p->nice = 20;
   wake_up_process(p);

@@ -26,7 +26,7 @@ typedef struct process {
   void *kernel_stack_top;
   u32 **page_dir;
   u8 nice;
-  u32 running_ticks;
+  u32 runtime;
   u32 sched_count;
   Lock *sleeping_lock;
   u32 sleep_timer;
@@ -53,6 +53,7 @@ void stop_process(Proc *);
 void k_simple_proc1();
 void k_simple_proc2();
 void wake_up_all();
+void exit(u32 ret_code);
 
 Proc *do_schedule();
 

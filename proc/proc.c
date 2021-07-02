@@ -30,6 +30,13 @@ void top() {
   }
 }
 
+void exit(u32 ret_code) {
+  Proc *p = current_proc;
+  stop_process(p);
+  kill_process(p);
+  _switch_to_task(do_schedule());
+}
+
 void printTop() {
   List *l;
   Proc *p;
@@ -87,16 +94,20 @@ void stop_process(Proc *p) {
   if (p->pid == IDLE_PID)
     return;
   // kprintf("Stopping process PID %d\n", p->pid);
+  //get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
+  //unlock(sched_lock);
 }
 
 void sleep_process(Proc *p) {
   if (p->pid == IDLE_PID)
     return;
   // kprintf("Sleeping process PID %d\n", p->pid);
+  //get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
+  //unlock(sched_lock);
 
   // do_schedule();
   //_switch_to_task(current_proc);
@@ -196,16 +207,17 @@ wake_up:
   }
 }
 
-void load_current_proc(Proc *p) { current_proc = p; }
 void wake_up_process(Proc *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
+  //get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
+  //unlock(sched_lock);
 }
 
 void printProcSimple(Proc *p) {
   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
-          ticksToMillis(p->running_ticks));
+          ticksToMillis(p->runtime));
 }
 void printProc(Proc *p) {
   kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
@@ -303,7 +315,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 
   user_process->name = proc_name;
   user_process->sched_count = 0;
-  user_process->running_ticks = 0;
+  user_process->runtime = 0;
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */
@@ -315,7 +327,10 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
 void kill_process(Proc *p) {
   if (p->pid == IDLE_PID)
     return;
+  get_lock(sched_lock);
   list_remove(&p->head);
+  unlock(sched_lock);
+
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
   kfreeNormal((void *)p->name);

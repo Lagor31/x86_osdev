@@ -44,7 +44,6 @@ inline u32 ticksToMillis(u64 tickCount) {
   return (u32)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
 
-u32 i = 0;
 void scheduler_handler(registers_t *regs) {
 
   /* if (current_proc != NULL)
@@ -61,7 +60,7 @@ void scheduler_handler(registers_t *regs) {
   else
     next_proc = current_proc;
 
-  next_proc->running_ticks++;
+  next_proc->runtime++;
   // srand(tickCount);
 
   if (next_proc != NULL && next_proc != current_proc && current_proc != NULL) {
