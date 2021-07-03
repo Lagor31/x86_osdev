@@ -12,7 +12,7 @@ typedef struct spin_lock_t {
 extern Lock *screen_lock;
 extern Lock *mem_lock;
 extern Lock *sched_lock;
-
+extern Lock *work_queue_lock;
 
 #define LOCK_FREE 0
 #define LOCK_LOCKED 1
@@ -26,4 +26,7 @@ void init_kernel_locks();
 void spin_lock(Lock *);
 void unlock(Lock *);
 void get_lock(Lock *l);
+u32 test_lock(Lock *l);
+void disable_int();
+void enable_int();
 #endif

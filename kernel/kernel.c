@@ -28,19 +28,21 @@ void k_simple_proc() {
   int c = 0;
   sleep_ms(rand() % 300);
   while (TRUE) {
-    get_lock(screen_lock);
-    u32 prevPos = getCursorOffset();
+    // get_lock(screen_lock);
+    /* u32 prevPos = getCursorOffset();
     setCursorPos(current_proc->pid + 1, 50);
     // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
-    kprintf("PID: %d N: %d (%d)\n", current_proc->pid, current_proc->nice, ++c);
+    kprintf("PID: %d N: %d (%d) T: %dms\n", current_proc->pid,
+            current_proc->nice, ++c, ticksToMillis(current_proc->runtime));
     // printProcSimple(current_proc);
-    setCursorOffset(prevPos);
+    setCursorOffset(prevPos); */
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
     // sleep_ms(100);
 
-    unlock(screen_lock);
-    sleep_ms(10);
+    // unlock(screen_lock);
+
+    // sleep_ms(10);
 
     // sleep_process(current_proc);
     //_switch_to_task((Proc *)do_schedule());
@@ -191,21 +193,22 @@ void kernel_main(u32 magic, u32 addr) {
 
   init_kernel_locks();
   init_stdin();
+  init_work_queue();
 
   kPrintOKMessage("Kernel inizialized!");
 
   resetScreenColors();
 
-  clearScreen();
+  // clearScreen();
   kprintf("\n>");
 
   Proc *p;
-  /*   for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
-      p->nice = rand() % 20;
-      wake_up_process(p);
-    }
-   */
+  for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
+    p->nice = rand() % 20;
+    wake_up_process(p);
+  }
+
   p = create_kernel_proc(&top_bar, NULL, "head");
   p->nice = 20;
   wake_up_process(p);
@@ -270,7 +273,9 @@ void user_input(char *input) {
     p->nice = 0;
     wake_up_process(p);
   } else if (!strcmp(input, "printtop")) {
+    disable_int();
     printTop();
+    enable_int();
   } else if (!strcmp(input, "top")) {
     Proc *p = NULL;
     p = create_kernel_proc(&top, NULL, "top");
@@ -280,7 +285,7 @@ void user_input(char *input) {
     Proc *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_kernel_proc(&k_simple_proc_no, NULL, "kthread");
-      p->nice = 15;
+      p->nice = 2;
       wake_up_process(p);
     }
   } else if (!strcmp(input, "bootinfo")) {

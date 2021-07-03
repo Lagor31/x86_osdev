@@ -33,14 +33,22 @@ typedef struct process {
   List head;
 } Proc;
 
+typedef struct work_task{
+  char c;
+  List work_queue;
+} Work;
+
 extern Proc *current_proc;
 extern Proc *idle_proc;
+extern Proc *kwork_thread;
 extern List running_queue;
-
+extern List kwork_queue;
 extern void _switch_to_task(Proc *);
 
 void printProc(Proc *);
 void printTop();
+void work_queue_thread();
+void init_work_queue();
 
 void printProcSimple(Proc *);
 void init_kernel_proc();

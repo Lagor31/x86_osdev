@@ -2,6 +2,7 @@
 
 #include "../utils/list.h"
 
+#include "../cpu/gdt.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../kernel/kernel.h"
@@ -9,9 +10,8 @@
 #include "../libc/functions.h"
 #include "../libc/strings.h"
 #include "../mem/paging.h"
+#include "../proc/proc.h"
 #include "../utils/utils.h"
-
-#include "../cpu/gdt.h"
 
 #include "screen.h"
 
@@ -77,21 +77,18 @@ static void keyboard_callback(registers_t *regs) {
   u8 scancode = inb(0x60);
   if (scancode > SC_MAX)
     return;
+  char c = '\0';
 
-  if (scancode == BACKSPACE) {
-    append(stdin.buffer, (char)BACKSPACE);
-    stdin.available++;
-  } else if (scancode == ENTER) {
-    append(stdin.buffer, '\n');
-    stdin.available++;
-  } else {
-    char letter = sc_ascii[(int)scancode];
-    /* Remember that kprint only accepts char[] */
-    append(stdin.buffer, letter);
-    stdin.available++;
-  }
-  // Free lock means there's bytes to be read
-  unlock(stdin.read_lock);
+  if (scancode == BACKSPACE)
+    c = (char)BACKSPACE;
+  else if (scancode == ENTER)
+    c = '\n';
+  else
+    c = sc_ascii[(int)scancode];
+
+  Work *w = normal_page_alloc(0);
+  w->c = c;
+  list_add(&kwork_queue, &w->work_queue);
 
   regs->eflags |= 0x200;
   tss.cs = 0x10;

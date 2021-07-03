@@ -45,34 +45,43 @@ void printTop() {
   setTextColor(BLACK);
   kprintf("[RUNNING]\n");
   u32 c = 0;
+  disable_int();
   list_for_each(l, &running_queue) {
     p = list_entry(l, Proc, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
+  enable_int();
   resetScreenColors();
 
   c = 0;
   setBackgroundColor(CYAN);
   setTextColor(BLACK);
   kprintf("[SLEEP]\n");
+  disable_int();
+
   list_for_each(l, &sleep_queue) {
     p = list_entry(l, Proc, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
+  enable_int();
   resetScreenColors();
 
   c = 0;
   setBackgroundColor(GRAY);
   setTextColor(RED);
   kprintf("[STOPPED]\n");
+  disable_int();
+
   list_for_each(l, &stopped_queue) {
     p = list_entry(l, Proc, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
+  enable_int();
   resetScreenColors();
+  disable_int();
 
   if (current_proc != NULL) {
     setBackgroundColor(BLACK);
@@ -80,6 +89,7 @@ void printTop() {
     kprintf("[CURRENT]: \n");
     printProcSimple(current_proc);
   }
+  enable_int();
   resetScreenColors();
 }
 
@@ -94,20 +104,20 @@ void stop_process(Proc *p) {
   if (p->pid == IDLE_PID)
     return;
   // kprintf("Stopping process PID %d\n", p->pid);
-  //get_lock(sched_lock);
+  // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  //unlock(sched_lock);
+  // unlock(sched_lock);
 }
 
 void sleep_process(Proc *p) {
   if (p->pid == IDLE_PID)
     return;
   // kprintf("Sleeping process PID %d\n", p->pid);
-  //get_lock(sched_lock);
+  // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
-  //unlock(sched_lock);
+  // unlock(sched_lock);
 
   // do_schedule();
   //_switch_to_task(current_proc);
@@ -149,25 +159,29 @@ Proc *do_schedule() {
   u32 pAvg = 0;
   u32 pTot = 0;
   Proc *next = NULL;
+
+  if (list_length(&kwork_queue) > 0)
+    return kwork_thread;
+
   u32 proc_num = list_length(&running_queue);
   if (proc_num > 1) {
-    // u32 sched = rand() % size;
+    list_for_each(l, &running_queue) {
+      Proc *p = (Proc *)list_entry(l, Proc, head);
+      if (i++ == 0 && p->sched_count > 0 && p->pid != IDLE_PID)
+        return p;
+      pTot += p->nice;
+    }
+
+    pAvg = pTot / (proc_num - 1);
+    i = 0;
+
     list_for_each(l, &running_queue) {
       Proc *p = (Proc *)list_entry(l, Proc, head);
       if (i++ == 0) {
         next = p;
-        continue;
+        break;
       }
-
-      pTot += p->nice;
     }
-  } else {
-    idle_proc->sched_count = millisToTicks(MIN_QUANTUM_MS);
-    return idle_proc;
-  }
-  pAvg = pTot / (proc_num - 1);
-
-  if (next != NULL) {
     list_remove(&next->head);
     list_add(&running_queue, &next->head);
 
@@ -180,6 +194,13 @@ Proc *do_schedule() {
     else
       next->sched_count = millisToTicks((u32)q);
 
+    list_for_each(l, &running_queue) {
+      Proc *p = (Proc *)list_entry(l, Proc, head);
+      if (i++ == 0) {
+        next = p;
+        break;
+      }
+    }
     return next;
   }
 
@@ -209,10 +230,10 @@ wake_up:
 
 void wake_up_process(Proc *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
-  //get_lock(sched_lock);
+  // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
-  //unlock(sched_lock);
+  // unlock(sched_lock);
 }
 
 void printProcSimple(Proc *p) {
@@ -231,6 +252,7 @@ void init_kernel_proc() {
   idle_proc = create_kernel_proc(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
   idle_proc->nice = MIN_PRIORITY;
+  idle_proc->sched_count = ticksToMillis(MIN_QUANTUM_MS);
   wake_up_process(idle_proc);
   current_proc = idle_proc;
 }

@@ -51,16 +51,18 @@ void scheduler_handler(registers_t *regs) {
             getRegisterValue(ESP), tss.esp0); */
 
   ++tickCount;
+
+  if (current_proc != kwork_thread && current_proc->sched_count > 0)
+    current_proc->sched_count--;
+  current_proc->runtime++;
+
+  if (work_queue_lock->state == LOCK_LOCKED) {
+    goto done_sched;
+  }
   // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
-
-  if (current_proc != NULL && current_proc->sched_count-- <= 0)
-    // reschedule
-    next_proc = (Proc *)do_schedule();
-  else
-    next_proc = current_proc;
-
-  next_proc->runtime++;
+  // reschedule
+  next_proc = (Proc *)do_schedule();
   // srand(tickCount);
 
   if (next_proc != NULL && next_proc != current_proc && current_proc != NULL) {
@@ -75,7 +77,7 @@ void scheduler_handler(registers_t *regs) {
     _switch_to_task(next_proc);
     return;
   }
-
+done_sched:
   if (current_proc != NULL) {
     current_proc->regs.eip = regs->eip;
     current_proc->regs.esp = regs->esp;
