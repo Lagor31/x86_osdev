@@ -105,33 +105,51 @@ _switch_to_task:
     ;  The task isn't able to change CR3 so it doesn't need to be saved
     ;  Segment registers are constants (while running kernel code) so they don't need to be saved
  
+    
+    
+    pop edx                 ; ret addr
+    
+    pushf
+
+    push cs                 
+    push edx
+
     push ebx
     push esi
     push edi
     push ebp
+
+    push ds
  
     mov edi, [current_proc]   ;edi = address of the previous task's "thread control block"
     ;esp offset in the Proc struct
-    mov [edi + (14 * 4) + 4],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
+    mov [edi + 60],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
     
     ;Load next task's state 
     mov esi,eax                 ;esi = address of the next task's "thread control block" (parameter passed on stack)
     mov [current_proc],esi      ;Current task's TCB is the next task TCB
  
     mov esp,[esi + 60]         ;Load ESP for next task's kernel stack from the thread's TCB
-    ;mov eax,[esi+CR3]         ;eax = address of page directory for next task
+    mov eax,[esi + 76]         ;eax = address of page directory for next task
     mov ebx,[esi + 68]        ;ebx = address for the top of the next task's kernel stack
     mov [tss + 4],ebx            ;Adjust the ESP0 field in the TSS (used by CPU for for CPL=3 -> CPL=0 privilege level changes)
-    ;mov ecx,cr3                   ;ecx = previous task's virtual address space
+    mov DWORD [tss], 0x10
+    mov ecx,cr3                   ;ecx = previous task's virtual address space
  
-    ;cmp eax,ecx                   ;Does the virtual address space need to being changed?
-    ;je .doneVAS                   ; no, virtual address space is the same, so don't reload it and cause TLB flushes
-    ;mov cr3,eax                   ; yes, load the next task's virtual address space
+    cmp eax,ecx                   ;Does the virtual address space need to being changed?
+    je .doneVAS                   ; no, virtual address space is the same, so don't reload it and cause TLB flushes
+    mov cr3,eax                   ; yes, load the next task's virtual address space
 .doneVAS:
- 
+
+    pop  ebx
+    mov ds, bx
+    mov es, bx
+    mov gs, bx
+    mov fs, bx
+
     pop ebp
     pop edi
     pop esi
     pop ebx 
-    sti
-ret  
+    
+iret

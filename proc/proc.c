@@ -125,30 +125,12 @@ void sleep_process(Proc *p) {
 
 void u_simple_proc() {
   while (TRUE) {
-    asm volatile("cli");
-    // kprintf("PID: %d Name: %s\n", current_proc->pid, current_proc->name);
-    sleep_process(current_proc);
-    asm volatile("sti");
-
-    /*
-        Proc *me = current_proc;
-
-        u32 r = rand();
-        if (r % 10000000 == 0) {
-          foo(r);
-          foo(r);
-          foo(r);
-          foo(r);
-          foo(r);
-          foo(30);
-          asm volatile("cli");
-          kprintf("PID: %d Name: %s\n", current_proc->pid, current_proc->name);
-          sleep_process(current_proc);
-          asm volatile("sti");
-
-          // do_schedule();
-          //_switch_to_task(current_proc);
-        } */
+    // Proc *me = current_proc;
+    // int pos = getCursorOffset();
+    // setCursorPos(me->pid + 1, 50);
+    // u32 r = rand();
+    // kprintf("Usermode PID %d!", me->pid);
+    // setCursorOffset(pos);
   }
 }
 
@@ -237,7 +219,7 @@ void wake_up_process(Proc *p) {
 }
 
 void printProcSimple(Proc *p) {
-  kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
+   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
           ticksToMillis(p->runtime));
 }
 void printProc(Proc *p) {
@@ -272,27 +254,49 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   user_process->nice = 0;
   user_process->pid = pid++;
   LIST_INIT(&user_process->head);
-  user_process->page_dir = (u32 **)&user_page_directory;
+  user_process->page_dir = PA((u32)user_page_directory);
   user_process->Vm = kernel_vm;
   user_process->regs.eip = (u32)procfunc;
 
   void *user_stack = normal_page_alloc(0);
-  user_process->regs.esp = (u32)user_stack + PAGE_SIZE;
+  user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (10 * sizeof(u32));
+
+  // EBP, ESI, EDI, EDX
+  ((u32 *)user_process->regs.esp)[9] = 35;                          // SS
+  ((u32 *)user_process->regs.esp)[8] = (u32)user_stack + PAGE_SIZE; // ESP
+
+  ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
+
+  ((u32 *)user_process->regs.esp)[6] = 27;            // CS
+  ((u32 *)user_process->regs.esp)[5] = (u32)procfunc; // EIP
+
+  ((u32 *)user_process->regs.esp)[4] = (u32)0;
+  ((u32 *)user_process->regs.esp)[3] = (u32)0;
+  ((u32 *)user_process->regs.esp)[2] = (u32)0;
+  ((u32 *)user_process->regs.esp)[1] = (u32)0;
+
+  ((u32 *)user_process->regs.esp)[0] = (u32)35; // DS
 
   user_process->stack = user_stack;
-  user_process->regs.ds = 0x23;
-  user_process->regs.cs = 0x1B;
-  user_process->regs.ss = 0x23;
+  user_process->regs.ds = 32;
+  user_process->regs.cs = 24;
+  user_process->regs.ss = 32;
   void *kernel_stack = normal_page_alloc(0);
   user_process->kernel_stack_top = kernel_stack;
   user_process->esp0 = (u32)kernel_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);
-  memcopy((byte *)args, (byte *)proc_name, strlen(args));
-  intToAscii(rand() % 100, &proc_name[6]);
+  u32 name_length = strlen(args);
+  memcopy((byte *)args, (byte *)proc_name, name_length);
+  // intToAscii(rand() % 100, &proc_name[6]);
+  proc_name[name_length] = '\0';
+
+  user_process->sleeping_lock = NULL;
+  user_process->sleep_timer = 0;
 
   user_process->name = proc_name;
-
+  user_process->sched_count = 0;
+  user_process->runtime = 0;
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */
@@ -310,13 +314,25 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   user_process->nice = 0;
   user_process->pid = pid++;
   LIST_INIT(&user_process->head);
-  user_process->page_dir = (u32 **)&kernel_page_directory;
+  user_process->page_dir = PA((u32)kernel_page_directory);
   user_process->Vm = kernel_vm;
   user_process->regs.eip = (u32)procfunc;
 
   void *user_stack = normal_page_alloc(0);
-  user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (5 * sizeof(u32));
-  ((u32 *)user_process->regs.esp)[4] = (u32)procfunc;
+  user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (8 * sizeof(u32));
+
+  ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
+
+  ((u32 *)user_process->regs.esp)[6] = 8;             // CS
+  ((u32 *)user_process->regs.esp)[5] = (u32)procfunc; // EIP
+
+  // EBP, ESI, EDI, EDX
+  ((u32 *)user_process->regs.esp)[4] = (u32)0;
+  ((u32 *)user_process->regs.esp)[3] = (u32)0;
+  ((u32 *)user_process->regs.esp)[2] = (u32)0;
+  ((u32 *)user_process->regs.esp)[1] = (u32)0;
+
+  ((u32 *)user_process->regs.esp)[0] = (u32)16; // DS
 
   user_process->stack = user_stack;
   user_process->regs.ds = 0x10;
@@ -324,7 +340,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   user_process->regs.ss = 0x10;
   void *kernel_stack = normal_page_alloc(0);
   user_process->kernel_stack_top = kernel_stack;
-  user_process->esp0 = (u32)kernel_stack + PAGE_SIZE - (5 * sizeof(u32));
+  user_process->esp0 = (u32)user_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);
   u32 name_length = strlen(args);

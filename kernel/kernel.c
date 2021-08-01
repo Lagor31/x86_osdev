@@ -38,7 +38,7 @@ void k_simple_proc() {
     setCursorOffset(prevPos); */
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    // sleep_ms(100);
+    // sleep_ms(1000);
 
     // unlock(screen_lock);
 
@@ -181,6 +181,8 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Enabling kernel paging...");
   init_kernel_paging();
+  init_test_user_paging();
+
   kPrintOKMessage("Kernel paging enabled!");
 
   kPrintOKMessage("Enabling chaching...");
@@ -210,16 +212,18 @@ void kernel_main(u32 magic, u32 addr) {
   }
 
   p = create_kernel_proc(&top_bar, NULL, "head");
-  p->nice = 20;
+  p->nice = 0;
   wake_up_process(p);
 
   p = create_kernel_proc(&shell, NULL, "shell");
   p->nice = 0;
   wake_up_process(p);
 
-  /*   p = create_kernel_proc(&top, NULL, "top");
-    p->nice = 10;
-    wake_up_process(p); */
+  for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_user_proc(&u_simple_proc, NULL, "uproc");
+    p->nice = rand() % 20;
+    wake_up_process(p);
+  }
 
   irq_install();
   srand(tickCount);

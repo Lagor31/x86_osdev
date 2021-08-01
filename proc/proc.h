@@ -4,7 +4,7 @@
 #define IDLE_PID 0
 #define MIN_PRIORITY 20
 #define MAX_PRIORITY 0
-#define MAX_QUANTUM_MS 200
+#define MAX_QUANTUM_MS 100
 #define MIN_QUANTUM_MS 1
 #define P_PENALTY 5
 
@@ -20,11 +20,12 @@ typedef struct process {
   registers_t regs;
   u32 esp0;
   void *stack;
+  u32 page_dir;
+
   u16 pid;
   bool isKernelProc;
   VMRegion *Vm;
   void *kernel_stack_top;
-  u32 **page_dir;
   u8 nice;
   u32 runtime;
   u32 sched_count;

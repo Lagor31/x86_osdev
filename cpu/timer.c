@@ -52,6 +52,9 @@ void scheduler_handler(registers_t *regs) {
 
   ++tickCount;
 
+  if (current_proc == NULL)
+    goto done_sched;
+
   if (current_proc != kwork_thread && current_proc->sched_count > 0)
     current_proc->sched_count--;
   current_proc->runtime++;
@@ -65,7 +68,7 @@ void scheduler_handler(registers_t *regs) {
   next_proc = (Proc *)do_schedule();
   // srand(tickCount);
 
-  if (next_proc != NULL && next_proc != current_proc && current_proc != NULL) {
+  if (next_proc != NULL && next_proc != current_proc) {
     //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
 
     outb(0x70, 0x0C); // select register C
@@ -74,15 +77,19 @@ void scheduler_handler(registers_t *regs) {
       outb(0xA0, 0x20); /* slave */
       outb(0x20, 0x20);
     }
+    int i = 0;
+    if (next_proc->isKernelProc == FALSE)
+      i++;
+    else
+      i--;
     _switch_to_task(next_proc);
-    return;
   }
 done_sched:
-  if (current_proc != NULL) {
-    current_proc->regs.eip = regs->eip;
-    current_proc->regs.esp = regs->esp;
-    current_proc->esp0 = tss.esp0;
-  }
+  /*   if (current_proc != NULL) {
+      current_proc->regs.eip = regs->eip;
+      current_proc->regs.esp = regs->esp;
+      current_proc->esp0 = tss.esp0;
+    } */
 
   // Enable interrupts if no context switch was necessary
   regs->eflags |= 0x200;
