@@ -124,13 +124,16 @@ void sleep_process(Proc *p) {
 }
 
 void u_simple_proc() {
+  u32 i = 0;
   while (TRUE) {
+    //_syscall(55);
     // Proc *me = current_proc;
-    // int pos = getCursorOffset();
+    int pos = getCursorOffset();
     // setCursorPos(me->pid + 1, 50);
-    // u32 r = rand();
-    // kprintf("Usermode PID %d!", me->pid);
-    // setCursorOffset(pos);
+    u32 r = rand();
+    setCursorPos(20, 50);
+    kprintf("Usermode (%d)", i++);
+    setCursorOffset(pos);
   }
 }
 
@@ -219,7 +222,7 @@ void wake_up_process(Proc *p) {
 }
 
 void printProcSimple(Proc *p) {
-   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
+  kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
           ticksToMillis(p->runtime));
 }
 void printProc(Proc *p) {
@@ -265,7 +268,7 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   ((u32 *)user_process->regs.esp)[9] = 35;                          // SS
   ((u32 *)user_process->regs.esp)[8] = (u32)user_stack + PAGE_SIZE; // ESP
 
-  ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
+  ((u32 *)user_process->regs.esp)[7] = 0x3200; // flags
 
   ((u32 *)user_process->regs.esp)[6] = 27;            // CS
   ((u32 *)user_process->regs.esp)[5] = (u32)procfunc; // EIP

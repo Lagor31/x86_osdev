@@ -45,6 +45,7 @@ extern Proc *kwork_thread;
 extern List running_queue;
 extern List kwork_queue;
 extern void _switch_to_task(Proc *);
+extern void _syscall(u32 num);
 
 void printProc(Proc *);
 void printTop();

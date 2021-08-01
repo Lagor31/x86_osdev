@@ -92,6 +92,18 @@ _free_lock:
                     ; was called.
 ret
 
+
+
+global _syscall
+_syscall:
+    push  ebp         ; Save the stack-frame base pointer (of the calling function).
+    mov   ebp, esp    ; Set the stack-frame base pointer to be the current
+                        ; location on the stack.
+    mov ebx, [ebp + 8]
+    int 31
+    
+ret
+
 global _switch_to_task
 extern current_proc
 extern tss

@@ -32,8 +32,8 @@ void gpFaultHandler(registers_t *regs) {
   setTextColor(RED);
   if (current_proc != NULL) printProc(current_proc);
 
-  kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d\n", regs->cs, regs->eip,
-          regs->err_code);
+  kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs, regs->eip,
+          regs->err_code, regs->ebx);
   resetScreenColors();
   hlt();
 }
