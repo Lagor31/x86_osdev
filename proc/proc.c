@@ -3,6 +3,7 @@
 #include "../cpu/types.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
+#include "../kernel/syscall.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"
 #include "../libc/strings.h"
@@ -28,13 +29,6 @@ void top() {
     unlock(screen_lock);
     sleep_ms(200);
   }
-}
-
-void exit(u32 ret_code) {
-  Proc *p = current_proc;
-  stop_process(p);
-  kill_process(p);
-  _switch_to_task(do_schedule());
 }
 
 void printTop() {
@@ -128,12 +122,19 @@ void u_simple_proc() {
   while (TRUE) {
     //_syscall(55);
     // Proc *me = current_proc;
+    disable_int();
     int pos = getCursorOffset();
     // setCursorPos(me->pid + 1, 50);
     u32 r = rand();
+
     setCursorPos(20, 50);
     kprintf("Usermode (%d)", i++);
     setCursorOffset(pos);
+    enable_int();
+    if (i == 70000)
+      _syscall(1);
+
+    _syscall(2);
   }
 }
 

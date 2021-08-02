@@ -99,9 +99,10 @@ _syscall:
     push  ebp         ; Save the stack-frame base pointer (of the calling function).
     mov   ebp, esp    ; Set the stack-frame base pointer to be the current
                         ; location on the stack.
-    mov ebx, [ebp + 8]
+    mov eax, [ebp + 8]
     int 31
-    
+
+    pop ebp
 ret
 
 global _switch_to_task

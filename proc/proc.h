@@ -45,7 +45,6 @@ extern Proc *kwork_thread;
 extern List running_queue;
 extern List kwork_queue;
 extern void _switch_to_task(Proc *);
-extern void _syscall(u32 num);
 
 void printProc(Proc *);
 void printTop();
@@ -63,7 +62,6 @@ void stop_process(Proc *);
 void k_simple_proc1();
 void k_simple_proc2();
 void wake_up_all();
-void exit(u32 ret_code);
 
 Proc *do_schedule();
 

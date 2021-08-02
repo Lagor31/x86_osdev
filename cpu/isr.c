@@ -1,5 +1,5 @@
-#include "types.h"
 #include "../utils/list.h"
+#include "types.h"
 
 #include "../kernel/kernel.h"
 
@@ -8,9 +8,10 @@
 
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
-#include "../mem/paging.h"
+#include "../kernel/syscall.h"
 #include "../libc/constants.h"
 #include "../libc/strings.h"
+#include "../mem/paging.h"
 #include "../utils/utils.h"
 
 #include "idt.h"
@@ -94,7 +95,7 @@ void isr_install() {
   set_idt_gate(46, (u32)irq14);
   set_idt_gate(47, (u32)irq15);
 
-  set_idt();  // Load with ASM
+  set_idt(); // Load with ASM
 }
 
 /* To print the message which defines every exception */
@@ -139,16 +140,22 @@ void isr_handler(registers_t *r) {
   setBackgroundColor(WHITE);
   // kprintf("received interrupt %d\n", r->int_no);
   switch (r->int_no) {
-    case 14:
-      pageFaultHandler(r);
-      break;
 
-    case 13:
+  case 14:
+    pageFaultHandler(r);
+    break;
+    
+  case 13:
+    // Syscall error code
+    if (r->err_code == 250) {
+      syscall_handler(r);
+      break;
+    } else
       gpFaultHandler(r);
-      break;
+    break;
 
-    default:
-      break;
+  default:
+    break;
   }
 
   resetScreenColors();
@@ -192,8 +199,9 @@ void irq_handler(registers_t *r) {
 
   /* After every interrupt we need to send an EOI to the PICs
    * or they will not send another interrupt again */
-  if (r->int_no >= IRQ8) outb(0xA0, 0x20); /* slave */
-  outb(0x20, 0x20);                        /* master */
+  if (r->int_no >= IRQ8)
+    outb(0xA0, 0x20); /* slave */
+  outb(0x20, 0x20);   /* master */
 }
 
 void register_interrupt_handler(u8 n, isr_t handler) {

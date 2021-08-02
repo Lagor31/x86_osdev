@@ -144,7 +144,7 @@ void k_simple_proc_no() {
  */
 
   sleep_ms(5000 + rand() % 1000);
-  exit(0);
+  //exit(0);
   /*   string[0] = 'F';
 
     get_lock(mem_lock);
