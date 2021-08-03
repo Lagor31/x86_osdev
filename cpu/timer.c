@@ -52,9 +52,6 @@ void scheduler_handler(registers_t *regs) {
 
   ++tickCount;
 
-  if (current_proc == NULL)
-    goto done_sched;
-
   if (current_proc != kwork_thread && current_proc->sched_count > 0)
     current_proc->sched_count--;
   current_proc->runtime++;
@@ -77,11 +74,6 @@ void scheduler_handler(registers_t *regs) {
       outb(0xA0, 0x20); /* slave */
       outb(0x20, 0x20);
     }
-    int i = 0;
-    if (next_proc->isKernelProc == FALSE)
-      i++;
-    else
-      i--;
     _switch_to_task(next_proc);
   }
 done_sched:

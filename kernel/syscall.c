@@ -11,6 +11,10 @@ void sys_exit(u32 ret_code) {
 
 void sys_printf(u32 number) { kprintf("Input: %x\n", number); }
 
+void sys_wait(u32 millis){
+  sleep_ms(millis);
+}
+
 void syscall_handler(registers_t *regs) {
   u32 syscall_num = regs->eax;
   //kprintf("Called syscall %d!\n", syscall_num);
@@ -22,6 +26,9 @@ void syscall_handler(registers_t *regs) {
   case 2:
     sys_printf(regs->esp);
     regs->eax = 3131;
+    break;
+  case 3:
+    sys_wait(1000);
     break;
   default:
     break;

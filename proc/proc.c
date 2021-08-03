@@ -114,27 +114,27 @@ void sleep_process(Proc *p) {
   // unlock(sched_lock);
 
   // do_schedule();
-  //_switch_to_task(current_proc);
-}
+    //_switch_to_task(current_proc);
+  }
 
 void u_simple_proc() {
   u32 i = 0;
   while (TRUE) {
     //_syscall(55);
-    // Proc *me = current_proc;
-    disable_int();
+    Proc *me = current_proc;
+    //disable_int();
     int pos = getCursorOffset();
-    // setCursorPos(me->pid + 1, 50);
+    setCursorPos(me->pid + 1, 50);
     u32 r = rand();
 
-    setCursorPos(20, 50);
+    //setCursorPos(20, 50);
     kprintf("Usermode (%d)", i++);
     setCursorOffset(pos);
-    enable_int();
-    if (i == 70000)
+    //enable_int();
+    if (i == 7000)
       _syscall(1);
-
-    _syscall(2);
+    _syscall(3);
+    //_syscall(2);
   }
 }
 
