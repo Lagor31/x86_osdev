@@ -219,17 +219,20 @@ void kernel_main(u32 magic, u32 addr) {
   p->nice = 0;
   wake_up_process(p);
 
-  for (int i = 0; i < ALLOC_NUM; ++i) {
+  /* for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_user_proc(&u_simple_proc, NULL, "uproc");
     p->nice = rand() % 20;
     wake_up_process(p);
-  }
+  } */
 
   irq_install();
   srand(tickCount);
   clearScreen();
   kprintf("\n>");
-  hlt();
+
+  while(TRUE)
+    hlt();
+
 }
 
 /*

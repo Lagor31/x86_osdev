@@ -58,19 +58,10 @@ char read_stdin() {
     unlock(stdin.read_lock);
 
   return out;
-
-  /*   char *out_string = normal_page_alloc(2);
-    memcopy((byte *)stdin.buffer, (byte *)out_string, stdin.available + 1);
-    memset((byte *)stdin.buffer, 0, PAGE_SIZE * 2);
-    out_string[stdin.available + 1] = '\0';
-    stdin.available = 0;
-    return out_string; */
 }
 
 static void keyboard_callback(registers_t *regs) {
-  /*   u8 userMode = FALSE;
-    if ((regs->cs & 0b11) == 3) userMode = TRUE; */
-
+  
   outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD); // select register C
 
   /* The PIC leaves us the scancode in port 0x60 */
@@ -89,10 +80,6 @@ static void keyboard_callback(registers_t *regs) {
   Work *w = normal_page_alloc(0);
   w->c = c;
   list_add(&kwork_queue, &w->work_queue);
-
-  regs->eflags |= 0x200;
-  tss.cs = 0x10;
-  tss.esp0 = getRegisterValue(ESP);
 }
 
 void init_keyboard() { register_interrupt_handler(IRQ1, keyboard_callback); }

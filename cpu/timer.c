@@ -45,29 +45,21 @@ inline u32 ticksToMillis(u64 tickCount) {
 };
 
 void scheduler_handler(registers_t *regs) {
-
-  /* if (current_proc != NULL)
-    kprintf("PID %d - ESP: 0x%x ESP0: 0x%x\n", current_proc->pid,
-            getRegisterValue(ESP), tss.esp0); */
-
   ++tickCount;
-
-  if (current_proc != kwork_thread && current_proc->sched_count > 0)
+  if (current_proc != NULL && current_proc != kwork_thread && current_proc->sched_count > 0)
     current_proc->sched_count--;
   current_proc->runtime++;
 
   if (work_queue_lock->state == LOCK_LOCKED) {
     goto done_sched;
   }
+
   // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
   // reschedule
   next_proc = (Proc *)do_schedule();
-  // srand(tickCount);
 
   if (next_proc != NULL && next_proc != current_proc) {
-    //_loadPageDirectory((uint32_t *)PA((uint32_t)&kernel_page_directory));
-
     outb(0x70, 0x0C); // select register C
     inb(0x71);        // just throw away contents
     if (regs->int_no >= IRQ8) {
@@ -77,15 +69,8 @@ void scheduler_handler(registers_t *regs) {
     _switch_to_task(next_proc);
   }
 done_sched:
-  /*   if (current_proc != NULL) {
-      current_proc->regs.eip = regs->eip;
-      current_proc->regs.esp = regs->esp;
-      current_proc->esp0 = tss.esp0;
-    } */
-
   // Enable interrupts if no context switch was necessary
   regs->eflags |= 0x200;
-
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
   */
@@ -103,17 +88,14 @@ void init_scheduler_timer() {
 }
 
 void setTimerPhase(u16 rate) {
-  // NMI_disable();
-
+  NMI_disable();
   rate &= 0x0F; // rate must be above 2 and not over 15
-
   /* Setting up rate */
   outb(0x70, 0x8A);                 // set index to register A, disable NMI
   char prev = inb(0x71);            // get initial value of register A
   outb(0x70, 0x8A);                 // reset index to A
   outb(0x71, (prev & 0xF0) | rate); /* write only our rate to A. Note, rate is
                                        the bottom 4 bits. */
-
   /* Enabling RTC */
   outb(0x70, 0x8B); // select register B, and disable NMI
   prev = inb(0x71); // read the current value of register B
@@ -121,5 +103,5 @@ void setTimerPhase(u16 rate) {
                        register D) */
   outb(0x71, prev | 0x40); /* write the previous value ORed with 0x40. This
                             turns on bit 6 of register B */
-  // NMI_enable();
+  NMI_enable();
 }

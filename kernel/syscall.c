@@ -25,7 +25,6 @@ void syscall_handler(registers_t *regs) {
     break;
   case 2:
     sys_printf(regs->esp);
-    regs->eax = 3131;
     break;
   case 3:
     sys_wait(1000);

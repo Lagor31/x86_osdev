@@ -117,6 +117,7 @@ void sleep_process(Proc *p) {
     //_switch_to_task(current_proc);
   }
 
+
 void u_simple_proc() {
   u32 i = 0;
   while (TRUE) {
@@ -269,7 +270,7 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   ((u32 *)user_process->regs.esp)[9] = 35;                          // SS
   ((u32 *)user_process->regs.esp)[8] = (u32)user_stack + PAGE_SIZE; // ESP
 
-  ((u32 *)user_process->regs.esp)[7] = 0x3200; // flags
+  ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
 
   ((u32 *)user_process->regs.esp)[6] = 27;            // CS
   ((u32 *)user_process->regs.esp)[5] = (u32)procfunc; // EIP
@@ -292,7 +293,6 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   char *proc_name = normal_page_alloc(0);
   u32 name_length = strlen(args);
   memcopy((byte *)args, (byte *)proc_name, name_length);
-  // intToAscii(rand() % 100, &proc_name[6]);
   proc_name[name_length] = '\0';
 
   user_process->sleeping_lock = NULL;
