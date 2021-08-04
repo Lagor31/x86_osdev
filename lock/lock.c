@@ -38,11 +38,11 @@ u32 test_lock(Lock *l) { return _test_spin_lock(&l->state); }
 
 void get_lock(Lock *l) {
   while (_test_spin_lock(&l->state) == LOCK_LOCKED) {
-    current_proc->sleeping_lock = l;
-    sleep_thread(current_proc);
-    _switch_to_task((Thread *)do_schedule());
+    current_thread->sleeping_lock = l;
+    sleep_thread(current_thread);
+    _switch_to_thread((Thread *)do_schedule());
   }
-  current_proc->sleeping_lock = NULL;
+  current_thread->sleeping_lock = NULL;
 }
 
 void unlock(Lock *l) {

@@ -12,7 +12,6 @@
 #include "../mem/mem.h"
 #include "../mem/vma.h"
 #include "../proc/thread.h"
-#include <elf.h>
 #include "../utils/utils.h"
 
 #include "../cpu/gdt.h"
@@ -30,7 +29,7 @@ void gpFaultHandler(registers_t *regs) {
 
   setBackgroundColor(BLUE);
   setTextColor(RED);
-  if (current_proc != NULL) printProc(current_proc);
+  if (current_thread != NULL) printProc(current_thread);
 
   kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs, regs->eip,
           regs->err_code, regs->ebx);

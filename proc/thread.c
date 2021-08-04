@@ -15,8 +15,8 @@ List sleep_queue;
 List running_queue;
 List stopped_queue;
 
-Thread *current_proc = NULL;
-Thread *idle_proc;
+Thread *current_thread = NULL;
+Thread *idle_thread;
 static u32 pid = IDLE_PID;
 
 void top() {
@@ -77,21 +77,21 @@ void printTop() {
   resetScreenColors();
   disable_int();
 
-  if (current_proc != NULL) {
+  if (current_thread != NULL) {
     setBackgroundColor(BLACK);
     setTextColor(GREEN);
     kprintf("[CURRENT]: \n");
-    printProcSimple(current_proc);
+    printProcSimple(current_thread);
   }
   enable_int();
   resetScreenColors();
 }
 
 void sleep_ms(u32 ms) {
-  current_proc->sleep_timer = millisToTicks(ms) + tickCount;
-  current_proc->sched_count = 0;
-  sleep_thread(current_proc);
-  _switch_to_task((Thread *)do_schedule());
+  current_thread->sleep_timer = millisToTicks(ms) + tick_count;
+  current_thread->sched_count = 0;
+  sleep_thread(current_thread);
+  _switch_to_thread((Thread *)do_schedule());
 }
 
 void stop_thread(Thread *p) {
@@ -122,15 +122,15 @@ void u_simple_proc() {
   u32 i = 0;
   while (TRUE) {
     //_syscall(55);
-    Thread *me = current_proc;
+    Thread *me = current_thread;
     //disable_int();
     int pos = getCursorOffset();
-    setCursorPos(me->pid + 1, 50);
+    //setCursorPos(me->pid + 1, 50);
     u32 r = rand();
 
     //setCursorPos(20, 50);
-    kprintf("Usermode (%d)", i++);
-    setCursorOffset(pos);
+    //kprintf("Usermode (%d)", i++);
+    //setCursorOffset(pos);
     //enable_int();
     if (i == 7000)
       _syscall(1);
@@ -191,8 +191,8 @@ Thread *do_schedule() {
     return next;
   }
 
-  idle_proc->sched_count = millisToTicks(MIN_QUANTUM_MS);
-  return idle_proc;
+  idle_thread->sched_count = millisToTicks(MIN_QUANTUM_MS);
+  return idle_thread;
 }
 
 void wake_up_all() {
@@ -206,7 +206,7 @@ wake_up:
         wake_up_thread(p);
         goto wake_up;
 
-      } else if (p->sleep_timer != 0 && tickCount >= p->sleep_timer) {
+      } else if (p->sleep_timer != 0 && tick_count >= p->sleep_timer) {
         p->sleep_timer = 0;
         wake_up_thread(p);
         goto wake_up;
@@ -236,12 +236,12 @@ void init_kernel_proc() {
   LIST_INIT(&sleep_queue);
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
-  idle_proc = create_kernel_thread(idle, NULL, "idle");
-  idle_proc->pid = IDLE_PID;
-  idle_proc->nice = MIN_PRIORITY;
-  idle_proc->sched_count = ticksToMillis(MIN_QUANTUM_MS);
-  wake_up_thread(idle_proc);
-  current_proc = idle_proc;
+  idle_thread = create_kernel_thread(idle, NULL, "idle");
+  idle_thread->pid = IDLE_PID;
+  idle_thread->nice = MIN_PRIORITY;
+  idle_thread->sched_count = ticksToMillis(MIN_QUANTUM_MS);
+  wake_up_thread(idle_thread);
+  current_thread = idle_thread;
 }
 
 void idle() {

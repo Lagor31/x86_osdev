@@ -23,20 +23,20 @@
    Even at the highest frequency (4096 ticks/s, given by RTC_PHASE = 4) it
    would take 139.4  MILLENNIA to wrap around, i think we're safe...
 */
-u64 tickCount = 0;
-Thread *next_proc;
+u64 tick_count = 0;
+Thread *next_thread;
 
 /*Halts the cpu and stays idle until the timer has expired */
 void syncWait(u32 millis) {
-  u64 startTicks = tickCount;
+  u64 startTicks = tick_count;
   u64 totalWaitingTicks = millisToTicks(millis);
-  while (tickCount < startTicks + totalWaitingTicks) {
+  while (tick_count < startTicks + totalWaitingTicks) {
     __asm__("hlt");
   }
 }
 
 /* Returns the number of milliseconds since RTC setup */
-u32 getUptime() { return (u32)ticksToMillis(tickCount); }
+u32 getUptime() { return (u32)ticksToMillis(tick_count); }
 
 inline u64 millisToTicks(u32 millis) { return millis * RTC_FREQ / 1000; }
 
@@ -45,28 +45,30 @@ inline u32 ticksToMillis(u64 tickCount) {
 };
 
 void scheduler_handler(registers_t *regs) {
-  ++tickCount;
-  if (current_proc != NULL && current_proc != kwork_thread && current_proc->sched_count > 0)
-    current_proc->sched_count--;
-  current_proc->runtime++;
-
-  if (work_queue_lock->state == LOCK_LOCKED) {
-    goto done_sched;
+  ++tick_count;
+  if (current_thread != NULL){
+    current_thread->runtime++;
+    if(current_thread != kwork_thread && current_thread->sched_count > 0)
+      current_thread->sched_count--;
   }
+
+  if (work_queue_lock->state == LOCK_LOCKED) 
+    goto done_sched;
+  
 
   // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
   // reschedule
-  next_proc = (Thread *)do_schedule();
+  next_thread = (Thread *)do_schedule();
 
-  if (next_proc != NULL && next_proc != current_proc) {
+  if (next_thread != NULL && next_thread != current_thread) {
     outb(0x70, 0x0C); // select register C
     inb(0x71);        // just throw away contents
     if (regs->int_no >= IRQ8) {
       outb(0xA0, 0x20); /* slave */
       outb(0x20, 0x20);
     }
-    _switch_to_task(next_proc);
+    _switch_to_thread(next_thread);
   }
 done_sched:
   // Enable interrupts if no context switch was necessary

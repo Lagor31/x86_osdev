@@ -105,11 +105,11 @@ _syscall:
     pop ebp
 ret
 
-global _switch_to_task
-extern current_proc
+global _switch_to_thread
+extern current_thread
 extern tss
 
-_switch_to_task:
+_switch_to_thread:
     ;Save previous task's state
  
     ;Notes:
@@ -117,7 +117,7 @@ _switch_to_task:
     ;  EIP is already saved on the stack by the caller's "CALL" instruction
     ;  The task isn't able to change CR3 so it doesn't need to be saved
     ;  Segment registers are constants (while running kernel code) so they don't need to be saved
-    
+
     pop edx                 ; ret addr
     
     pushf
@@ -132,13 +132,13 @@ _switch_to_task:
 
     push ds
  
-    mov edi, [current_proc]   ;edi = address of the previous task's "thread control block"
+    mov edi, [current_thread]   ;edi = address of the previous task's "thread control block"
     ;esp offset in the Proc struct
     mov [edi + 60],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
     
     ;Load next task's state 
     mov esi,eax                 ;esi = address of the next task's "thread control block" (parameter passed on stack)
-    mov [current_proc],esi      ;Current task's TCB is the next task TCB
+    mov [current_thread],esi      ;Current task's TCB is the next task TCB
  
     mov esp,[esi + 60]         ;Load ESP for next task's kernel stack from the thread's TCB
     mov eax,[esi + 76]         ;eax = address of page directory for next task

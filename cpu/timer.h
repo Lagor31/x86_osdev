@@ -11,7 +11,7 @@
 #define MILLIS_IN_A_SECOND 1000
 
 
-extern uint64_t tickCount;
+extern uint64_t tick_count;
 extern tss_entry_t tss;
 
 void scheduler_handler(registers_t* regs);

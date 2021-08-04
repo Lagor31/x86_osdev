@@ -39,12 +39,12 @@ typedef struct work_task{
   List work_queue;
 } Work;
 
-extern Thread *current_proc;
-extern Thread *idle_proc;
+extern Thread *current_thread;
+extern Thread *idle_thread;
 extern Thread *kwork_thread;
 extern List running_queue;
 extern List kwork_queue;
-extern void _switch_to_task(Thread *);
+extern void _switch_to_thread(Thread *);
 
 void printProc(Thread *);
 void printTop();
@@ -68,7 +68,7 @@ Thread *do_schedule();
 void u_simple_proc();
 void sleep_ms(u32 ms);
 
-Thread *create_kernel_thread(void (*procfunc)(), void *data, char *args, ...);
-Thread *create_user_thread(void (*procfunc)(), void *data, char *args, ...);
+Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...);
+Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...);
 
 #endif

@@ -226,7 +226,7 @@ void kernel_main(u32 magic, u32 addr) {
   } 
 
   irq_install();
-  srand(tickCount);
+  srand(tick_count);
   clearScreen();
   kprintf("\n>");
 
@@ -270,7 +270,7 @@ void user_input(char *input) {
     resetScreenColors();
     // clearScreen();
     kprintf(">");
-    _switch_to_task((Thread *)do_schedule());
+    _switch_to_thread((Thread *)do_schedule());
 
   } else if (!strcmp(input, "free")) {
     printFree();
