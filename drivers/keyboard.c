@@ -10,7 +10,7 @@
 #include "../libc/functions.h"
 #include "../libc/strings.h"
 #include "../mem/paging.h"
-#include "../proc/proc.h"
+#include "../proc/thread.h"
 #include "../utils/utils.h"
 
 #include "screen.h"

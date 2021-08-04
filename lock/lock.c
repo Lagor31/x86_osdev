@@ -1,7 +1,7 @@
 #include "lock.h"
 #include "../drivers/keyboard.h"
 #include "../mem/mem.h"
-#include "../proc/proc.h"
+#include "../proc/thread.h"
 #include "../utils/list.h"
 
 List kernel_locks;
@@ -39,8 +39,8 @@ u32 test_lock(Lock *l) { return _test_spin_lock(&l->state); }
 void get_lock(Lock *l) {
   while (_test_spin_lock(&l->state) == LOCK_LOCKED) {
     current_proc->sleeping_lock = l;
-    sleep_process(current_proc);
-    _switch_to_task((Proc *)do_schedule());
+    sleep_thread(current_proc);
+    _switch_to_task((Thread *)do_schedule());
   }
   current_proc->sleeping_lock = NULL;
 }

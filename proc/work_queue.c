@@ -4,14 +4,14 @@
 #include "../libc/strings.h"
 #include "../lock/lock.h"
 
-#include "proc.h"
+#include "thread.h"
 
 List kwork_queue;
-Proc *kwork_thread;
+Thread *kwork_thread;
 
 void init_work_queue() {
   LIST_INIT(&kwork_queue);
-  kwork_thread = create_kernel_proc(work_queue_thread, NULL, "kworker");
+  kwork_thread = create_kernel_thread(work_queue_thread, NULL, "kworker");
 }
 
 void work_queue_thread() {

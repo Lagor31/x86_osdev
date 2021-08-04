@@ -1,5 +1,5 @@
-#ifndef PROC_H
-#define PROC_H
+#ifndef THREAD_H
+#define THREAD_H
 
 #define IDLE_PID 0
 #define MIN_PRIORITY 20
@@ -15,7 +15,7 @@
 
 void top();
 
-typedef struct process {
+typedef struct thread {
   char *name;
   registers_t regs;
   u32 esp0;
@@ -32,43 +32,43 @@ typedef struct process {
   Lock *sleeping_lock;
   u32 sleep_timer;
   List head;
-} Proc;
+} Thread;
 
 typedef struct work_task{
   char c;
   List work_queue;
 } Work;
 
-extern Proc *current_proc;
-extern Proc *idle_proc;
-extern Proc *kwork_thread;
+extern Thread *current_proc;
+extern Thread *idle_proc;
+extern Thread *kwork_thread;
 extern List running_queue;
 extern List kwork_queue;
-extern void _switch_to_task(Proc *);
+extern void _switch_to_task(Thread *);
 
-void printProc(Proc *);
+void printProc(Thread *);
 void printTop();
 void work_queue_thread();
 void init_work_queue();
 
-void printProcSimple(Proc *);
+void printProcSimple(Thread *);
 void init_kernel_proc();
-void kill_process(Proc *);
+void kill_process(Thread *);
 void idle();
-void load_current_proc(Proc *p);
-void wake_up_process(Proc *p);
-void sleep_process(Proc *p);
-void stop_process(Proc *);
+void load_current_proc(Thread *p);
+void wake_up_thread(Thread *p);
+void sleep_thread(Thread *p);
+void stop_thread(Thread *);
 void k_simple_proc1();
 void k_simple_proc2();
 void wake_up_all();
 
-Proc *do_schedule();
+Thread *do_schedule();
 
 void u_simple_proc();
 void sleep_ms(u32 ms);
 
-Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...);
-Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...);
+Thread *create_kernel_thread(void (*procfunc)(), void *data, char *args, ...);
+Thread *create_user_thread(void (*procfunc)(), void *data, char *args, ...);
 
 #endif

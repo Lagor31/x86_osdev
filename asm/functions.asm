@@ -117,8 +117,6 @@ _switch_to_task:
     ;  EIP is already saved on the stack by the caller's "CALL" instruction
     ;  The task isn't able to change CR3 so it doesn't need to be saved
     ;  Segment registers are constants (while running kernel code) so they don't need to be saved
- 
-    
     
     pop edx                 ; ret addr
     

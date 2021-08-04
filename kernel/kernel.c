@@ -14,7 +14,7 @@
 #include "../mem/mem.h"
 #include "../mem/paging.h"
 #include "../mem/slab.h"
-#include "../proc/proc.h"
+#include "../proc/thread.h"
 #include "../rfs/rfs.h"
 #include "../utils/list.h"
 #include "../utils/shutdown.h"
@@ -204,26 +204,26 @@ void kernel_main(u32 magic, u32 addr) {
   // clearScreen();
   kprintf("\n>");
 
-  Proc *p;
+  Thread *p;
   for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_kernel_proc(&k_simple_proc, NULL, "k-init");
+    p = create_kernel_thread(&k_simple_proc, NULL, "k-init");
     p->nice = rand() % 20;
-    wake_up_process(p);
+    wake_up_thread(p);
   }
 
-  p = create_kernel_proc(&top_bar, NULL, "head");
+  p = create_kernel_thread(&top_bar, NULL, "head");
   p->nice = 0;
-  wake_up_process(p);
+  wake_up_thread(p);
 
-  p = create_kernel_proc(&shell, NULL, "shell");
+  p = create_kernel_thread(&shell, NULL, "shell");
   p->nice = 0;
-  wake_up_process(p);
+  wake_up_thread(p);
 
-  /* for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_user_proc(&u_simple_proc, NULL, "uproc");
+   for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_user_thread(&u_simple_proc, NULL, "uproc");
     p->nice = rand() % 20;
-    wake_up_process(p);
-  } */
+    wake_up_thread(p);
+  } 
 
   irq_install();
   srand(tickCount);
@@ -258,42 +258,42 @@ void user_input(char *input) {
 
     List *l;
     u32 i = 0;
-    Proc *p = NULL;
+    Thread *p = NULL;
     list_for_each(l, &running_queue) {
-      p = list_entry(l, Proc, head);
+      p = list_entry(l, Thread, head);
       if (i++ == killMe) {
         kprintf("Stopping PID: %d\n", p->pid);
-        stop_process(p);
+        stop_thread(p);
         break;
       }
     }
     resetScreenColors();
     // clearScreen();
     kprintf(">");
-    _switch_to_task((Proc *)do_schedule());
+    _switch_to_task((Thread *)do_schedule());
 
   } else if (!strcmp(input, "free")) {
     printFree();
   } else if (!strcmp(input, "head")) {
-    Proc *p = NULL;
-    p = create_kernel_proc(&top_bar, NULL, "head");
+    Thread *p = NULL;
+    p = create_kernel_thread(&top_bar, NULL, "head");
     p->nice = 0;
-    wake_up_process(p);
+    wake_up_thread(p);
   } else if (!strcmp(input, "printtop")) {
     disable_int();
     printTop();
     enable_int();
   } else if (!strcmp(input, "top")) {
-    Proc *p = NULL;
-    p = create_kernel_proc(&top, NULL, "top");
+    Thread *p = NULL;
+    p = create_kernel_thread(&top, NULL, "top");
     p->nice = 0;
-    wake_up_process(p);
+    wake_up_thread(p);
   } else if (!strcmp(input, "ckp")) {
-    Proc *p;
+    Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_kernel_proc(&k_simple_proc_no, NULL, "kthread");
+      p = create_kernel_thread(&k_simple_proc_no, NULL, "kthread");
       p->nice = 2;
-      wake_up_process(p);
+      wake_up_thread(p);
     }
   } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);

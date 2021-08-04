@@ -1,4 +1,4 @@
-#include "proc.h"
+#include "thread.h"
 #include "../cpu/timer.h"
 #include "../cpu/types.h"
 #include "../drivers/screen.h"
@@ -15,8 +15,8 @@ List sleep_queue;
 List running_queue;
 List stopped_queue;
 
-Proc *current_proc = NULL;
-Proc *idle_proc;
+Thread *current_proc = NULL;
+Thread *idle_proc;
 static u32 pid = IDLE_PID;
 
 void top() {
@@ -33,7 +33,7 @@ void top() {
 
 void printTop() {
   List *l;
-  Proc *p;
+  Thread *p;
 
   setBackgroundColor(GREEN);
   setTextColor(BLACK);
@@ -41,7 +41,7 @@ void printTop() {
   u32 c = 0;
   disable_int();
   list_for_each(l, &running_queue) {
-    p = list_entry(l, Proc, head);
+    p = list_entry(l, Thread, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
@@ -55,7 +55,7 @@ void printTop() {
   disable_int();
 
   list_for_each(l, &sleep_queue) {
-    p = list_entry(l, Proc, head);
+    p = list_entry(l, Thread, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
@@ -69,7 +69,7 @@ void printTop() {
   disable_int();
 
   list_for_each(l, &stopped_queue) {
-    p = list_entry(l, Proc, head);
+    p = list_entry(l, Thread, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
@@ -90,11 +90,11 @@ void printTop() {
 void sleep_ms(u32 ms) {
   current_proc->sleep_timer = millisToTicks(ms) + tickCount;
   current_proc->sched_count = 0;
-  sleep_process(current_proc);
-  _switch_to_task((Proc *)do_schedule());
+  sleep_thread(current_proc);
+  _switch_to_task((Thread *)do_schedule());
 }
 
-void stop_process(Proc *p) {
+void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID)
     return;
   // kprintf("Stopping process PID %d\n", p->pid);
@@ -104,7 +104,7 @@ void stop_process(Proc *p) {
   // unlock(sched_lock);
 }
 
-void sleep_process(Proc *p) {
+void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID)
     return;
   // kprintf("Sleeping process PID %d\n", p->pid);
@@ -122,7 +122,7 @@ void u_simple_proc() {
   u32 i = 0;
   while (TRUE) {
     //_syscall(55);
-    Proc *me = current_proc;
+    Thread *me = current_proc;
     //disable_int();
     int pos = getCursorOffset();
     setCursorPos(me->pid + 1, 50);
@@ -139,13 +139,13 @@ void u_simple_proc() {
   }
 }
 
-Proc *do_schedule() {
+Thread *do_schedule() {
   List *l;
 
   u32 i = 0;
   u32 pAvg = 0;
   u32 pTot = 0;
-  Proc *next = NULL;
+  Thread *next = NULL;
 
   if (list_length(&kwork_queue) > 0)
     return kwork_thread;
@@ -153,7 +153,7 @@ Proc *do_schedule() {
   u32 proc_num = list_length(&running_queue);
   if (proc_num > 1) {
     list_for_each(l, &running_queue) {
-      Proc *p = (Proc *)list_entry(l, Proc, head);
+      Thread *p = (Thread *)list_entry(l, Thread, head);
       if (i++ == 0 && p->sched_count > 0 && p->pid != IDLE_PID)
         return p;
       pTot += p->nice;
@@ -163,7 +163,7 @@ Proc *do_schedule() {
     i = 0;
 
     list_for_each(l, &running_queue) {
-      Proc *p = (Proc *)list_entry(l, Proc, head);
+      Thread *p = (Thread *)list_entry(l, Thread, head);
       if (i++ == 0) {
         next = p;
         break;
@@ -182,7 +182,7 @@ Proc *do_schedule() {
       next->sched_count = millisToTicks((u32)q);
 
     list_for_each(l, &running_queue) {
-      Proc *p = (Proc *)list_entry(l, Proc, head);
+      Thread *p = (Thread *)list_entry(l, Thread, head);
       if (i++ == 0) {
         next = p;
         break;
@@ -200,22 +200,22 @@ void wake_up_all() {
 wake_up:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
-      Proc *p = list_entry(l, Proc, head);
+      Thread *p = list_entry(l, Thread, head);
       if (p->sleeping_lock != NULL && p->sleeping_lock->state == LOCK_FREE) {
         p->sleeping_lock = NULL;
-        wake_up_process(p);
+        wake_up_thread(p);
         goto wake_up;
 
       } else if (p->sleep_timer != 0 && tickCount >= p->sleep_timer) {
         p->sleep_timer = 0;
-        wake_up_process(p);
+        wake_up_thread(p);
         goto wake_up;
       }
     }
   }
 }
 
-void wake_up_process(Proc *p) {
+void wake_up_thread(Thread *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
   // get_lock(sched_lock);
   list_remove(&p->head);
@@ -223,11 +223,11 @@ void wake_up_process(Proc *p) {
   // unlock(sched_lock);
 }
 
-void printProcSimple(Proc *p) {
+void printProcSimple(Thread *p) {
   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
           ticksToMillis(p->runtime));
 }
-void printProc(Proc *p) {
+void printProc(Thread *p) {
   kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
           p->pid, p->regs.eip, p->regs.esp, p->name, p);
 }
@@ -236,11 +236,11 @@ void init_kernel_proc() {
   LIST_INIT(&sleep_queue);
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
-  idle_proc = create_kernel_proc(idle, NULL, "idle");
+  idle_proc = create_kernel_thread(idle, NULL, "idle");
   idle_proc->pid = IDLE_PID;
   idle_proc->nice = MIN_PRIORITY;
   idle_proc->sched_count = ticksToMillis(MIN_QUANTUM_MS);
-  wake_up_process(idle_proc);
+  wake_up_thread(idle_proc);
   current_proc = idle_proc;
 }
 
@@ -250,9 +250,9 @@ void idle() {
   }
 }
 
-Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
+Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
-  Proc *user_process = normal_page_alloc(0);
+  Thread *user_process = normal_page_alloc(0);
 
   user_process->isKernelProc = FALSE;
 
@@ -261,7 +261,7 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   LIST_INIT(&user_process->head);
   user_process->page_dir = PA((u32)user_page_directory);
   user_process->Vm = kernel_vm;
-  user_process->regs.eip = (u32)procfunc;
+  user_process->regs.eip = (u32)entry_point;
 
   void *user_stack = normal_page_alloc(0);
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (10 * sizeof(u32));
@@ -270,10 +270,12 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   ((u32 *)user_process->regs.esp)[9] = 35;                          // SS
   ((u32 *)user_process->regs.esp)[8] = (u32)user_stack + PAGE_SIZE; // ESP
 
-  ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
+
+//TODO: remove IOPL = 3 (allows usermode threads to run htl, outb and so forth)
+  ((u32 *)user_process->regs.esp)[7] = 0x3200; // flags
 
   ((u32 *)user_process->regs.esp)[6] = 27;            // CS
-  ((u32 *)user_process->regs.esp)[5] = (u32)procfunc; // EIP
+  ((u32 *)user_process->regs.esp)[5] = (u32)entry_point; // EIP
 
   ((u32 *)user_process->regs.esp)[4] = (u32)0;
   ((u32 *)user_process->regs.esp)[3] = (u32)0;
@@ -309,9 +311,9 @@ Proc *create_user_proc(void (*procfunc)(), void *data, char *args, ...) {
   return user_process;
 }
 
-Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
+Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
-  Proc *user_process = normal_page_alloc(0);
+  Thread *user_process = normal_page_alloc(0);
 
   user_process->isKernelProc = TRUE;
 
@@ -320,7 +322,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   LIST_INIT(&user_process->head);
   user_process->page_dir = PA((u32)kernel_page_directory);
   user_process->Vm = kernel_vm;
-  user_process->regs.eip = (u32)procfunc;
+  user_process->regs.eip = (u32)entry_point;
 
   void *user_stack = normal_page_alloc(0);
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (8 * sizeof(u32));
@@ -328,7 +330,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
 
   ((u32 *)user_process->regs.esp)[6] = 8;             // CS
-  ((u32 *)user_process->regs.esp)[5] = (u32)procfunc; // EIP
+  ((u32 *)user_process->regs.esp)[5] = (u32)entry_point; // EIP
 
   // EBP, ESI, EDI, EDX
   ((u32 *)user_process->regs.esp)[4] = (u32)0;
@@ -366,7 +368,7 @@ Proc *create_kernel_proc(void (*procfunc)(), void *data, char *args, ...) {
   return user_process;
 }
 
-void kill_process(Proc *p) {
+void kill_process(Thread *p) {
   if (p->pid == IDLE_PID)
     return;
   get_lock(sched_lock);

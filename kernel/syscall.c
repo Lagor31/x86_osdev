@@ -1,10 +1,10 @@
 #include "syscall.h"
 #include "../drivers/screen.h"
-#include "../proc/proc.h"
+#include "../proc/thread.h"
 
 void sys_exit(u32 ret_code) {
-  Proc *p = current_proc;
-  stop_process(p);
+  Thread *p = current_proc;
+  stop_thread(p);
   kill_process(p);
   _switch_to_task(do_schedule());
 }

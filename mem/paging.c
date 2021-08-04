@@ -11,7 +11,7 @@
 #include "../kernel/kernel.h"
 #include "../mem/mem.h"
 #include "../mem/vma.h"
-#include "../proc/proc.h"
+#include "../proc/thread.h"
 #include <elf.h>
 #include "../utils/utils.h"
 

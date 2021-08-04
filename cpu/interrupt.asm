@@ -34,8 +34,6 @@ iret ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 	
 ; Common IRQ code. Identical to ISR code except for the 'call' 
 ; and the 'pop ebx'
-extern _switch_to_task
-extern current_proc
 
 irq_common_stub:
     pusha 

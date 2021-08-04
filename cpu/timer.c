@@ -11,7 +11,7 @@
 #include "../drivers/screen.h"
 #include "../libc/constants.h"
 #include "../libc/functions.h"
-#include "../proc/proc.h"
+#include "../proc/thread.h"
 #include "../utils/utils.h"
 
 #include "isr.h"
@@ -24,7 +24,7 @@
    would take 139.4  MILLENNIA to wrap around, i think we're safe...
 */
 u64 tickCount = 0;
-Proc *next_proc;
+Thread *next_proc;
 
 /*Halts the cpu and stays idle until the timer has expired */
 void syncWait(u32 millis) {
@@ -57,7 +57,7 @@ void scheduler_handler(registers_t *regs) {
   // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
   // reschedule
-  next_proc = (Proc *)do_schedule();
+  next_proc = (Thread *)do_schedule();
 
   if (next_proc != NULL && next_proc != current_proc) {
     outb(0x70, 0x0C); // select register C
