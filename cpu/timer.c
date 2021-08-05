@@ -59,6 +59,7 @@ void scheduler_handler(registers_t *regs) {
   // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
   // reschedule
+  //We should user the stack for this!!
   next_thread = (Thread *)do_schedule();
 
   if (next_thread != NULL && next_thread != current_thread) {

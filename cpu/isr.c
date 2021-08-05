@@ -136,8 +136,8 @@ char *exception_messages[] = {"Division By Zero",
                               "Reserved"};
 
 void isr_handler(registers_t *r) {
-  setTextColor(RED);
-  setBackgroundColor(WHITE);
+  /* setTextColor(RED);
+  setBackgroundColor(WHITE); */
   // kprintf("received interrupt %d\n", r->int_no);
   switch (r->int_no) {
 
@@ -158,7 +158,7 @@ void isr_handler(registers_t *r) {
     break;
   }
 
-  resetScreenColors();
+  //resetScreenColors();
 }
 
 void IRQ_set_mask(unsigned char IRQline) {

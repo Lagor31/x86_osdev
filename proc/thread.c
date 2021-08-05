@@ -124,10 +124,8 @@ void u_simple_proc() {
     //_syscall(55);
     Thread *me = current_thread;
     //disable_int();
-    int pos = getCursorOffset();
     //setCursorPos(me->pid + 1, 50);
-    u32 r = rand();
-
+  
     //setCursorPos(20, 50);
     //kprintf("Usermode (%d)", i++);
     //setCursorOffset(pos);

@@ -50,7 +50,6 @@ void k_simple_proc() {
 }
 
 void shell() {
-
   char *my_buf = normal_page_alloc(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
@@ -84,8 +83,9 @@ void top_bar() {
     int totFree = total_used_memory / 1024 / 1024;
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
-    const char *title = " Uptime: %4ds             Used: %4d / %4d Mb"
-                        "               ProcsRunning: %3d ";
+    const char *title =
+        " Uptime: %4ds             Used: %4d / %4d Mb"
+        "               ProcsRunning: %3d ";
     get_lock(screen_lock);
     u32 prevPos = getCursorOffset();
 
@@ -99,7 +99,6 @@ void top_bar() {
     resetScreenColors();
 
     unlock(screen_lock);
-
     sleep_ms(100);
   }
 }
@@ -115,41 +114,23 @@ void itaFlag() {
 
     setTextColor(GREEN);
     setBackgroundColor(GREEN);
-    for (c = 0; c < 26; ++c)
-      kprintf(" ");
+    for (c = 0; c < 26; ++c) kprintf(" ");
 
     resetScreenColors();
 
     setTextColor(WHITE);
     setBackgroundColor(WHITE);
-    for (c = 0; c < 27; ++c)
-      kprintf(" ");
+    for (c = 0; c < 27; ++c) kprintf(" ");
 
     resetScreenColors();
 
     setTextColor(RED);
     setBackgroundColor(RED);
-    for (c = 0; c < 26; ++c)
-      kprintf(" ");
+    for (c = 0; c < 26; ++c) kprintf(" ");
     kprintf("\n");
   }
   resetScreenColors();
   // clearScreen();
-}
-void k_simple_proc_no() {
-
-  /*   get_lock(mem_lock);
-    char *string = normal_page_alloc(10);
-    unlock(mem_lock);
- */
-
-  sleep_ms(5000 + rand() % 1000);
-  //exit(0);
-  /*   string[0] = 'F';
-
-    get_lock(mem_lock);
-    kfreeNormal(string);
-    unlock(mem_lock); */
 }
 
 /*
@@ -219,20 +200,18 @@ void kernel_main(u32 magic, u32 addr) {
   p->nice = 0;
   wake_up_thread(p);
 
-   for (int i = 0; i < ALLOC_NUM; ++i) {
+  for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_user_thread(&u_simple_proc, NULL, "uproc");
     p->nice = rand() % 20;
     wake_up_thread(p);
-  } 
+  }
 
   irq_install();
   srand(tick_count);
   clearScreen();
   kprintf("\n>");
 
-  while(TRUE)
-    hlt();
-
+  while (TRUE) hlt();
 }
 
 /*
@@ -291,8 +270,15 @@ void user_input(char *input) {
   } else if (!strcmp(input, "ckp")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_kernel_thread(&k_simple_proc_no, NULL, "kthread");
-      p->nice = 2;
+      p = create_kernel_thread(&k_simple_proc, NULL, "k-extra");
+      p->nice = rand() % 20;
+      wake_up_thread(p);
+    }
+  } else if (!strcmp(input, "cup")) {
+    Thread *p;
+    for (int i = 0; i < ALLOC_NUM; ++i) {
+      p = create_user_thread(&u_simple_proc, NULL, "u-extra");
+      p->nice = rand() % 20;
       wake_up_thread(p);
     }
   } else if (!strcmp(input, "bootinfo")) {
