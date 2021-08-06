@@ -1,7 +1,7 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 #define PAGE_SIZE 4096
 #define PD_SIZE 1024

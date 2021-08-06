@@ -1,6 +1,6 @@
 #ifndef SLAB_H
 #define SLAB_H
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 // Must always be contained in a order 0 buddy block
 typedef struct slab {

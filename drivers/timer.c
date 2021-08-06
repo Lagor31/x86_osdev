@@ -3,15 +3,15 @@
 #include "../cpu/gdt.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
-#include "../libc/constants.h"
+#include "../lib/constants.h"
 #include "../mem/mem.h"
 #include "../mem/paging.h"
 #include "../proc/thread.h"
-#include "../utils/list.h"
-#include "../utils/utils.h"
+#include "../lib/list.h"
+#include "../lib/utils.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
-#include "../libc/functions.h"
+#include "../lib/functions.h"
 
 /*
    Even at the highest frequency (4096 ticks/s, given by RTC_PHASE = 4) it

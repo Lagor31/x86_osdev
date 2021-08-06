@@ -5,12 +5,12 @@
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
 #include "../kernel/syscall.h"
-#include "../libc/constants.h"
-#include "../libc/functions.h"
-#include "../libc/strings.h"
+#include "../lib/constants.h"
+#include "../lib/functions.h"
+#include "../lib/strings.h"
 #include "../mem/mem.h"
 #include "../mem/vma.h"
-#include "../utils/utils.h"
+#include "../lib/utils.h"
 
 List sleep_queue;
 List running_queue;

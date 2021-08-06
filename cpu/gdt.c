@@ -1,5 +1,5 @@
 #include "../cpu/types.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 #include "../boot/multiboot.h"
 #include "../mem/mem.h"
 #include "../cpu/gdt.h"

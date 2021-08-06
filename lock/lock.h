@@ -1,7 +1,7 @@
 #ifndef LOCK_H
 #define LOCK_H
 
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 typedef struct spin_lock_t {
   u32 state;

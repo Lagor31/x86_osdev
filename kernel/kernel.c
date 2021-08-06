@@ -8,22 +8,19 @@
 #include "../cpu/types.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
-#include "../libc/constants.h"
-#include "../libc/strings.h"
+#include "../lib/constants.h"
+#include "../lib/strings.h"
 #include "../lock/lock.h"
 #include "../mem/mem.h"
 #include "../mem/paging.h"
 #include "../mem/slab.h"
 #include "../proc/thread.h"
-#include "../rfs/rfs.h"
-#include "../utils/list.h"
-#include "../utils/shutdown.h"
-#include "../utils/utils.h"
+#include "../lib/list.h"
+#include "../lib/shutdown.h"
+#include "../lib/utils.h"
 #include "../bin/binaries.h"
 
 KMultiBoot2Info *kMultiBootInfo;
-struct rfsHeader *krfsHeader;
-struct fileTableEntry *kfileTable;
 
 
 

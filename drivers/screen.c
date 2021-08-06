@@ -1,10 +1,10 @@
 #include "../cpu/types.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 #include "../boot/multiboot.h"
 #include "../cpu/ports.h"
 #include "../mem/mem.h"
 #include "../kernel/kernel.h"
-#include "../libc/strings.h"
+#include "../lib/strings.h"
 
 #include "screen.h"
 

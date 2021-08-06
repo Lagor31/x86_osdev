@@ -2,17 +2,17 @@
 
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 #include "../boot/multiboot.h"
 #include "../drivers/screen.h"
-#include "../libc/constants.h"
-#include "../libc/functions.h"
-#include "../utils/utils.h"
+#include "../lib/constants.h"
+#include "../lib/functions.h"
+#include "../lib/utils.h"
 #include "../kernel/kernel.h"
 #include "../mem/mem.h"
 #include "../mem/vma.h"
 #include "../proc/thread.h"
-#include "../utils/utils.h"
+#include "../lib/utils.h"
 
 #include "../cpu/gdt.h"
 

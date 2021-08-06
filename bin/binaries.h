@@ -7,7 +7,7 @@
 #include "../drivers/screen.h"
 #include "../mem/mem.h"
 #include "../drivers/keyboard.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 #include "../proc/thread.h"
 
 

@@ -3,8 +3,8 @@
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
 
-#include "../utils/list.h"
-#include "../utils/utils.h"
+#include "../lib/list.h"
+#include "../lib/utils.h"
 #include "../boot/multiboot.h"
 #include "../mem/page.h"
 #include "../mem/buddy.h"

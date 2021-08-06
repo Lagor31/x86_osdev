@@ -1,7 +1,7 @@
 #include "page.h"
 
 #include "../cpu/types.h"
-#include "../utils/utils.h"
+#include "../lib/utils.h"
 
 #include "buddy.h"
 #include "../kernel/kernel.h"
@@ -10,7 +10,7 @@
 #include "../boot/multiboot.h"
 
 #include "../mem/mem.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 Buddy buddy[MAX_ORDER + 1];
 Buddy normal_buddy[MAX_ORDER + 1];

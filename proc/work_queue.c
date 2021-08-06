@@ -1,7 +1,7 @@
 #include "../cpu/types.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
-#include "../libc/strings.h"
+#include "../lib/strings.h"
 #include "../lock/lock.h"
 
 #include "thread.h"

@@ -2,7 +2,7 @@
 #include "../drivers/keyboard.h"
 #include "../mem/mem.h"
 #include "../proc/thread.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 List kernel_locks;
 u32 locks_id = 0;

@@ -2,7 +2,7 @@
 #include "../mem/mem.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
-#include "../libc/functions.h"
+#include "../lib/functions.h"
 
 VMRegion *kernel_vm;
 

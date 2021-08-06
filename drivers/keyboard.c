@@ -1,17 +1,17 @@
 #include "../cpu/types.h"
 
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 #include "../cpu/gdt.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../kernel/kernel.h"
-#include "../libc/constants.h"
-#include "../libc/functions.h"
-#include "../libc/strings.h"
+#include "../lib/constants.h"
+#include "../lib/functions.h"
+#include "../lib/strings.h"
 #include "../mem/paging.h"
 #include "../proc/thread.h"
-#include "../utils/utils.h"
+#include "../lib/utils.h"
 
 #include "screen.h"
 

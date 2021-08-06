@@ -1,4 +1,4 @@
-#include "../utils/list.h"
+#include "../lib/list.h"
 #include "types.h"
 
 #include "../kernel/kernel.h"
@@ -9,10 +9,10 @@
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
 #include "../kernel/syscall.h"
-#include "../libc/constants.h"
-#include "../libc/strings.h"
+#include "../lib/constants.h"
+#include "../lib/strings.h"
 #include "../mem/paging.h"
-#include "../utils/utils.h"
+#include "../lib/utils.h"
 
 #include "idt.h"
 #include "ports.h"

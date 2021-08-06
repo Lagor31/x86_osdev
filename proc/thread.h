@@ -11,7 +11,7 @@
 #include "../lock/lock.h"
 #include "../mem/paging.h"
 #include "../mem/vma.h"
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 void top();
 

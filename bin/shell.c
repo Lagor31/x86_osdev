@@ -97,8 +97,6 @@ void user_input(char *input) {
   } else if (!strcmp(input, "init")) {
     clearScreen();
     printInitScreen();
-  } else if (!strcmp(input, "rfs")) {
-    printRFSInfo();
   } else if (!strcmp(input, "gdt")) {
     printGdt();
   } else if (!strcmp(input, "uptime")) {
@@ -114,7 +112,6 @@ void user_input(char *input) {
   }
   kprintf("\n>");
 }
-
 
 void itaFlag() {
   clearScreen();

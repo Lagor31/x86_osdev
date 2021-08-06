@@ -1,6 +1,6 @@
 #ifndef VMA_H
 #define VMA_H
-#include "../utils/list.h"
+#include "../lib/list.h"
 
 typedef struct virtual_memory_region {
   u32 start;
