@@ -94,14 +94,14 @@ void init_kernel_proc() {
 }
 
 void set_kernel_esp(u32 *kesp, u32 entry_point) {
-  kesp[7] = 0x200;
-  kesp[6] = KERNEL_CS;
-  kesp[5] = entry_point;
-  kesp[4] = 0;
-  kesp[3] = 0;
-  kesp[2] = 0;
-  kesp[1] = 0;
-  kesp[0] = KERNEL_DS;
+  kesp[7] = 0x200;        // FLAGS
+  kesp[6] = KERNEL_CS;    // CS
+  kesp[5] = entry_point;  // EIP
+  kesp[4] = 0;            // EBP
+  kesp[3] = 0;            // ESI
+  kesp[2] = 0;            // EDI
+  kesp[1] = 0;            // EDX
+  kesp[0] = KERNEL_DS;    // DS
 }
 
 void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
@@ -116,7 +116,6 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
   uesp[1] = 0;            // EDX
   uesp[0] = USER_DS;      // DS
 }
-
 
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
