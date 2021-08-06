@@ -2,18 +2,20 @@
 
 void k_simple_proc() {
   sleep_ms(rand() % 300);
+  u32 i = 0;
   while (TRUE) {
     // get_lock(screen_lock);
-/*     u32 prevPos = getCursorOffset();
-    setCursorPos(current_thread->pid + 1, 50);
-    // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
+    /*     u32 prevPos = getCursorOffset();
+        setCursorPos(current_thread->pid + 1, 50);
+        // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
 
-    printProcSimple(current_thread);
-    setCursorOffset(prevPos); */
+        printProcSimple(current_thread);
+        setCursorOffset(prevPos); */
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
     sleep_ms(rand() % 5 * 1000);
 
+    if (i++ == 50) sys_exit(0);
     // unlock(screen_lock);
 
     // sleep_ms(10);

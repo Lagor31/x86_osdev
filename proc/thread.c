@@ -23,7 +23,7 @@ void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
   //current_thread->sched_count = 0;
   sleep_thread(current_thread);
-  //_switch_to_thread((Thread *)do_schedule());
+  _switch_to_thread((Thread *)do_schedule());
 }
 
 void stop_thread(Thread *p) {
@@ -32,7 +32,7 @@ void stop_thread(Thread *p) {
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  _switch_to_thread((Thread *)do_schedule());
+  //_switch_to_thread((Thread *)do_schedule());
 
   // unlock(sched_lock);
 }
@@ -43,7 +43,7 @@ void sleep_thread(Thread *p) {
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
-  _switch_to_thread((Thread *)do_schedule());
+  //_switch_to_thread((Thread *)do_schedule());
 
   // unlock(sched_lock);
 

@@ -6,7 +6,7 @@
 void sys_exit(u32 ret_code) {
   Thread *p = current_thread;
   stop_thread(p);
-  //kill_process(p);
+  kill_process(p);
   _switch_to_thread((Thread *)do_schedule());
   UNUSED(ret_code);
 }

@@ -7,7 +7,7 @@ void u_simple_proc() {
     Thread *me = current_thread;
     // disable_int();
     int pos = getCursorOffset();
-    setCursorPos(me->pid + 1, 40);
+    setCursorPos(me->pid + 1 % 30, 40);
 
     // setCursorPos(20, 50);
     kprintf("Usermode PID %d (%d)", me->pid, i++);
