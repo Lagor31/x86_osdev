@@ -31,6 +31,7 @@ struct Thread {
   TCB tcb;
   char *name;
   u16 pid;
+  u16 tgid;
   bool isKernelProc;
   VMRegion *Vm;
   u8 nice;
