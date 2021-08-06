@@ -4,7 +4,7 @@
 #include "../cpu/types.h"
 #include "../cpu/gdt.h"
 
-#define RTC_PHASE 4
+#define RTC_PHASE 10
 #define RTC_FREQ (32768 >> (RTC_PHASE - 1))
 #define MILLIS_IN_A_YEAR 3.154E10
 #define MILLIS_IN_A_DAY 8.64E7

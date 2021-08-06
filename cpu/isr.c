@@ -149,7 +149,6 @@ void isr_handler(registers_t *r) {
     // Syscall error code
     if (r->err_code == 250) {
       syscall_handler(r);
-      break;
     } else
       gpFaultHandler(r);
     break;
