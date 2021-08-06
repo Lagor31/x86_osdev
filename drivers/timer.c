@@ -61,7 +61,7 @@ void scheduler_handler(registers_t *regs) {
   }
 done_sched:
   current_thread->runtime++;
-  current_thread->sched_count--;
+  if (current_thread->sched_count > 0) current_thread->sched_count--;
   // Enable interrupts if no context switch was necessary
   // regs->eflags |= 0x200;
   /*

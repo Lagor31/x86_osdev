@@ -75,6 +75,13 @@ void kernel_main(u32 magic, u32 addr) {
   kprintf("\n>");
 
   Thread *p;
+
+  for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_user_thread(&u_simple_proc, NULL, "uproc");
+    p->nice = 10;
+    wake_up_thread(p);
+  }
+  
   for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_kernel_thread(&k_simple_proc, NULL, "k-init");
     p->nice = 10;
@@ -88,12 +95,6 @@ void kernel_main(u32 magic, u32 addr) {
   p = create_kernel_thread(&shell, NULL, "shell");
   p->nice = 0;
   wake_up_thread(p);
-
-  for (int i = 0; i < ALLOC_NUM; ++i) {
-    p = create_user_thread(&u_simple_proc, NULL, "uproc");
-    p->nice = 10;
-    wake_up_thread(p);
-  }
 
   irq_install();
   srand(tick_count);
