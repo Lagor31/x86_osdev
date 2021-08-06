@@ -13,15 +13,15 @@ CC = gcc
 C_SOURCES = $(wildcard kernel/*.c bin/*.c drivers/*.c lib/*.c cpu/*.c  mem/*.c proc/*.c lock/*.c)
 HEADERS = $(wildcard kernel/*.h bin/*.h drivers/*.h lib/*h cpu/*.h mem/*.h proc/*.h lock/*.h)
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o}
+OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o asm/functions.o}
 
 # First rule is the one executed when no parameters are fed to the Makefile
 
-kernel/kernel.elf: boot/meminit.o ${OBJ} asm/functions.o
+kernel/kernel.elf: boot/meminit.o ${OBJ} 
 	nasm -f elf32 boot/multiboot_header.asm
 	ld  -m elf_i386  -n -T linker.ld  -o $@  boot/multiboot_header.o  $^ --oformat=elf32-i386
 
-kernel/kernel_entry.o: boot/meminit.asm asm/functions.asm
+kernel/kernel_entry.o: boot/meminit.asm asm/functions.asm 
 	nasm $< -f elf32 -o $@
 	nasm $(word 2,$^) -f elf32 -o functions.o
 
