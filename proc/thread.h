@@ -14,8 +14,11 @@
 #include "../lib/list.h"
 #include "../lib/constants.h"
 
-
-
+#define TASK_RUNNABLE 0
+#define TASK_UNINSTERRUPTIBLE 1
+#define TASK_INTERRUPTIBLE 2
+#define TASK_ZOMBIE 3
+#define TASK_STOPPED 4
 
 /*
   Thread control block
@@ -33,20 +36,23 @@ typedef struct thread_cb {
 typedef struct Thread Thread;
 
 struct Thread {
-  TCB tcb;
-  char *name;
+  TCB tcb; /* Needs to be first to make math easier in asm */
+  char *command;
+  u32 state;
   u16 pid;
   u16 tgid;
   bool ring0;
-  VMRegion *Vm;
+  VMRegion *vm;
   u8 nice;
   u32 runtime;
   u32 sched_count;
   Lock *sleeping_lock;
   u32 sleep_timer;
   List head;
+  List k_proc_list;
   Thread *father;
   List children;
+  u32 exit_value;
 };
 
 typedef struct work_task {
@@ -61,6 +67,8 @@ extern List running_queue;
 extern List stopped_queue;
 extern List sleep_queue;
 extern List kwork_queue;
+extern List k_threads;
+
 extern void _switch_to_thread(Thread *);
 
 void printProc(Thread *);

@@ -15,13 +15,15 @@ List sleep_queue;
 List running_queue;
 List stopped_queue;
 
+List k_threads;
+
 Thread *current_thread = NULL;
 Thread *idle_thread;
 static u32 pid = IDLE_PID;
 
 void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
-  //current_thread->sched_count = 0;
+  // current_thread->sched_count = 0;
   sleep_thread(current_thread);
   _switch_to_thread((Thread *)do_schedule());
 }
@@ -30,6 +32,7 @@ void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   // kprintf("Stopping process PID %d\n", p->pid);
   // get_lock(sched_lock);
+  p->state = TASK_STOPPED;
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
   //_switch_to_thread((Thread *)do_schedule());
@@ -41,6 +44,7 @@ void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   // kprintf("Sleeping process PID %d\n", p->pid);
   // get_lock(sched_lock);
+  p->state = TASK_INTERRUPTIBLE;
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
   //_switch_to_thread((Thread *)do_schedule());
@@ -53,6 +57,7 @@ void sleep_thread(Thread *p) {
 
 void wake_up_thread(Thread *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
+  p->state = TASK_RUNNABLE;
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
@@ -63,11 +68,12 @@ void kill_process(Thread *p) {
   if (p->pid == IDLE_PID) return;
   get_lock(sched_lock);
   list_remove(&p->head);
+  list_remove(&p->k_proc_list);
   unlock(sched_lock);
 
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfree_normal((void *)p->name);
+  kfree_normal((void *)p->command);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   kfree_normal(p->tcb.user_stack_bot);
   kfree_normal(p->tcb.kernel_stack_bot);
@@ -77,20 +83,46 @@ void kill_process(Thread *p) {
 }
 
 void printProcSimple(Thread *p) {
-  kprintf("%s - PID: %d - N: %d T: %d\n", p->name, p->pid, p->nice,
-          p->runtime);
+  resetScreenColors();
+
+  if (p->ring0)
+    setColor(RED);
+  else
+    setColor(GREEN);
+
+  char s = 'R';
+  switch (p->state) {
+    case TASK_RUNNABLE:
+      s = 'R';
+      break;
+    case TASK_STOPPED:
+      s = 'X';
+      break;
+    case TASK_UNINSTERRUPTIBLE:
+    case TASK_INTERRUPTIBLE:
+      s = 'Z';
+      break;
+    default:
+      s = '?';
+      break;
+  }
+  kprintf("%s - PID: %d - N: %d T: %dms %c\n", p->command, p->pid, p->nice,
+          ticks_to_millis(p->runtime), s);
+  resetScreenColors();
 }
 
 void init_kernel_proc() {
   LIST_INIT(&sleep_queue);
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
+  LIST_INIT(&k_threads);
+
   idle_thread = create_kernel_thread(idle, NULL, "idle");
   idle_thread->pid = IDLE_PID;
   idle_thread->nice = MIN_PRIORITY;
   idle_thread->sched_count = ticks_to_millis(MIN_QUANTUM_MS);
   wake_up_thread(idle_thread);
-  //current_thread = idle_thread;
+  // current_thread = idle_thread;
 }
 
 void set_kernel_esp(u32 *kesp, u32 entry_point) {
@@ -127,7 +159,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->pid = pid++;
   LIST_INIT(&user_thread->head);
   user_thread->tcb.page_dir = PA((u32)user_page_directory);
-  user_thread->Vm = kernel_vm;
+  user_thread->vm = kernel_vm;
 
   void *user_stack = normal_page_alloc(0);
   user_thread->tcb.esp =
@@ -149,9 +181,15 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->sleeping_lock = NULL;
   user_thread->sleep_timer = 0;
 
-  user_thread->name = proc_name;
+  user_thread->command = proc_name;
   user_thread->sched_count = 0;
   user_thread->runtime = 0;
+
+  user_thread->tgid = user_thread->pid;
+  user_thread->state = TASK_RUNNABLE;
+  LIST_INIT(&user_thread->children);
+  LIST_INIT(&user_thread->k_proc_list);
+  list_add(&k_threads, &user_thread->k_proc_list);
 
   UNUSED(data);
   return user_thread;
@@ -168,7 +206,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->pid = pid++;
   LIST_INIT(&kernel_thread->head);
   kernel_thread->tcb.page_dir = PA((u32)kernel_page_directory);
-  kernel_thread->Vm = kernel_vm;
+  kernel_thread->vm = kernel_vm;
 
   void *user_stack = normal_page_alloc(0);
 
@@ -190,9 +228,16 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->sleeping_lock = NULL;
   kernel_thread->sleep_timer = 0;
 
-  kernel_thread->name = proc_name;
+  kernel_thread->command = proc_name;
   kernel_thread->sched_count = 0;
   kernel_thread->runtime = 0;
+
+  kernel_thread->tgid = kernel_thread->pid;
+  LIST_INIT(&kernel_thread->children);
+  LIST_INIT(&kernel_thread->k_proc_list);
+  list_add(&k_threads, &kernel_thread->k_proc_list);
+
+  kernel_thread->state = TASK_RUNNABLE;
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */
