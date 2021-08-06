@@ -18,7 +18,7 @@ void top_bar() {
     setCursorPos(0, 0);
     setBackgroundColor(BLUE);
     setTextColor(YELLOW);
-    kprintf(title, getUptime() / 1000, totFree, tot,
+    kprintf(title, get_uptime() / 1000, totFree, tot,
             list_length(&running_queue));
 
     setCursorOffset(prevPos);

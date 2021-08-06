@@ -183,7 +183,7 @@ int deleteLastChar() {
 /*
 Booting with GRUB and timeout=0 disables cursor showing, this enables it
 */
-void activateCursor() {
+void init_cursor() {
   outb(0x3D4, 0x09);  // set maximum scan line register to 15
   outb(0x3D5, 0x0F);
 

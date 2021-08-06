@@ -37,13 +37,6 @@ void saveMultibootInfo(uint32_t addr, uint32_t magic) {
   kMultiBootInfo->magic = magic;
 }
 
-void fakeSysLoadingBar(uint32_t loadingTime) {
-  uint32_t waitForEachBar = loadingTime / VGA_COLUMNS;
-  for (uint8_t i = 0; i < VGA_COLUMNS; ++i) {
-    kprintf("X");
-    syncWait(waitForEachBar);
-  }
-}
 
 /*
   Only loading first module is supported by now
@@ -356,7 +349,7 @@ void printUptime() {
   /*  stdDate_t *uptime = getSystemDate();
    kprintf("%u days, %02u:%02u:%02u\n", uptime->days, uptime->hours,
            uptime->minutes, uptime->seconds); */
-  kprintf("Uptime %d s", getUptime() / 1000);
+  kprintf("Uptime %d s", get_uptime() / 1000);
 }
 
 // Enable/Disable non maskable interrupt

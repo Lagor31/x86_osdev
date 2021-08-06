@@ -19,21 +19,12 @@
 */
 u64 tick_count = 0;
 
-/*Halts the cpu and stays idle until the timer has expired */
-void syncWait(u32 millis) {
-  u64 startTicks = tick_count;
-  u64 totalWaitingTicks = millisToTicks(millis);
-  while (tick_count < startTicks + totalWaitingTicks) {
-    __asm__("hlt");
-  }
-}
-
 /* Returns the number of milliseconds since RTC setup */
-u32 getUptime() { return (u32)ticksToMillis(tick_count); }
+u32 get_uptime() { return (u32)ticks_to_millis(tick_count); }
 
-inline u64 millisToTicks(u32 millis) { return millis * RTC_FREQ / 1000; }
+inline u64 millis_to_ticks(u32 millis) { return millis * RTC_FREQ / 1000; }
 
-inline u32 ticksToMillis(u64 tickCount) {
+inline u32 ticks_to_millis(u64 tickCount) {
   return 1000 * tickCount / RTC_FREQ;
   // return (u32)((tickCount * ((double)1 / (double)RTC_FREQ)) * 1000);
 };
@@ -51,7 +42,6 @@ void scheduler_handler(registers_t *regs) {
   // Wake up all processes that no longer need to sleep on locks or timers
   wake_up_all();
   // reschedule
-  // We should user the stack for this!!
   Thread *next_thread = (Thread *)do_schedule();
 
   if (next_thread != NULL && next_thread != current_thread) {
@@ -75,14 +65,14 @@ done_sched:
 
 void init_scheduler_timer() {
   // asm  volatile("cli");
-  setTimerPhase(RTC_PHASE);
+  set_timer_phase(RTC_PHASE);
   register_interrupt_handler(IRQ8, scheduler_handler);
   tss.esp0 = getRegisterValue(ESP);
   tss.ss0 = 0x10;
   // asm  volatile("sti");
 }
 
-void setTimerPhase(u16 rate) {
+void set_timer_phase(u16 rate) {
   NMI_disable();
   rate &= 0x0F;  // rate must be above 2 and not over 15
   /* Setting up rate */

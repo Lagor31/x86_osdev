@@ -8,7 +8,7 @@ void k_simple_proc() {
     setCursorPos(current_proc->pid + 1, 50);
     // kprintf("Got lock 0x%x!!!\n", &kernel_spin_lock);
     kprintf("PID: %d N: %d (%d) T: %dms\n", current_proc->pid,
-            current_proc->nice, ++c, ticksToMillis(current_proc->runtime));
+            current_proc->nice, ++c, ticks_to_millis(current_proc->runtime));
     // printProcSimple(current_proc);
     setCursorOffset(prevPos); */
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);

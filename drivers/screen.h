@@ -47,7 +47,7 @@ int deleteLastChar();
 void setColor(u8);
 void kprintf(const char *format, ...);
 void kprintfColor(u8 color, const char *format, ...);
-void activateCursor();
+void init_cursor();
 void kPrintOKMessage(const char *message);
 void kPrintKOMessage(const char *message);
 

@@ -212,7 +212,7 @@ void irq_install() {
   asm volatile("cli");
   // Setup requested IRQs
   init_keyboard();
-  activateCursor();
+  init_cursor();
   init_scheduler_timer();
 
   asm volatile("sti");

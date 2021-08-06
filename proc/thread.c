@@ -20,7 +20,7 @@ Thread *idle_thread;
 static u32 pid = IDLE_PID;
 
 void sleep_ms(u32 ms) {
-  current_thread->sleep_timer = millisToTicks(ms) + tick_count;
+  current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
   current_thread->sched_count = 0;
   sleep_thread(current_thread);
   _switch_to_thread((Thread *)do_schedule());
@@ -74,7 +74,7 @@ void kill_process(Thread *p) {
 
 void printProcSimple(Thread *p) {
   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
-          ticksToMillis(p->runtime));
+          ticks_to_millis(p->runtime));
 }
 /* void printProc(Thread *p) {
   kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
@@ -88,10 +88,35 @@ void init_kernel_proc() {
   idle_thread = create_kernel_thread(idle, NULL, "idle");
   idle_thread->pid = IDLE_PID;
   idle_thread->nice = MIN_PRIORITY;
-  idle_thread->sched_count = ticksToMillis(MIN_QUANTUM_MS);
+  idle_thread->sched_count = ticks_to_millis(MIN_QUANTUM_MS);
   wake_up_thread(idle_thread);
   current_thread = idle_thread;
 }
+
+void set_kernel_esp(u32 *kesp, u32 entry_point) {
+  kesp[7] = 0x200;
+  kesp[6] = KERNEL_CS;
+  kesp[5] = entry_point;
+  kesp[4] = 0;
+  kesp[3] = 0;
+  kesp[2] = 0;
+  kesp[1] = 0;
+  kesp[0] = KERNEL_DS;
+}
+
+void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
+  uesp[9] = USER_DS;      // SS
+  uesp[8] = user_stack;   // ESP
+  uesp[7] = 0x3200;       // FLAGS
+  uesp[6] = USER_CS;      // CS
+  uesp[5] = entry_point;  // EIP
+  uesp[4] = 0;            // EBP
+  uesp[3] = 0;            // ESI
+  uesp[2] = 0;            // EDI
+  uesp[1] = 0;            // EDX
+  uesp[0] = USER_DS;      // DS
+}
+
 
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
@@ -109,24 +134,8 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
 
-  // EBP, ESI, EDI, EDX
-  ((u32 *)user_thread->tcb.esp)[9] = USER_DS;                      // SS
-  ((u32 *)user_thread->tcb.esp)[8] = (u32)user_stack + PAGE_SIZE;  // ESP
-
-  // TODO: remove IOPL = 3 (allows usermode threads to run htl, outb and so
-  // forth)
-  ((u32 *)user_thread->tcb.esp)[7] = 0x3200;  // flags
-
-  ((u32 *)user_thread->tcb.esp)[6] = USER_CS;           // CS
-  ((u32 *)user_thread->tcb.esp)[5] = (u32)entry_point;  // EIP
-
-  ((u32 *)user_thread->tcb.esp)[4] = (u32)0;
-  ((u32 *)user_thread->tcb.esp)[3] = (u32)0;
-  ((u32 *)user_thread->tcb.esp)[2] = (u32)0;
-  ((u32 *)user_thread->tcb.esp)[1] = (u32)0;
-
-  ((u32 *)user_thread->tcb.esp)[0] = (u32)USER_DS;  // DS
-
+  set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
+               (u32)(user_stack + PAGE_SIZE));
   user_thread->tcb.user_stack_bot = user_stack;
 
   void *kernel_stack = normal_page_alloc(0);
@@ -163,23 +172,11 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->Vm = kernel_vm;
 
   void *user_stack = normal_page_alloc(0);
-  
+
   kernel_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (K_ESP_SIZE * sizeof(u32));
 
-  ((u32 *)kernel_thread->tcb.esp)[7] = 0x200;  // flags
-
-  ((u32 *)kernel_thread->tcb.esp)[6] = KERNEL_CS;         // CS
-  ((u32 *)kernel_thread->tcb.esp)[5] = (u32)entry_point;  // EIP
-
-  // EBP, ESI, EDI, EDX
-  ((u32 *)kernel_thread->tcb.esp)[4] = (u32)0;
-  ((u32 *)kernel_thread->tcb.esp)[3] = (u32)0;
-  ((u32 *)kernel_thread->tcb.esp)[2] = (u32)0;
-  ((u32 *)kernel_thread->tcb.esp)[1] = (u32)0;
-
-  ((u32 *)kernel_thread->tcb.esp)[0] = (u32)KERNEL_DS;  // DS
-
+  set_kernel_esp((u32 *)kernel_thread->tcb.esp, (u32)entry_point);
   kernel_thread->tcb.user_stack_bot = user_stack;
 
   void *kernel_stack = normal_page_alloc(0);

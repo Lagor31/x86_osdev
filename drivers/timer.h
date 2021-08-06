@@ -19,10 +19,9 @@ extern tss_entry_t tss;
 void scheduler_handler(registers_t* regs);
 void init_scheduler_timer();
 void initTime(uint32_t freq);
-void setTimerPhase(uint16_t hz);
-uint64_t millisToTicks(uint32_t millis);
-uint32_t ticksToMillis(uint64_t ticks);
-void syncWait(uint32_t);
-uint32_t getUptime();
+void set_timer_phase(uint16_t hz);
+uint64_t millis_to_ticks(uint32_t millis);
+uint32_t ticks_to_millis(uint64_t ticks);
+uint32_t get_uptime();
 
 #endif
