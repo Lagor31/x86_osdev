@@ -1,60 +1,46 @@
 #include "scheduler.h"
 
-
 Thread *do_schedule() {
   List *l;
 
-  u32 i = 0;
+  u32 proc_num = 0;
   u32 pAvg = 0;
   u32 pTot = 0;
   Thread *next = NULL;
 
+  u32 min_runtime = 0;
+
   if (list_length(&kwork_queue) > 0) return kwork_thread;
 
-  u32 proc_num = list_length(&running_queue);
-  if (proc_num > 1) {
-    list_for_each(l, &running_queue) {
-      Thread *p = (Thread *)list_entry(l, Thread, head);
-      if (i++ == 0 && p->sched_count > 0 && p->pid != IDLE_PID) return p;
-      pTot += p->nice;
+  list_for_each(l, &running_queue) {
+    Thread *p = (Thread *)list_entry(l, Thread, head);
+    if (proc_num == 0) {
+      min_runtime = p->runtime;
+      next = p;
+    } else if (p->runtime < min_runtime) {
+      min_runtime = p->runtime;
+      next = p;
     }
-
-    pAvg = pTot / (proc_num - 1);
-    i = 0;
-
-    list_for_each(l, &running_queue) {
-      Thread *p = (Thread *)list_entry(l, Thread, head);
-      if (i++ == 0) {
-        next = p;
-        break;
-      }
-    }
-    list_remove(&next->head);
-    list_add(&running_queue, &next->head);
-
-    int q = MAX_QUANTUM_MS / proc_num;
-    int penalty = (((int)pAvg - (int)next->nice) * P_PENALTY);
-    q += penalty;
-
-    if (q <= 0)
-      next->sched_count = 100;
-    else
-      next->sched_count = millis_to_ticks((u32)q);
-
-    list_for_each(l, &running_queue) {
-      Thread *p = (Thread *)list_entry(l, Thread, head);
-      if (i++ == 0) {
-        next = p;
-        break;
-      }
-    }
-    return next;
+    pTot += p->nice;
+    ++proc_num;
   }
 
-  idle_thread->sched_count = 1;
-  return idle_thread;
-}
+  pAvg = pTot / (proc_num - 1);
 
+  /*   list_remove(&next->head);
+    list_add(&running_queue, &next->head); */
+
+  int q = MAX_QUANTUM_MS / proc_num;
+  int penalty = (((int)pAvg - (int)next->nice) * P_PENALTY);
+  q += penalty;
+
+  if (q <= 0)
+    next->sched_count = millis_to_ticks(MIN_QUANTUM_MS);
+  else
+    next->sched_count = millis_to_ticks((u32)q);
+
+  return next;
+}
 
 void wake_up_all() {
   List *l;
