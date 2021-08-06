@@ -6,6 +6,6 @@
 #include "../drivers/timer.h"
 
 extern Thread *do_schedule();
-extern void wake_up_all();
+extern u32 wake_up_all();
 
 #endif

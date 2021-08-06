@@ -12,7 +12,7 @@ void k_simple_proc() {
     setCursorOffset(prevPos); */
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    sleep_ms(rand() % 5 * 10);
+    sleep_ms(rand() % 5 * 1000);
 
     // unlock(screen_lock);
 

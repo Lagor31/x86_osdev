@@ -38,12 +38,12 @@ Thread *do_schedule() {
     next->sched_count = millis_to_ticks(MIN_QUANTUM_MS);
   else
     next->sched_count = millis_to_ticks((u32)q);
-
   return next;
 }
 
-void wake_up_all() {
+u32 wake_up_all() {
   List *l;
+  int c = 0;
 wake_up:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
@@ -51,13 +51,16 @@ wake_up:
       if (p->sleeping_lock != NULL && p->sleeping_lock->state == LOCK_FREE) {
         p->sleeping_lock = NULL;
         wake_up_thread(p);
+        c++;
         goto wake_up;
 
       } else if (p->sleep_timer != 0 && tick_count >= p->sleep_timer) {
         p->sleep_timer = 0;
         wake_up_thread(p);
+        c++;
         goto wake_up;
       }
     }
   }
+  return c;
 }

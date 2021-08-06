@@ -31,31 +31,38 @@ inline u32 ticks_to_millis(u64 tickCount) {
 
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
-  if (current_thread != NULL) {
-    current_thread->runtime++;
-    if (current_thread != kwork_thread && current_thread->sched_count > 0)
-      current_thread->sched_count--;
-  }
+  Thread *saved_curr = current_thread;
 
   if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
 
   // Wake up all processes that no longer need to sleep on locks or timers
-  wake_up_all();
+  if (wake_up_all() == 0) {
+    if (current_thread->sched_count > 0) goto done_sched;
+  }
+
   // reschedule
   Thread *next_thread = (Thread *)do_schedule();
 
-  if (next_thread != NULL && next_thread != current_thread) {
+  if (next_thread != NULL) {
     outb(0x70, 0x0C);  // select register C
     inb(0x71);         // just throw away contents
     if (regs->int_no >= IRQ8) {
       outb(0xA0, 0x20); /* slave */
       outb(0x20, 0x20);
     }
+    next_thread->sched_count--;
+    next_thread->runtime++;
     _switch_to_thread(next_thread);
+
+    outb(0x70, 0x0C);  // select register C
+    inb(0x71);         // just throw away contents
+    return;
   }
 done_sched:
+  current_thread->runtime++;
+  current_thread->sched_count--;
   // Enable interrupts if no context switch was necessary
-  //regs->eflags |= 0x200;
+  // regs->eflags |= 0x200;
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
   */

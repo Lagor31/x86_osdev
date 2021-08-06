@@ -6,7 +6,7 @@
 #define MAX_PRIORITY 0
 #define MAX_QUANTUM_MS 100
 #define MIN_QUANTUM_MS 1
-#define P_PENALTY 5
+#define P_PENALTY 2
 
 #include "../lock/lock.h"
 #include "../mem/paging.h"
