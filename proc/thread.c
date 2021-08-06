@@ -95,115 +95,112 @@ void init_kernel_proc() {
 
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
-  Thread *user_process = normal_page_alloc(0);
+  Thread *user_thread = normal_page_alloc(0);
 
-  user_process->isKernelProc = FALSE;
+  user_thread->ring0 = FALSE;
 
-  user_process->nice = 0;
-  user_process->pid = pid++;
-  LIST_INIT(&user_process->head);
-  user_process->tcb.page_dir = PA((u32)user_page_directory);
-  user_process->Vm = kernel_vm;
+  user_thread->nice = 0;
+  user_thread->pid = pid++;
+  LIST_INIT(&user_thread->head);
+  user_thread->tcb.page_dir = PA((u32)user_page_directory);
+  user_thread->Vm = kernel_vm;
 
   void *user_stack = normal_page_alloc(0);
-  user_process->tcb.esp = (u32)user_stack + PAGE_SIZE - (10 * sizeof(u32));
+  user_thread->tcb.esp =
+      (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
 
   // EBP, ESI, EDI, EDX
-  ((u32 *)user_process->tcb.esp)[9] = 35;                           // SS
-  ((u32 *)user_process->tcb.esp)[8] = (u32)user_stack + PAGE_SIZE;  // ESP
+  ((u32 *)user_thread->tcb.esp)[9] = USER_DS;                      // SS
+  ((u32 *)user_thread->tcb.esp)[8] = (u32)user_stack + PAGE_SIZE;  // ESP
 
   // TODO: remove IOPL = 3 (allows usermode threads to run htl, outb and so
   // forth)
-  ((u32 *)user_process->tcb.esp)[7] = 0x3200;  // flags
+  ((u32 *)user_thread->tcb.esp)[7] = 0x3200;  // flags
 
-  ((u32 *)user_process->tcb.esp)[6] = 27;                // CS
-  ((u32 *)user_process->tcb.esp)[5] = (u32)entry_point;  // EIP
+  ((u32 *)user_thread->tcb.esp)[6] = USER_CS;           // CS
+  ((u32 *)user_thread->tcb.esp)[5] = (u32)entry_point;  // EIP
 
-  ((u32 *)user_process->tcb.esp)[4] = (u32)0;
-  ((u32 *)user_process->tcb.esp)[3] = (u32)0;
-  ((u32 *)user_process->tcb.esp)[2] = (u32)0;
-  ((u32 *)user_process->tcb.esp)[1] = (u32)0;
+  ((u32 *)user_thread->tcb.esp)[4] = (u32)0;
+  ((u32 *)user_thread->tcb.esp)[3] = (u32)0;
+  ((u32 *)user_thread->tcb.esp)[2] = (u32)0;
+  ((u32 *)user_thread->tcb.esp)[1] = (u32)0;
 
-  ((u32 *)user_process->tcb.esp)[0] = (u32)35;  // DS
+  ((u32 *)user_thread->tcb.esp)[0] = (u32)USER_DS;  // DS
 
-  user_process->tcb.user_stack_bot = user_stack;
-  /*   user_process->regs.ds = 32;
-    user_process->regs.cs = 24;
-    user_process->regs.ss = 32; */
+  user_thread->tcb.user_stack_bot = user_stack;
+
   void *kernel_stack = normal_page_alloc(0);
-  user_process->tcb.kernel_stack_bot = kernel_stack;
-  user_process->tcb.tss = (u32)kernel_stack + PAGE_SIZE;
+  user_thread->tcb.kernel_stack_bot = kernel_stack;
+  user_thread->tcb.tss = (u32)kernel_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);
   u32 name_length = strlen(args);
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
 
-  user_process->sleeping_lock = NULL;
-  user_process->sleep_timer = 0;
+  user_thread->sleeping_lock = NULL;
+  user_thread->sleep_timer = 0;
 
-  user_process->name = proc_name;
-  user_process->sched_count = 0;
-  user_process->runtime = 0;
-  /*
-    kprintf("Created PID %d\n", user_process->pid);
-    kprintf("       Proc name %s\n", (u32)proc_name); */
+  user_thread->name = proc_name;
+  user_thread->sched_count = 0;
+  user_thread->runtime = 0;
 
   UNUSED(data);
-  return user_process;
+  return user_thread;
 }
 
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
   // TODO: cache! chache! cache!
-  Thread *user_process = normal_page_alloc(0);
+  Thread *kernel_thread = normal_page_alloc(0);
 
-  user_process->isKernelProc = TRUE;
+  kernel_thread->ring0 = TRUE;
 
-  user_process->nice = 0;
-  user_process->pid = pid++;
-  LIST_INIT(&user_process->head);
-  user_process->tcb.page_dir = PA((u32)kernel_page_directory);
-  user_process->Vm = kernel_vm;
+  kernel_thread->nice = 0;
+  kernel_thread->pid = pid++;
+  LIST_INIT(&kernel_thread->head);
+  kernel_thread->tcb.page_dir = PA((u32)kernel_page_directory);
+  kernel_thread->Vm = kernel_vm;
 
   void *user_stack = normal_page_alloc(0);
-  user_process->tcb.esp = (u32)user_stack + PAGE_SIZE - (8 * sizeof(u32));
+  
+  kernel_thread->tcb.esp =
+      (u32)user_stack + PAGE_SIZE - (K_ESP_SIZE * sizeof(u32));
 
-  ((u32 *)user_process->tcb.esp)[7] = 0x200;  // flags
+  ((u32 *)kernel_thread->tcb.esp)[7] = 0x200;  // flags
 
-  ((u32 *)user_process->tcb.esp)[6] = 8;                 // CS
-  ((u32 *)user_process->tcb.esp)[5] = (u32)entry_point;  // EIP
+  ((u32 *)kernel_thread->tcb.esp)[6] = KERNEL_CS;         // CS
+  ((u32 *)kernel_thread->tcb.esp)[5] = (u32)entry_point;  // EIP
 
   // EBP, ESI, EDI, EDX
-  ((u32 *)user_process->tcb.esp)[4] = (u32)0;
-  ((u32 *)user_process->tcb.esp)[3] = (u32)0;
-  ((u32 *)user_process->tcb.esp)[2] = (u32)0;
-  ((u32 *)user_process->tcb.esp)[1] = (u32)0;
+  ((u32 *)kernel_thread->tcb.esp)[4] = (u32)0;
+  ((u32 *)kernel_thread->tcb.esp)[3] = (u32)0;
+  ((u32 *)kernel_thread->tcb.esp)[2] = (u32)0;
+  ((u32 *)kernel_thread->tcb.esp)[1] = (u32)0;
 
-  ((u32 *)user_process->tcb.esp)[0] = (u32)16;  // DS
+  ((u32 *)kernel_thread->tcb.esp)[0] = (u32)KERNEL_DS;  // DS
 
-  user_process->tcb.user_stack_bot = user_stack;
+  kernel_thread->tcb.user_stack_bot = user_stack;
 
   void *kernel_stack = normal_page_alloc(0);
-  user_process->tcb.kernel_stack_bot = kernel_stack;
-  user_process->tcb.tss = (u32)user_stack + PAGE_SIZE;
+  kernel_thread->tcb.kernel_stack_bot = kernel_stack;
+  kernel_thread->tcb.tss = (u32)user_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);
   u32 name_length = strlen(args);
   memcopy((byte *)args, (byte *)proc_name, name_length);
-  // intToAscii(rand() % 100, &proc_name[6]);
   proc_name[name_length] = '\0';
 
-  user_process->sleeping_lock = NULL;
-  user_process->sleep_timer = 0;
+  kernel_thread->sleeping_lock = NULL;
+  kernel_thread->sleep_timer = 0;
 
-  user_process->name = proc_name;
-  user_process->sched_count = 0;
-  user_process->runtime = 0;
+  kernel_thread->name = proc_name;
+  kernel_thread->sched_count = 0;
+  kernel_thread->runtime = 0;
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */
 
   UNUSED(data);
-  return user_process;
+  return kernel_thread;
 }

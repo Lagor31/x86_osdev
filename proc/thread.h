@@ -12,6 +12,11 @@
 #include "../mem/paging.h"
 #include "../mem/vma.h"
 #include "../lib/list.h"
+#include "../lib/constants.h"
+
+
+
+
 /*
   Thread control block
 */
@@ -32,7 +37,7 @@ struct Thread {
   char *name;
   u16 pid;
   u16 tgid;
-  bool isKernelProc;
+  bool ring0;
   VMRegion *Vm;
   u8 nice;
   u32 runtime;

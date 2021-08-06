@@ -1,9 +1,8 @@
 #ifndef IDT_H
 #define IDT_H
 
-/* Segment selectors */
-#define KERNEL_CS 0x08
-#define USERMODE_CS 0x18
+#include "../lib/constants.h"
+
 /* How every interrupt gate (handler) is defined */
 typedef struct {
   u16 low_offset; /* Lower 16 bits of handler function address */
