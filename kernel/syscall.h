@@ -5,6 +5,10 @@
 #include "../kernel/scheduler.h"
 #include "../lib/utils.h"
 
+#define EXIT 1
+#define PRINTF 2
+#define WAIT 3
+
 extern void _syscall(u32 num);
 
 void syscall_handler(registers_t *regs);

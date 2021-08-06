@@ -76,10 +76,6 @@ void printProcSimple(Thread *p) {
   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
           ticks_to_millis(p->runtime));
 }
-/* void printProc(Thread *p) {
-  kprintf("%s - PID: %d - EIP: %x - ESP: %x - &N: 0x%x - Self: 0x%x\n", p->name,
-          p->pid, p->regs.eip, p->regs.esp, p->name, p);
-} */
 
 void init_kernel_proc() {
   LIST_INIT(&sleep_queue);

@@ -22,14 +22,14 @@ void syscall_handler(registers_t *regs) {
   u32 syscall_num = regs->eax;
   //kprintf("Called syscall %d!\n", syscall_num);
   switch (syscall_num) {
-  case 1:
+  case EXIT:
     kprintf("Stopping process PID: %d\n", current_thread->pid);
     sys_exit(regs->ebx);
     break;
-  case 2:
+  case PRINTF:
     sys_printf(regs->esp);
     break;
-  case 3:
+  case WAIT:
     sys_wait(rand() % 5 * 1000);
     break;
   default:
