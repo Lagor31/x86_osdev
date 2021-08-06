@@ -37,7 +37,8 @@ void scheduler_handler(registers_t *regs) {
 
   // Wake up all processes that no longer need to sleep on locks or timers
   if (wake_up_all() == 0) {
-    if (current_thread->sched_count > 0) goto done_sched;
+    if (current_thread != NULL && current_thread->sched_count > 0)
+      goto done_sched;
   }
 
   // reschedule
@@ -50,7 +51,7 @@ void scheduler_handler(registers_t *regs) {
       outb(0xA0, 0x20); /* slave */
       outb(0x20, 0x20);
     }
-    next_thread->sched_count--;
+    if (next_thread->sched_count > 0) next_thread->sched_count--;
     next_thread->runtime++;
     _switch_to_thread(next_thread);
 

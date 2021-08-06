@@ -32,7 +32,7 @@ void stop_thread(Thread *p) {
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  //_switch_to_thread((Thread *)do_schedule());
+  _switch_to_thread((Thread *)do_schedule());
 
   // unlock(sched_lock);
 }
@@ -90,7 +90,7 @@ void init_kernel_proc() {
   idle_thread->nice = MIN_PRIORITY;
   idle_thread->sched_count = ticks_to_millis(MIN_QUANTUM_MS);
   wake_up_thread(idle_thread);
-  current_thread = idle_thread;
+  //current_thread = idle_thread;
 }
 
 void set_kernel_esp(u32 *kesp, u32 entry_point) {
