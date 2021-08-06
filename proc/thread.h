@@ -12,27 +12,36 @@
 #include "../mem/paging.h"
 #include "../mem/vma.h"
 #include "../lib/list.h"
+/*
+  Thread control block
+*/
+typedef struct thread_cb {
+  u32 esp;
+  u32 tss;
+  u32 page_dir;
 
+  void *user_stack_bot;
+  void *kernel_stack_bot;
+
+} TCB;
 
 typedef struct thread {
+  TCB tcb;
   char *name;
-  registers_t regs;
-  u32 esp0;
-  void *stack;
-  u32 page_dir;
   u16 pid;
   bool isKernelProc;
   VMRegion *Vm;
-  void *kernel_stack_bot;
   u8 nice;
   u32 runtime;
   u32 sched_count;
   Lock *sleeping_lock;
   u32 sleep_timer;
   List head;
+
+
 } Thread;
 
-typedef struct work_task{
+typedef struct work_task {
   char c;
   List work_queue;
 } Work;
@@ -62,7 +71,8 @@ void stop_thread(Thread *);
 
 void sleep_ms(u32 ms);
 
-Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...);
+Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
+                             ...);
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...);
 
 #endif

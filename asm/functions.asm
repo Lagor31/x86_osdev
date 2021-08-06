@@ -109,9 +109,9 @@ global _switch_to_thread
 extern current_thread
 extern tss
 
-THREAD_ESP equ 60
-PAGE_DIR equ 76
-THREAD_TSS equ 68
+THREAD_ESP equ 0
+PAGE_DIR equ 8
+THREAD_TSS equ 4
 KERNEL_CS equ 0x10
 
 _switch_to_thread:

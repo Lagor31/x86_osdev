@@ -28,7 +28,7 @@ void gpFaultHandler(registers_t *regs) {
 
   setBackgroundColor(BLUE);
   setTextColor(RED);
-  if (current_thread != NULL) printProc(current_thread);
+  //if (current_thread != NULL) printProc(current_thread);
 
   kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs, regs->eip,
           regs->err_code, regs->ebx);
