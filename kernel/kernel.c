@@ -22,8 +22,6 @@
 
 KMultiBoot2Info *kMultiBootInfo;
 
-
-
 /*
   After running the content of meminit.asm we get called here
 */
@@ -79,7 +77,7 @@ void kernel_main(u32 magic, u32 addr) {
   Thread *p;
   for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_kernel_thread(&k_simple_proc, NULL, "k-init");
-    p->nice = rand() % 20;
+    p->nice = 10;
     wake_up_thread(p);
   }
 
@@ -93,7 +91,7 @@ void kernel_main(u32 magic, u32 addr) {
 
   for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_user_thread(&u_simple_proc, NULL, "uproc");
-    p->nice = rand() % 20;
+    p->nice = 10;
     wake_up_thread(p);
   }
 
@@ -104,4 +102,3 @@ void kernel_main(u32 magic, u32 addr) {
 
   while (TRUE) hlt();
 }
-

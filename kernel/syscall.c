@@ -29,7 +29,7 @@ void syscall_handler(registers_t *regs) {
     sys_printf(regs->esp);
     break;
   case WAIT:
-    sys_wait(rand() % 5 * 1000);
+    sys_wait(rand() % 5 * 10);
     break;
   default:
     break;

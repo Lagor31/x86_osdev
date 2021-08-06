@@ -8,7 +8,7 @@ void top() {
     printTop();
     setCursorOffset(prevCur);
     unlock(screen_lock);
-    sleep_ms(200);
+    sleep_ms(2000);
   }
 }
 

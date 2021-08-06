@@ -37,7 +37,7 @@ Thread *do_schedule() {
     q += penalty;
 
     if (q <= 0)
-      next->sched_count = millis_to_ticks(MIN_QUANTUM_MS);
+      next->sched_count = 100;
     else
       next->sched_count = millis_to_ticks((u32)q);
 
@@ -51,7 +51,7 @@ Thread *do_schedule() {
     return next;
   }
 
-  idle_thread->sched_count = millis_to_ticks(MIN_QUANTUM_MS);
+  idle_thread->sched_count = 1;
   return idle_thread;
 }
 

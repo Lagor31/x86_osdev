@@ -23,7 +23,7 @@ void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
   current_thread->sched_count = 0;
   sleep_thread(current_thread);
-  _switch_to_thread((Thread *)do_schedule());
+  //_switch_to_thread((Thread *)do_schedule());
 }
 
 void stop_thread(Thread *p) {
@@ -77,8 +77,8 @@ void kill_process(Thread *p) {
 }
 
 void printProcSimple(Thread *p) {
-  kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
-          ticks_to_millis(p->runtime));
+  kprintf("%s - PID: %d - N: %d T: %d\n", p->name, p->pid, p->nice,
+          p->runtime);
 }
 
 void init_kernel_proc() {

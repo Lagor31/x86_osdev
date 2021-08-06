@@ -55,7 +55,7 @@ void scheduler_handler(registers_t *regs) {
   }
 done_sched:
   // Enable interrupts if no context switch was necessary
-  regs->eflags |= 0x200;
+  //regs->eflags |= 0x200;
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
   */
