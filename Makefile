@@ -34,7 +34,7 @@ debug-iso: os.iso kernel/kernel.elf
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel/kernel.elf"
 
 clean:
-	rm -f *.bin boot/*.bin boot/*.o kernel/*.o  kernel/*.elf kernel/*.bin drivers/*.o cpu/*.o libc/*.o mem/*.o  utils/*.o rfs/*.o *.iso  iso/boot/*.elf asm/*.o lock/*.o
+	rm -f *.bin boot/*.bin boot/*.o kernel/*.o bin/*.o kernel/*.elf kernel/*.bin drivers/*.o proc/*.o cpu/*.o lib/*.o mem/*.o  *.iso  iso/boot/*.elf asm/*.o lock/*.o
 
 process:
 	nasm external/lib.asm -f elf32 -o external/lib.o
