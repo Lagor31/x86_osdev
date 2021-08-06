@@ -109,6 +109,11 @@ global _switch_to_thread
 extern current_thread
 extern tss
 
+THREAD_ESP equ 60
+PAGE_DIR equ 76
+THREAD_TSS equ 68
+KERNEL_CS equ 0x10
+
 _switch_to_thread:
     ;Save previous task's state
  
@@ -135,23 +140,24 @@ _switch_to_thread:
  
     mov edi, [current_thread]   ;edi = address of the previous task's "thread control block"
     ;esp offset in the Proc struct
-    mov [edi + 60],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
+    mov [edi + THREAD_ESP],esp         ;Save ESP for previous task's kernel stack in the thread's TCB
     
     ;Load next task's state 
     mov esi,ecx                 ;esi = address of the next task's "thread control block" (parameter passed on stack)
     mov [current_thread],esi      ;Current task's TCB is the next task TCB
  
-    mov esp,[esi + 60]         ;Load ESP for next task's kernel stack from the thread's TCB
-    mov eax,[esi + 76]         ;eax = address of page directory for next task
-    mov ebx,[esi + 68]        ;ebx = address for the top of the next task's kernel stack
+    mov esp,[esi + THREAD_ESP]         ;Load ESP for next task's kernel stack from the thread's TCB
+    mov eax,[esi + PAGE_DIR]         ;eax = address of page directory for next task
+    mov ebx,[esi + THREAD_TSS]        ;ebx = address for the top of the next task's kernel stack
     mov [tss + 4],ebx            ;Adjust the ESP0 field in the TSS (used by CPU for for CPL=3 -> CPL=0 privilege level changes)
-    mov DWORD [tss], 0x10
+    mov DWORD [tss], KERNEL_CS
     mov ecx,cr3                   ;ecx = previous task's virtual address space
  
     cmp eax,ecx                   ;Does the virtual address space need to being changed?
-    je .doneVAS                   ; no, virtual address space is the same, so don't reload it and cause TLB flushes
+    je .done_paging                   ; no, virtual address space is the same, so don't reload it and cause TLB flushes
     mov cr3,eax                   ; yes, load the next task's virtual address space
-.doneVAS:
+
+.done_paging:
 
     pop  ebx
     mov ds, bx

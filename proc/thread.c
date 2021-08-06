@@ -66,7 +66,7 @@ void kill_process(Thread *p) {
   kfreeNormal((void *)p->name);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   kfreeNormal(p->stack);
-  kfreeNormal(p->kernel_stack_top);
+  kfreeNormal(p->kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
   kfreeNormal((void *)p);
   // current_proc = NULL;
@@ -105,7 +105,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_process->head);
   user_process->page_dir = PA((u32)user_page_directory);
   user_process->Vm = kernel_vm;
-  user_process->regs.eip = (u32)entry_point;
+  //user_process->regs.eip = (u32)entry_point;
 
   void *user_stack = normal_page_alloc(0);
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (10 * sizeof(u32));
@@ -129,11 +129,11 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   ((u32 *)user_process->regs.esp)[0] = (u32)35;  // DS
 
   user_process->stack = user_stack;
-  user_process->regs.ds = 32;
+/*   user_process->regs.ds = 32;
   user_process->regs.cs = 24;
-  user_process->regs.ss = 32;
+  user_process->regs.ss = 32; */
   void *kernel_stack = normal_page_alloc(0);
-  user_process->kernel_stack_top = kernel_stack;
+  user_process->kernel_stack_bot = kernel_stack;
   user_process->esp0 = (u32)kernel_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);
@@ -190,7 +190,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   user_process->regs.cs = 0x08;
   user_process->regs.ss = 0x10;
   void *kernel_stack = normal_page_alloc(0);
-  user_process->kernel_stack_top = kernel_stack;
+  user_process->kernel_stack_bot = kernel_stack;
   user_process->esp0 = (u32)user_stack + PAGE_SIZE;
 
   char *proc_name = normal_page_alloc(0);

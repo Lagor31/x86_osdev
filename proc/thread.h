@@ -20,11 +20,10 @@ typedef struct thread {
   u32 esp0;
   void *stack;
   u32 page_dir;
-
   u16 pid;
   bool isKernelProc;
   VMRegion *Vm;
-  void *kernel_stack_top;
+  void *kernel_stack_bot;
   u8 nice;
   u32 runtime;
   u32 sched_count;
