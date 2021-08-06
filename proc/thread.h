@@ -25,7 +25,9 @@ typedef struct thread_cb {
 
 } TCB;
 
-typedef struct thread {
+typedef struct Thread Thread;
+
+struct Thread {
   TCB tcb;
   char *name;
   u16 pid;
@@ -37,9 +39,9 @@ typedef struct thread {
   Lock *sleeping_lock;
   u32 sleep_timer;
   List head;
-
-
-} Thread;
+  Thread *father;
+  List children;
+};
 
 typedef struct work_task {
   char c;
