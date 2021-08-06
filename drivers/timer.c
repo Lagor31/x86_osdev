@@ -3,6 +3,7 @@
 #include "../cpu/gdt.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
+#include "../kernel/scheduler.h"
 #include "../lib/constants.h"
 #include "../mem/mem.h"
 #include "../mem/paging.h"

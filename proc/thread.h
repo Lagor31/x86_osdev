@@ -13,7 +13,6 @@
 #include "../mem/vma.h"
 #include "../lib/list.h"
 
-void top();
 
 typedef struct thread {
   char *name;
@@ -61,13 +60,7 @@ void load_current_proc(Thread *p);
 void wake_up_thread(Thread *p);
 void sleep_thread(Thread *p);
 void stop_thread(Thread *);
-void k_simple_proc1();
-void k_simple_proc2();
-void wake_up_all();
 
-Thread *do_schedule();
-
-void u_simple_proc();
 void sleep_ms(u32 ms);
 
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...);

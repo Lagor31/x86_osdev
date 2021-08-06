@@ -1,12 +1,15 @@
 #include "syscall.h"
 #include "../drivers/screen.h"
 #include "../proc/thread.h"
+#include "../lib/utils.h"
 
 void sys_exit(u32 ret_code) {
   Thread *p = current_thread;
   stop_thread(p);
   kill_process(p);
   _switch_to_thread(do_schedule());
+  UNUSED(ret_code);
+
 }
 
 void sys_printf(u32 number) { kprintf("Input: %x\n", number); }

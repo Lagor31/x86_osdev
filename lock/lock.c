@@ -3,6 +3,7 @@
 #include "../mem/mem.h"
 #include "../proc/thread.h"
 #include "../lib/list.h"
+#include "../kernel/scheduler.h"
 
 List kernel_locks;
 u32 locks_id = 0;

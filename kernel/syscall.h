@@ -2,6 +2,9 @@
 #define SYSCALL_H
 
 #include "../cpu/types.h"
+#include "../kernel/scheduler.h"
+#include "../lib/utils.h"
+#include "../lib/functions.h"
 
 extern void _syscall(u32 num);
 

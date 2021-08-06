@@ -1,7 +1,6 @@
 #include "binaries.h"
 
 void k_simple_proc() {
-  int c = 0;
   sleep_ms(rand() % 300);
   while (TRUE) {
     // get_lock(screen_lock);

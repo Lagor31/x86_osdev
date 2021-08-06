@@ -80,6 +80,8 @@ static void keyboard_callback(registers_t *regs) {
   Work *w = normal_page_alloc(0);
   w->c = c;
   list_add(&kwork_queue, &w->work_queue);
+
+  UNUSED(regs);
 }
 
 void init_keyboard() { register_interrupt_handler(IRQ1, keyboard_callback); }
