@@ -32,7 +32,7 @@ u8 parse_multiboot_info(KMultiBoot2Info *info);
 void memory_alloc_init();
 void *kernel_page_alloc(u32 order);
 void *normal_page_alloc(u32 order);
-void kfreeNormal(void *ptr);
+void kfree_normal(void *ptr);
 void kfree(void *ptr);
 void printFree();
 #endif

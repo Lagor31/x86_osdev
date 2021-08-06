@@ -105,7 +105,7 @@ void kfree(void *ptr) {
   free_kernel_pages(get_page_from_address(ptr, KERNEL_ALLOC));
 }
 
-void kfreeNormal(void *ptr) {
+void kfree_normal(void *ptr) {
   if (ptr == NULL) return;
   // kprintf("Free ptr %x ", ptr);
   free_normal_pages(

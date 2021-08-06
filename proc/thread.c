@@ -32,6 +32,8 @@ void stop_thread(Thread *p) {
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
+  _switch_to_thread((Thread *)do_schedule());
+
   // unlock(sched_lock);
 }
 
@@ -41,6 +43,8 @@ void sleep_thread(Thread *p) {
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
+  _switch_to_thread((Thread *)do_schedule());
+
   // unlock(sched_lock);
 
   // do_schedule();
@@ -63,12 +67,12 @@ void kill_process(Thread *p) {
 
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfreeNormal((void *)p->name);
+  kfree_normal((void *)p->name);
   /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
-  kfreeNormal(p->tcb.user_stack_bot);
-  kfreeNormal(p->tcb.kernel_stack_bot);
+  kfree_normal(p->tcb.user_stack_bot);
+  kfree_normal(p->tcb.kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfreeNormal((void *)p);
+  kfree_normal((void *)p);
   // current_proc = NULL;
 }
 

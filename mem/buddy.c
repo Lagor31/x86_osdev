@@ -170,15 +170,6 @@ bool is_buddy_block_free(BuddyBlock *b, bool kernel_alloc) {
 
 void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
   setColor(LIGHTGREEN);
-  /*
-    if (is_buddy_block_free(b, kernel_alloc)) {
-      setBackgroundColor(WHITE);
-      setTextColor(RED);
-      kprintf("Buddy already freed!!\n");
-      printBuddy(b, kernel_alloc);
-      resetScreenColors();
-      return;
-    } */
   for (int i = b->order; i <= MAX_ORDER; ++i) {
     if (is_buddy_free_at_order(b, i, kernel_alloc)) {
       setBackgroundColor(RED);
