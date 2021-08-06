@@ -9,7 +9,7 @@
 #include "../cpu/gdt.h"
 
 #include "../cpu/ports.h"
-#include "../cpu/timer.h"
+#include "../drivers/timer.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
 #include "../libc/constants.h"

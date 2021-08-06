@@ -1,6 +1,8 @@
 #ifndef TIMER_H
 #define TIMER_H
-#include "gdt.h"
+
+#include "../cpu/types.h"
+#include "../cpu/gdt.h"
 
 #define RTC_PHASE 12
 #define RTC_FREQ (32768 >> (RTC_PHASE - 1))

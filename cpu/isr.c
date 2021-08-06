@@ -16,7 +16,7 @@
 
 #include "idt.h"
 #include "ports.h"
-#include "timer.h"
+#include "../drivers/timer.h"
 
 #include "isr.h"
 

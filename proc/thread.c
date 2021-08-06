@@ -1,5 +1,6 @@
 #include "thread.h"
-#include "../cpu/timer.h"
+
+#include "../drivers/timer.h"
 #include "../cpu/types.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
@@ -19,74 +20,6 @@ Thread *current_thread = NULL;
 Thread *idle_thread;
 static u32 pid = IDLE_PID;
 
-void top() {
-  while (TRUE) {
-    get_lock(screen_lock);
-    u32 prevCur = getCursorOffset();
-    setCursorPos(1, 0);
-    printTop();
-    setCursorOffset(prevCur);
-    unlock(screen_lock);
-    sleep_ms(200);
-  }
-}
-
-void printTop() {
-  List *l;
-  Thread *p;
-
-  setBackgroundColor(GREEN);
-  setTextColor(BLACK);
-  kprintf("[RUNNING]\n");
-  u32 c = 0;
-  disable_int();
-  list_for_each(l, &running_queue) {
-    p = list_entry(l, Thread, head);
-    kprintf("[%d] ", c++);
-    printProcSimple(p);
-  }
-  enable_int();
-  resetScreenColors();
-
-  c = 0;
-  setBackgroundColor(CYAN);
-  setTextColor(BLACK);
-  kprintf("[SLEEP]\n");
-  disable_int();
-
-  list_for_each(l, &sleep_queue) {
-    p = list_entry(l, Thread, head);
-    kprintf("[%d] ", c++);
-    printProcSimple(p);
-  }
-  enable_int();
-  resetScreenColors();
-
-  c = 0;
-  setBackgroundColor(GRAY);
-  setTextColor(RED);
-  kprintf("[STOPPED]\n");
-  disable_int();
-
-  list_for_each(l, &stopped_queue) {
-    p = list_entry(l, Thread, head);
-    kprintf("[%d] ", c++);
-    printProcSimple(p);
-  }
-  enable_int();
-  resetScreenColors();
-  disable_int();
-
-  if (current_thread != NULL) {
-    setBackgroundColor(BLACK);
-    setTextColor(GREEN);
-    kprintf("[CURRENT]: \n");
-    printProcSimple(current_thread);
-  }
-  enable_int();
-  resetScreenColors();
-}
-
 void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millisToTicks(ms) + tick_count;
   current_thread->sched_count = 0;
@@ -95,8 +28,7 @@ void sleep_ms(u32 ms) {
 }
 
 void stop_thread(Thread *p) {
-  if (p->pid == IDLE_PID)
-    return;
+  if (p->pid == IDLE_PID) return;
   // kprintf("Stopping process PID %d\n", p->pid);
   // get_lock(sched_lock);
   list_remove(&p->head);
@@ -105,8 +37,7 @@ void stop_thread(Thread *p) {
 }
 
 void sleep_thread(Thread *p) {
-  if (p->pid == IDLE_PID)
-    return;
+  if (p->pid == IDLE_PID) return;
   // kprintf("Sleeping process PID %d\n", p->pid);
   // get_lock(sched_lock);
   list_remove(&p->head);
@@ -114,11 +45,33 @@ void sleep_thread(Thread *p) {
   // unlock(sched_lock);
 
   // do_schedule();
-    //_switch_to_task(current_proc);
-  }
+  //_switch_to_task(current_proc);
+}
 
+void wake_up_thread(Thread *p) {
+  // kprintf("Waking up process PID %d\n", p->pid);
+  // get_lock(sched_lock);
+  list_remove(&p->head);
+  list_add(&running_queue, &p->head);
+  // unlock(sched_lock);
+}
 
+void kill_process(Thread *p) {
+  if (p->pid == IDLE_PID) return;
+  get_lock(sched_lock);
+  list_remove(&p->head);
+  unlock(sched_lock);
 
+  // kprintf("\nKilling PID %d\n", p->pid);
+  /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
+  kfreeNormal((void *)p->name);
+  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
+  kfreeNormal(p->stack);
+  kfreeNormal(p->kernel_stack_top);
+  /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
+  kfreeNormal((void *)p);
+  // current_proc = NULL;
+}
 
 Thread *do_schedule() {
   List *l;
@@ -128,15 +81,13 @@ Thread *do_schedule() {
   u32 pTot = 0;
   Thread *next = NULL;
 
-  if (list_length(&kwork_queue) > 0)
-    return kwork_thread;
+  if (list_length(&kwork_queue) > 0) return kwork_thread;
 
   u32 proc_num = list_length(&running_queue);
   if (proc_num > 1) {
     list_for_each(l, &running_queue) {
       Thread *p = (Thread *)list_entry(l, Thread, head);
-      if (i++ == 0 && p->sched_count > 0 && p->pid != IDLE_PID)
-        return p;
+      if (i++ == 0 && p->sched_count > 0 && p->pid != IDLE_PID) return p;
       pTot += p->nice;
     }
 
@@ -196,14 +147,6 @@ wake_up:
   }
 }
 
-void wake_up_thread(Thread *p) {
-  // kprintf("Waking up process PID %d\n", p->pid);
-  // get_lock(sched_lock);
-  list_remove(&p->head);
-  list_add(&running_queue, &p->head);
-  // unlock(sched_lock);
-}
-
 void printProcSimple(Thread *p) {
   kprintf("%s - PID: %d - N: %d T: %dms\n", p->name, p->pid, p->nice,
           ticksToMillis(p->runtime));
@@ -225,12 +168,6 @@ void init_kernel_proc() {
   current_thread = idle_thread;
 }
 
-void idle() {
-  while (TRUE) {
-    hlt();
-  }
-}
-
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
   Thread *user_process = normal_page_alloc(0);
@@ -248,22 +185,22 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (10 * sizeof(u32));
 
   // EBP, ESI, EDI, EDX
-  ((u32 *)user_process->regs.esp)[9] = 35;                          // SS
-  ((u32 *)user_process->regs.esp)[8] = (u32)user_stack + PAGE_SIZE; // ESP
+  ((u32 *)user_process->regs.esp)[9] = 35;                           // SS
+  ((u32 *)user_process->regs.esp)[8] = (u32)user_stack + PAGE_SIZE;  // ESP
 
+  // TODO: remove IOPL = 3 (allows usermode threads to run htl, outb and so
+  // forth)
+  ((u32 *)user_process->regs.esp)[7] = 0x3200;  // flags
 
-//TODO: remove IOPL = 3 (allows usermode threads to run htl, outb and so forth)
-  ((u32 *)user_process->regs.esp)[7] = 0x3200; // flags
-
-  ((u32 *)user_process->regs.esp)[6] = 27;            // CS
-  ((u32 *)user_process->regs.esp)[5] = (u32)entry_point; // EIP
+  ((u32 *)user_process->regs.esp)[6] = 27;                // CS
+  ((u32 *)user_process->regs.esp)[5] = (u32)entry_point;  // EIP
 
   ((u32 *)user_process->regs.esp)[4] = (u32)0;
   ((u32 *)user_process->regs.esp)[3] = (u32)0;
   ((u32 *)user_process->regs.esp)[2] = (u32)0;
   ((u32 *)user_process->regs.esp)[1] = (u32)0;
 
-  ((u32 *)user_process->regs.esp)[0] = (u32)35; // DS
+  ((u32 *)user_process->regs.esp)[0] = (u32)35;  // DS
 
   user_process->stack = user_stack;
   user_process->regs.ds = 32;
@@ -292,7 +229,8 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   return user_process;
 }
 
-Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...) {
+Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
+                             ...) {
   // TODO: cache! chache! cache!
   Thread *user_process = normal_page_alloc(0);
 
@@ -308,10 +246,10 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...)
   void *user_stack = normal_page_alloc(0);
   user_process->regs.esp = (u32)user_stack + PAGE_SIZE - (8 * sizeof(u32));
 
-  ((u32 *)user_process->regs.esp)[7] = 0x200; // flags
+  ((u32 *)user_process->regs.esp)[7] = 0x200;  // flags
 
-  ((u32 *)user_process->regs.esp)[6] = 8;             // CS
-  ((u32 *)user_process->regs.esp)[5] = (u32)entry_point; // EIP
+  ((u32 *)user_process->regs.esp)[6] = 8;                 // CS
+  ((u32 *)user_process->regs.esp)[5] = (u32)entry_point;  // EIP
 
   // EBP, ESI, EDI, EDX
   ((u32 *)user_process->regs.esp)[4] = (u32)0;
@@ -319,7 +257,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...)
   ((u32 *)user_process->regs.esp)[2] = (u32)0;
   ((u32 *)user_process->regs.esp)[1] = (u32)0;
 
-  ((u32 *)user_process->regs.esp)[0] = (u32)16; // DS
+  ((u32 *)user_process->regs.esp)[0] = (u32)16;  // DS
 
   user_process->stack = user_stack;
   user_process->regs.ds = 0x10;
@@ -349,20 +287,3 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args, ...)
   return user_process;
 }
 
-void kill_process(Thread *p) {
-  if (p->pid == IDLE_PID)
-    return;
-  get_lock(sched_lock);
-  list_remove(&p->head);
-  unlock(sched_lock);
-
-  // kprintf("\nKilling PID %d\n", p->pid);
-  /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfreeNormal((void *)p->name);
-  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
-  kfreeNormal(p->stack);
-  kfreeNormal(p->kernel_stack_top);
-  /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfreeNormal((void *)p);
-  // current_proc = NULL;
-}

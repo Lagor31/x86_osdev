@@ -43,6 +43,8 @@ extern Thread *current_thread;
 extern Thread *idle_thread;
 extern Thread *kwork_thread;
 extern List running_queue;
+extern List stopped_queue;
+extern List sleep_queue;
 extern List kwork_queue;
 extern void _switch_to_thread(Thread *);
 

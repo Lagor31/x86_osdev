@@ -16,7 +16,7 @@
 
 #include "../cpu/gdt.h"
 
-#include "../cpu/timer.h"
+#include "../drivers/timer.h"
 
 #include "paging.h"
 

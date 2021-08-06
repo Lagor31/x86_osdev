@@ -4,7 +4,7 @@
 #include "../cpu/gdt.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
-#include "../cpu/timer.h"
+#include "../drivers/timer.h"
 #include "../cpu/types.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
