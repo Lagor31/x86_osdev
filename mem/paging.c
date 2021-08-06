@@ -6,7 +6,6 @@
 #include "../boot/multiboot.h"
 #include "../drivers/screen.h"
 #include "../lib/constants.h"
-#include "../lib/functions.h"
 #include "../lib/utils.h"
 #include "../kernel/kernel.h"
 #include "../mem/mem.h"

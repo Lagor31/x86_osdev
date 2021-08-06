@@ -12,7 +12,6 @@
 #include "../lib/utils.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
-#include "../lib/functions.h"
 
 /*
    Even at the highest frequency (4096 ticks/s, given by RTC_PHASE = 4) it

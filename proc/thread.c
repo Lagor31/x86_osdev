@@ -6,7 +6,6 @@
 #include "../kernel/kernel.h"
 #include "../kernel/syscall.h"
 #include "../lib/constants.h"
-#include "../lib/functions.h"
 #include "../lib/strings.h"
 #include "../mem/mem.h"
 #include "../mem/vma.h"

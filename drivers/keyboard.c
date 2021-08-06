@@ -7,7 +7,6 @@
 #include "../cpu/ports.h"
 #include "../kernel/kernel.h"
 #include "../lib/constants.h"
-#include "../lib/functions.h"
 #include "../lib/strings.h"
 #include "../mem/paging.h"
 #include "../proc/thread.h"

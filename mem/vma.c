@@ -2,8 +2,7 @@
 #include "../mem/mem.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
-#include "../lib/functions.h"
-
+#include "../lib/utils.h"
 VMRegion *kernel_vm;
 
 void init_kernel_vma(u32 base_address) {

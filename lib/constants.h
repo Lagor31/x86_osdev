@@ -2,8 +2,6 @@
 #define CONSTANTS_H
 
 
-
-
 #define EAX 1
 #define EBX 2
 #define ESP 3
