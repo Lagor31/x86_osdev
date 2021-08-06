@@ -9,7 +9,6 @@ void sys_exit(u32 ret_code) {
   kill_process(p);
   _switch_to_thread(do_schedule());
   UNUSED(ret_code);
-
 }
 
 void sys_printf(u32 number) { kprintf("Input: %x\n", number); }
