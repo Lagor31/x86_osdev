@@ -14,6 +14,7 @@
 #include "../lib/shutdown.h"
 #include "../kernel/scheduler.h"
 #include "../kernel/syscall.h"
+#include "../users/user.h"
 
 extern void top_bar();
 extern void k_simple_proc();

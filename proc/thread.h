@@ -13,6 +13,7 @@
 #include "../mem/vma.h"
 #include "../lib/list.h"
 #include "../lib/constants.h"
+#include "../users/user.h"
 
 #define TASK_RUNNABLE 0
 #define TASK_UNINSTERRUPTIBLE 1
@@ -51,6 +52,7 @@ struct Thread {
   List head;
   List k_proc_list;
   Thread *father;
+  User *owner;
   List siblings;
   List children;
   bool wait4child;

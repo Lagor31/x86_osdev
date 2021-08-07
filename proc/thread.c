@@ -10,6 +10,7 @@
 #include "../mem/mem.h"
 #include "../mem/vma.h"
 #include "../lib/utils.h"
+#include "../users/user.h"
 
 List sleep_queue;
 List running_queue;
@@ -133,7 +134,6 @@ redo:
 }
 
 void printProcSimple(Thread *p) {
-
   char s = 'R';
   switch (p->state) {
     case TASK_RUNNABLE:
@@ -152,15 +152,17 @@ void printProcSimple(Thread *p) {
   }
   kprintf("%s - PID: %d - N: %d F: %d T: %dms %c\n", p->command, p->pid,
           p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
- /*  List *l;
-  list_for_each(l, &p->children) {
-    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
-    kprintf("%s,", p1->command);
-  }
-  kprintf("\n"); */
+  /*  List *l;
+   list_for_each(l, &p->children) {
+     Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+     kprintf("%s,", p1->command);
+   }
+   kprintf("\n"); */
 }
 
 void init_kernel_proc() {
+  init_users();
+
   LIST_INIT(&sleep_queue);
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
@@ -168,11 +170,12 @@ void init_kernel_proc() {
 
   // wake_up_thread(idle_thread);
 
-  init_thread = create_kernel_thread(init, NULL, "init");
+  init_thread = create_kernel_thread(init, NULL, "initd");
   init_thread->nice = MAX_PRIORITY;
   init_thread->pid = 1;
   init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
   init_thread->father = init_thread;
+  init_thread->owner = root;
 
   pid = 2;
   wake_up_thread(init_thread);
@@ -210,7 +213,6 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
 
   user_thread->ring0 = FALSE;
   user_thread->father = current_thread;
-
   user_thread->nice = 0;
   user_thread->pid = pid++;
   LIST_INIT(&user_thread->head);
@@ -249,8 +251,10 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->k_proc_list);
 
   list_add(&k_threads, &user_thread->k_proc_list);
-  if (current_thread != NULL)
+  if (current_thread != NULL) {
+    user_thread->owner = current_thread->owner;
     list_add(&current_thread->children, &user_thread->siblings);
+  }
 
   UNUSED(data);
   return user_thread;
@@ -300,8 +304,10 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
 
   LIST_INIT(&kernel_thread->k_proc_list);
   list_add(&k_threads, &kernel_thread->k_proc_list);
-  if (current_thread != NULL)
+  if (current_thread != NULL) {
+    kernel_thread->owner = current_thread->owner;
     list_add(&current_thread->children, &kernel_thread->siblings);
+  }
   kernel_thread->state = TASK_RUNNABLE;
   /*
     kprintf("Created PID %d\n", user_process->pid);

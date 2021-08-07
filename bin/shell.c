@@ -34,39 +34,8 @@ void user_input(char *input) {
     itaFlag();
     asm volatile("sti");
 
-  } else if (!strcmp(input, "stop")) {
-    u32 numProc = list_length(&running_queue);
-    u32 killMe = 0;
-
-    killMe = rand() % numProc;
-
-    List *l;
-    u32 i = 0;
-    Thread *p = NULL;
-    list_for_each(l, &running_queue) {
-      p = list_entry(l, Thread, head);
-      if (i++ == killMe) {
-        kprintf("Stopping PID: %d\n", p->pid);
-        stop_thread(p);
-        break;
-      }
-    }
-    resetScreenColors();
-    // clearScreen();
-    kprintf("# ");
-    _switch_to_thread((Thread *)do_schedule());
-
   } else if (!strcmp(input, "free")) {
     printFree();
-  } else if (!strcmp(input, "head")) {
-    Thread *p = NULL;
-    p = create_kernel_thread(&top_bar, NULL, "head");
-    p->nice = 0;
-    wake_up_thread(p);
-  } else if (!strcmp(input, "printtop")) {
-    disable_int();
-    printTop();
-    enable_int();
   } else if (!strcmp(input, "top")) {
     Thread *p = NULL;
     p = create_kernel_thread(&top, NULL, "top");
@@ -98,11 +67,6 @@ void user_input(char *input) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 1);
-  } else if (!strcmp(input, "meminfo")) {
-    printKernelMemInfo();
-  } else if (!strcmp(input, "init")) {
-    clearScreen();
-    printInitScreen();
   } else if (!strcmp(input, "gdt")) {
     printGdt();
   } else if (!strcmp(input, "uptime")) {
@@ -113,6 +77,9 @@ void user_input(char *input) {
     shutdown();
   } else if (!strcmp(input, "reboot")) {
     reboot();
+  } else if (!strcmp(input, "id")) {
+    kprintf("%s %d\n", current_thread->owner->username,
+            current_thread->owner->uid);
   } else {
     kprintf("Command %s not found!", input);
   }

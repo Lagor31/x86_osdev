@@ -14,20 +14,24 @@ void print_children(List *children, u32 indent) {
     append(pad, ' ');
   }
   pad[i] = '\0';
-
   list_for_each(l, children) {
     p = list_entry(l, Thread, siblings);
-    kprintf("%s- %d (%d)- %s %dms\n", pad, p->pid, p->state, p->command,
-            millis_to_ticks(p->runtime));
+    kprintf("%s- ", pad);
+    print_single_thread(p);
     print_children(&p->children, indent + 1);
   }
 }
 
+void print_single_thread(Thread *p) {
+  kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
+          p->owner->username, millis_to_ticks(p->runtime));
+}
+
 void print_tree() {
   // clearScreen();
-  kprintf("- %d - (%d) %s %dms\n", init_thread->pid, init_thread->state,
-          init_thread->command, init_thread->runtime);
+  print_single_thread(init_thread);
   print_children(&init_thread->children, 1);
+  kprintf(" q to quit\n");
 }
 
 void printTop() {

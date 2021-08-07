@@ -12,7 +12,7 @@ void init() {
 
   kwork_thread = create_kernel_thread(work_queue_thread, NULL, "kworker");
 
-  p = create_kernel_thread(&top_bar, NULL, "head");
+  p = create_kernel_thread(&top_bar, NULL, "gui");
   p->nice = 0;
   wake_up_thread(p);
 

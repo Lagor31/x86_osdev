@@ -43,8 +43,8 @@ void u_simple_proc() {
       wake_up_thread(t); */
 
       _syscall(WAIT4ALL);
-      kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
-              t->pid);
+      /* kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
+              t->pid); */
       _syscall(SLEEPMS);
       _syscall(EXIT);
     }
