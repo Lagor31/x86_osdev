@@ -10,8 +10,8 @@ CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -node
 #-Werror
 
 CC = gcc
-C_SOURCES = $(wildcard kernel/*.c bin/*.c drivers/*.c lib/*.c cpu/*.c  mem/*.c proc/*.c lock/*.c)
-HEADERS = $(wildcard kernel/*.h bin/*.h drivers/*.h lib/*h cpu/*.h mem/*.h proc/*.h lock/*.h)
+C_SOURCES = $(wildcard kernel/*.c  drivers/*.c  lib/*.c cpu/*.c mem/*.c proc/*.c lock/*.c bin/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h lib/*h cpu/*.h mem/*.h proc/*.h lock/*.h bin/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o asm/functions.o}
 

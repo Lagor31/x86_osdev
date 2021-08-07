@@ -1,6 +1,8 @@
 #ifndef BINARIES_H
 #define BINARIES_H
 
+#include "../proc/thread.h"
+
 
 #include "../kernel/kernel.h"
 #include "../cpu/types.h"
@@ -8,7 +10,6 @@
 #include "../mem/mem.h"
 #include "../drivers/keyboard.h"
 #include "../lib/list.h"
-#include "../proc/thread.h"
 #include "../lib/utils.h"
 #include "../lib/strings.h"
 #include "../lib/shutdown.h"
@@ -21,5 +22,6 @@ extern void shell();
 extern void u_simple_proc();
 extern void top();
 extern void itaFlag();
+extern void init();
 
 #endif

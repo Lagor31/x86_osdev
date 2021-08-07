@@ -81,14 +81,16 @@ void user_input(char *input) {
       p->nice =  10;
       wake_up_thread(p);
     }
-  } else if (!strcmp(input, "cup")) {
+  } 
+   else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_user_thread(&u_simple_proc, NULL, "u-extra");
       p->nice = 10;
       wake_up_thread(p);
     }
-  } else if (!strcmp(input, "bootinfo")) {
+  }  
+  else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 1);

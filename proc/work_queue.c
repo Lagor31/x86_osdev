@@ -11,7 +11,6 @@ Thread *kwork_thread;
 
 void init_work_queue() {
   LIST_INIT(&kwork_queue);
-  kwork_thread = create_kernel_thread(work_queue_thread, NULL, "kworker");
 }
 
 void work_queue_thread() {

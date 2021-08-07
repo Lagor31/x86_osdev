@@ -19,7 +19,9 @@ List k_threads;
 
 Thread *current_thread = NULL;
 Thread *idle_thread;
-static u32 pid = IDLE_PID;
+Thread *init_thread;
+
+u32 pid = IDLE_PID;
 
 void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
@@ -69,6 +71,28 @@ void kill_process(Thread *p) {
   get_lock(sched_lock);
   list_remove(&p->head);
   list_remove(&p->k_proc_list);
+
+  List *l;
+
+  //kprintf("Dead father had ->\n");
+  // ADD children to init
+  redo:
+
+  list_for_each(l, &p->children) {
+    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+    //LIST_INIT(&p1->siblings);
+    //kprintf("%d ", p1->pid);
+    list_remove(&p1->siblings);
+
+    p1->father = p->father;
+    list_add(&p->father->children, &p1->siblings);
+    goto redo;
+  }
+  //kprintf("\n");
+
+  list_remove(&p->children);
+  list_remove(&p->siblings);
+
   unlock(sched_lock);
 
   // kprintf("\nKilling PID %d\n", p->pid);
@@ -106,9 +130,14 @@ void printProcSimple(Thread *p) {
       s = '?';
       break;
   }
-  kprintf("%s - PID: %d - N: %d T: %dms %c\n", p->command, p->pid, p->nice,
-          ticks_to_millis(p->runtime), s);
-  resetScreenColors();
+  kprintf("%s - PID: %d - N: %d F: %d T: %dms %c\n", p->command, p->pid,
+          p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
+  List *l;
+  list_for_each(l, &p->children) {
+    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+    kprintf("%s,", p1->command);
+  }
+  kprintf("\n");
 }
 
 void init_kernel_proc() {
@@ -117,11 +146,17 @@ void init_kernel_proc() {
   LIST_INIT(&stopped_queue);
   LIST_INIT(&k_threads);
 
-  idle_thread = create_kernel_thread(idle, NULL, "idle");
-  idle_thread->pid = IDLE_PID;
-  idle_thread->nice = MIN_PRIORITY;
-  idle_thread->sched_count = ticks_to_millis(MIN_QUANTUM_MS);
-  wake_up_thread(idle_thread);
+  // wake_up_thread(idle_thread);
+
+  init_thread = create_kernel_thread(init, NULL, "init");
+  init_thread->nice = MAX_PRIORITY;
+  init_thread->pid = 1;
+  init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
+  init_thread->father = init_thread;
+
+  pid = 2;
+  wake_up_thread(init_thread);
+
   // current_thread = idle_thread;
 }
 
@@ -154,6 +189,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   Thread *user_thread = normal_page_alloc(0);
 
   user_thread->ring0 = FALSE;
+  user_thread->father = current_thread;
 
   user_thread->nice = 0;
   user_thread->pid = pid++;
@@ -188,8 +224,13 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->tgid = user_thread->pid;
   user_thread->state = TASK_RUNNABLE;
   LIST_INIT(&user_thread->children);
+  LIST_INIT(&user_thread->siblings);
+
   LIST_INIT(&user_thread->k_proc_list);
+
   list_add(&k_threads, &user_thread->k_proc_list);
+  if (current_thread != NULL)
+    list_add(&current_thread->children, &user_thread->siblings);
 
   UNUSED(data);
   return user_thread;
@@ -201,7 +242,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   Thread *kernel_thread = normal_page_alloc(0);
 
   kernel_thread->ring0 = TRUE;
-
+  kernel_thread->father = current_thread;
   kernel_thread->nice = 0;
   kernel_thread->pid = pid++;
   LIST_INIT(&kernel_thread->head);
@@ -234,9 +275,12 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
 
   kernel_thread->tgid = kernel_thread->pid;
   LIST_INIT(&kernel_thread->children);
+  LIST_INIT(&kernel_thread->siblings);
+
   LIST_INIT(&kernel_thread->k_proc_list);
   list_add(&k_threads, &kernel_thread->k_proc_list);
-
+  if (current_thread != NULL)
+    list_add(&current_thread->children, &kernel_thread->siblings);
   kernel_thread->state = TASK_RUNNABLE;
   /*
     kprintf("Created PID %d\n", user_process->pid);

@@ -51,6 +51,7 @@ struct Thread {
   List head;
   List k_proc_list;
   Thread *father;
+  List siblings;
   List children;
   u32 exit_value;
 };
@@ -62,14 +63,20 @@ typedef struct work_task {
 
 extern Thread *current_thread;
 extern Thread *idle_thread;
+extern Thread *init_thread;
 extern Thread *kwork_thread;
 extern List running_queue;
 extern List stopped_queue;
 extern List sleep_queue;
 extern List kwork_queue;
 extern List k_threads;
+extern u32 pid;
 
 extern void _switch_to_thread(Thread *);
+
+Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
+                             ...);
+Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...);
 
 void printProc(Thread *);
 void printTop();
@@ -86,9 +93,5 @@ void sleep_thread(Thread *p);
 void stop_thread(Thread *);
 
 void sleep_ms(u32 ms);
-
-Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
-                             ...);
-Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...);
 
 #endif
