@@ -9,7 +9,7 @@ void top() {
     print_tree();
     setCursorOffset(prevCur);
     unlock(screen_lock);
-    sleep_ms(500);
+    sleep_ms(1200);
   }
 }
 

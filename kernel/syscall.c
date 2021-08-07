@@ -20,7 +20,7 @@ void syscall_handler(registers_t *regs) {
   // kprintf("Called syscall %d!\n", syscall_num);
   switch (syscall_num) {
     case EXIT:
-      kprintf("Stopping process PID: %d\n", current_thread->pid);
+      //kprintf("Stopping process PID: %d\n", current_thread->pid);
       sys_exit(regs->ebx);
       break;
     case PRINTF:
