@@ -6,10 +6,12 @@ User *root;
 
 User *create_user(char *name) {
   User *u = (User *)normal_page_alloc(0);
+
   char *new_name = normal_page_alloc(0);
   u32 name_length = strlen(name);
   memcopy((byte *)name, (byte *)new_name, name_length);
-  name[name_length] = '\0';
+  new_name[name_length] = '\0';
+
   u->username = new_name;
   u->uid = uid++;
   u->gid = 0;
