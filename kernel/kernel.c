@@ -72,15 +72,9 @@ void kernel_main(u32 magic, u32 addr) {
   resetScreenColors();
 
   // clearScreen();
-  kprintf("\n>");
-
- 
-  
 
   irq_install();
   srand(tick_count);
-  clearScreen();
-  kprintf("\n>");
 
   while (TRUE) hlt();
 }

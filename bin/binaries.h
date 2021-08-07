@@ -3,7 +3,6 @@
 
 #include "../proc/thread.h"
 
-
 #include "../kernel/kernel.h"
 #include "../cpu/types.h"
 #include "../drivers/screen.h"
@@ -23,5 +22,7 @@ extern void u_simple_proc();
 extern void top();
 extern void itaFlag();
 extern void init();
+extern void ps();
+extern void login();
 
 #endif

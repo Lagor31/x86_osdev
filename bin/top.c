@@ -53,6 +53,13 @@ void printTop() {
   }
 
   /*
+
+*/
+}
+void ps() {
+  Thread *p;
+  List *l;
+  int c = 0;
   setBackgroundColor(GREEN);
   setTextColor(BLACK);
   kprintf("[RUNNING]\n");
@@ -102,17 +109,18 @@ void printTop() {
   }
   enable_int();
   resetScreenColors();
-*/
+
+  sys_exit(0);
 }
 
 void draw_thread() {
   while (TRUE) {
-    //get_lock(screen_lock);
+    // get_lock(screen_lock);
     clearScreen();
     setCursorPos(1, 0);
     // printTop();
     print_tree();
-    //unlock(screen_lock);
+    // unlock(screen_lock);
     sleep_ms(1000);
   }
 }

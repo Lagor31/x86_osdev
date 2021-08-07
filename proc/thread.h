@@ -54,6 +54,7 @@ struct Thread {
   List siblings;
   List children;
   bool wait4child;
+  u32 wait4;
   u32 exit_value;
 };
 

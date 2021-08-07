@@ -9,28 +9,19 @@ void sys_exit(u32 ret_code) {
   kill_process(p);
   p->exit_value = ret_code;
   _switch_to_thread((Thread *)do_schedule());
-  UNUSED(ret_code);
+}
+
+void sys_wait4(u32 pid) {
+  Thread *p = current_thread;
+  p->wait4 = pid;
+  sleep_thread(current_thread);
+  _switch_to_thread((Thread *)do_schedule());
 }
 
 void sys_wait4all() {
   sleep_thread(current_thread);
   current_thread->wait4child = TRUE;
   _switch_to_thread((Thread *)do_schedule());
-
-  /*  u32 c = 0;
-   List *l;
-   Thread *t;
-
-   list_for_each(l, &current_thread->children) {
-     Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
-     c++;
-     if (p1->state != TASK_ZOMBIE) {
-       sleep_thread(current_thread);
-       current_thread->wait4child = TRUE;
-       _switch_to_thread((Thread *)do_schedule());
-       return;
-     }
-   } */
 }
 
 void sys_printf(u32 number) { kprintf("Input: %x\n", number); }
@@ -42,7 +33,7 @@ void syscall_handler(registers_t *regs) {
   // kprintf("Called syscall %d!\n", syscall_num);
   switch (syscall_num) {
     case EXIT:
-      //kprintf("Stopping process PID: %d\n", current_thread->pid);
+      // kprintf("Stopping process PID: %d\n", current_thread->pid);
       sys_exit(rand() % 5);
       break;
     case PRINTF:
@@ -53,6 +44,9 @@ void syscall_handler(registers_t *regs) {
       break;
     case WAIT4ALL:
       sys_wait4all();
+      break;
+    case WAIT4:
+      sys_wait4(regs->eax);
       break;
     default:
       break;

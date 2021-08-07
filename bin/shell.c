@@ -1,6 +1,7 @@
 #include "binaries.h"
 
 void shell() {
+  kprintf("\n# ");
   char *my_buf = normal_page_alloc(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
@@ -21,10 +22,13 @@ void shell() {
 }
 
 void user_input(char *input) {
+  kprintf("\n");
   if (strcmp(input, "help") == 0)
     printHelp();
   else if (!strcmp(input, "clear")) {
     clearScreen();
+  } else if (!strcmp(input, "exit")) {
+    sys_exit(0);
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");
     itaFlag();
@@ -49,7 +53,7 @@ void user_input(char *input) {
     }
     resetScreenColors();
     // clearScreen();
-    kprintf(">");
+    kprintf("# ");
     _switch_to_thread((Thread *)do_schedule());
 
   } else if (!strcmp(input, "free")) {
@@ -68,8 +72,14 @@ void user_input(char *input) {
     p = create_kernel_thread(&top, NULL, "top");
     p->nice = 0;
     wake_up_thread(p);
-    sys_wait4all();
+    sys_wait4(p->pid);
     clearScreen();
+  } else if (!strcmp(input, "ps")) {
+    Thread *p = NULL;
+    p = create_kernel_thread(&ps, NULL, "ps");
+    p->nice = 0;
+    wake_up_thread(p);
+    sys_wait4(p->pid);
   } else if (!strcmp(input, "ckp")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
@@ -106,7 +116,7 @@ void user_input(char *input) {
   } else {
     kprintf("Command %s not found!", input);
   }
-  kprintf("\n>");
+  kprintf("\n# ");
 }
 
 void itaFlag() {

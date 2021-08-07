@@ -87,9 +87,14 @@ void kill_process(Thread *p) {
     }
   }
 
-  if (p->father->wait4child && wake_up_parent) {
+  if (p->father->wait4 == p->pid) {
     wake_up_thread(p->father);
-    p->father->wait4child = FALSE;
+    p->father->wait4 = 0;
+  } else {
+    if (p->father->wait4child && wake_up_parent) {
+      wake_up_thread(p->father);
+      p->father->wait4child = FALSE;
+    }
   }
 
 // kprintf("Dead father had ->\n");
@@ -128,12 +133,6 @@ redo:
 }
 
 void printProcSimple(Thread *p) {
-  resetScreenColors();
-
-  if (p->ring0)
-    setColor(RED);
-  else
-    setColor(GREEN);
 
   char s = 'R';
   switch (p->state) {
@@ -153,12 +152,12 @@ void printProcSimple(Thread *p) {
   }
   kprintf("%s - PID: %d - N: %d F: %d T: %dms %c\n", p->command, p->pid,
           p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
-  List *l;
+ /*  List *l;
   list_for_each(l, &p->children) {
     Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
     kprintf("%s,", p1->command);
   }
-  kprintf("\n");
+  kprintf("\n"); */
 }
 
 void init_kernel_proc() {
