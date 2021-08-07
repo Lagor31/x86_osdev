@@ -7,12 +7,13 @@
 
 #define EXIT 1
 #define PRINTF 2
-#define WAIT 3
+#define SLEEPMS 3
+#define WAIT4ALL 4
 
 extern void _syscall(u32 num);
 
 void syscall_handler(registers_t *regs);
 void sys_exit(u32 ret_code);
-void sys_wait(u32 millis);
-
+void sys_sleepms(u32 millis);
+void sys_wait4all();
 #endif

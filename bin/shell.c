@@ -6,11 +6,7 @@ void shell() {
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
-      get_lock(screen_lock);
-      kprintf("\n");
       user_input(my_buf);
-      unlock(screen_lock);
-
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
       if (strlen(my_buf) > 0) {
@@ -19,9 +15,7 @@ void shell() {
       }
     } else {
       append(my_buf, read);
-      get_lock(screen_lock);
       kprintf("%c", read);
-      unlock(screen_lock);
     }
   }
 }
@@ -74,23 +68,23 @@ void user_input(char *input) {
     p = create_kernel_thread(&top, NULL, "top");
     p->nice = 0;
     wake_up_thread(p);
+    sys_wait4all();
+    clearScreen();
   } else if (!strcmp(input, "ckp")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_kernel_thread(&k_simple_proc, NULL, "k-extra");
-      p->nice =  10;
+      p->nice = 10;
       wake_up_thread(p);
     }
-  } 
-   else if (!strcmp(input, "cup")) {
+  } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_user_thread(&u_simple_proc, NULL, "u-extra");
       p->nice = 10;
       wake_up_thread(p);
     }
-  }  
-  else if (!strcmp(input, "bootinfo")) {
+  } else if (!strcmp(input, "bootinfo")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);
   } else if (!strcmp(input, "mmap")) {
     printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 1);

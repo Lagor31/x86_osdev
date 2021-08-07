@@ -71,24 +71,42 @@ void kill_process(Thread *p) {
   get_lock(sched_lock);
   list_remove(&p->head);
   list_remove(&p->k_proc_list);
+  p->state = TASK_ZOMBIE;
 
   List *l;
+  /*   if (p->father->wait4child) {
+      wake_up_thread(p->father);
+      p->father->wait4child = FALSE;
+    } */
+  bool wake_up_parent = TRUE;
 
-  //kprintf("Dead father had ->\n");
-  // Reparenting
-  redo:
+  if (p->father->wait4child) {
+    list_for_each(l, &p->father->children) {
+      Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+      if (p1->state != TASK_ZOMBIE) wake_up_parent = FALSE;
+    }
+  }
+
+  if (p->father->wait4child && wake_up_parent) {
+    wake_up_thread(p->father);
+    p->father->wait4child = FALSE;
+  }
+
+// kprintf("Dead father had ->\n");
+// Reparenting
+redo:
 
   list_for_each(l, &p->children) {
     Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
-    //LIST_INIT(&p1->siblings);
-    //kprintf("%d ", p1->pid);
+    // LIST_INIT(&p1->siblings);
+    // kprintf("%d ", p1->pid);
     list_remove(&p1->siblings);
 
     p1->father = p->father;
     list_add(&p->father->children, &p1->siblings);
     goto redo;
   }
-  //kprintf("\n");
+  // kprintf("\n");
 
   list_remove(&p->children);
   list_remove(&p->siblings);
@@ -97,12 +115,15 @@ void kill_process(Thread *p) {
 
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  kfree_normal((void *)p->command);
-  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
-  kfree_normal(p->tcb.user_stack_bot);
-  kfree_normal(p->tcb.kernel_stack_bot);
+  // Do separetly
+  /*   kfree_normal((void *)p->command);
+   */  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
+  // Do separetly
+
+  // kfree_normal(p->tcb.user_stack_bot);
+  // kfree_normal(p->tcb.kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfree_normal((void *)p);
+  // kfree_normal((void *)p);
   // current_proc = NULL;
 }
 
@@ -196,7 +217,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->head);
   user_thread->tcb.page_dir = PA((u32)user_page_directory);
   user_thread->vm = kernel_vm;
-
+  user_thread->wait4child = FALSE;
   void *user_stack = normal_page_alloc(0);
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
@@ -248,6 +269,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   LIST_INIT(&kernel_thread->head);
   kernel_thread->tcb.page_dir = PA((u32)kernel_page_directory);
   kernel_thread->vm = kernel_vm;
+  kernel_thread->wait4child = FALSE;
 
   void *user_stack = normal_page_alloc(0);
 

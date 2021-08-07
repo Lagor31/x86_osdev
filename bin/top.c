@@ -17,16 +17,16 @@ void print_children(List *children, u32 indent) {
 
   list_for_each(l, children) {
     p = list_entry(l, Thread, siblings);
-    kprintf("%s- %d - %s %dms\n", pad, p->pid, p->command,
+    kprintf("%s- %d (%d)- %s %dms\n", pad, p->pid, p->state, p->command,
             millis_to_ticks(p->runtime));
     print_children(&p->children, indent + 1);
   }
 }
 
 void print_tree() {
-  clearScreen();
-  kprintf("- %d - %s %dms\n", init_thread->pid, init_thread->command,
-          init_thread->runtime);
+  // clearScreen();
+  kprintf("- %d - (%d) %s %dms\n", init_thread->pid, init_thread->state,
+          init_thread->command, init_thread->runtime);
   print_children(&init_thread->children, 1);
 }
 
@@ -51,6 +51,7 @@ void printTop() {
       kprintf("   - %d - %s\n", p->pid, p->command);
     }
   }
+
   /*
   setBackgroundColor(GREEN);
   setTextColor(BLACK);
@@ -104,15 +105,27 @@ void printTop() {
 */
 }
 
-void top() {
+void draw_thread() {
   while (TRUE) {
-    get_lock(screen_lock);
-    u32 prevCur = getCursorOffset();
+    //get_lock(screen_lock);
+    clearScreen();
     setCursorPos(1, 0);
     // printTop();
     print_tree();
-    setCursorOffset(prevCur);
-    unlock(screen_lock);
-    sleep_ms(1200);
+    //unlock(screen_lock);
+    sleep_ms(1000);
+  }
+}
+
+void top() {
+  Thread *draw = create_kernel_thread(&draw_thread, NULL, "draw");
+  draw->nice = 0;
+  wake_up_thread(draw);
+  while (TRUE) {
+    char read = read_stdin();
+    if (read == 'q') {
+      kill_process(draw);
+      sys_exit(EXIT);
+    }
   }
 }
