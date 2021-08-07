@@ -75,7 +75,7 @@ void kill_process(Thread *p) {
   List *l;
 
   //kprintf("Dead father had ->\n");
-  // ADD children to init
+  // Reparenting
   redo:
 
   list_for_each(l, &p->children) {

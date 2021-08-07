@@ -1,18 +1,5 @@
 #include "binaries.h"
 
-void top() {
-  while (TRUE) {
-    get_lock(screen_lock);
-    u32 prevCur = getCursorOffset();
-    setCursorPos(1, 0);
-    // printTop();
-    print_tree();
-    setCursorOffset(prevCur);
-    unlock(screen_lock);
-    sleep_ms(1200);
-  }
-}
-
 void print_children(List *children, u32 indent) {
   if (list_length(children) == 0) {
     return;
@@ -30,14 +17,16 @@ void print_children(List *children, u32 indent) {
 
   list_for_each(l, children) {
     p = list_entry(l, Thread, siblings);
-    kprintf("%s- %d - %s\n", pad, p->pid, p->command);
+    kprintf("%s- %d - %s %dms\n", pad, p->pid, p->command,
+            millis_to_ticks(p->runtime));
     print_children(&p->children, indent + 1);
   }
 }
 
 void print_tree() {
   clearScreen();
-  kprintf("- %d - %s\n", init_thread->pid, init_thread->command);
+  kprintf("- %d - %s %dms\n", init_thread->pid, init_thread->command,
+          init_thread->runtime);
   print_children(&init_thread->children, 1);
 }
 
@@ -46,15 +35,15 @@ void printTop() {
   Thread *p;
   Thread *p1;
 
-  u32 c = 0;
-  //clearScreen();
+  // clearScreen();
   List *children = NULL;
 
   List *l1;
 
   list_for_each(l1, &k_threads) {
     p1 = list_entry(l1, Thread, k_proc_list);
-    kprintf("- %d - %s\n", p1->pid, p1->command);
+    kprintf("- %d - %s %d\n", p1->pid, p1->command,
+            ticks_to_millis(p1->runtime));
     children = &p1->children;
 
     list_for_each(l, children) {
@@ -113,4 +102,17 @@ void printTop() {
   enable_int();
   resetScreenColors();
 */
+}
+
+void top() {
+  while (TRUE) {
+    get_lock(screen_lock);
+    u32 prevCur = getCursorOffset();
+    setCursorPos(1, 0);
+    // printTop();
+    print_tree();
+    setCursorOffset(prevCur);
+    unlock(screen_lock);
+    sleep_ms(1200);
+  }
 }
