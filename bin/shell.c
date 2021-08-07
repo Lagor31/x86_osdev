@@ -78,8 +78,8 @@ void user_input(char *input) {
   } else if (!strcmp(input, "reboot")) {
     reboot();
   } else if (!strcmp(input, "id")) {
-    kprintf("%s %d\n", current_thread->owner->username,
-            current_thread->owner->uid);
+    kprintf("user: %s uid: %d gid: %d\n", current_thread->owner->username,
+            current_thread->owner->uid, current_thread->owner->gid);
   } else {
     kprintf("Command %s not found!", input);
   }

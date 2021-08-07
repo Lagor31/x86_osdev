@@ -12,6 +12,7 @@ User *create_user(char *name) {
   name[name_length] = '\0';
   u->username = new_name;
   u->uid = uid++;
+  u->gid = 0;
   list_add(&users, &u->kuserq);
   return u;
 }

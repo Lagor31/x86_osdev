@@ -8,6 +8,7 @@ extern List users;
 
 typedef struct user_t {
   u32 uid;
+  u32 gid;
   char *username;
   List kuserq;
 } User;
