@@ -151,10 +151,10 @@ void printProcSimple(Thread *p) {
       s = '?';
       break;
   }
-  u32 files = list_length(&p->files->q);
+  //u32 files = list_length(&p->files->q);
   kprintf("%s - PID: %d - N: %d F: %d T: OF: %d %dms %c\n", p->command, p->pid,
-          p->nice, p->father->pid, files, ticks_to_millis(p->runtime), s);
-  kprintf("OpenFiles:\n");
+          p->nice, p->father->pid, 0, ticks_to_millis(p->runtime), s);
+ /*  kprintf("OpenFiles:\n");
   if (files > 0) {
     List *l;
     list_for_each(l, &p->files->q) {
@@ -162,8 +162,9 @@ void printProcSimple(Thread *p) {
       kprintf("%s, ", p1->fd->name);
     }
   }
-
+ 
   kprintf("\n");
+  */
 }
 
 void init_kernel_proc() {
@@ -282,11 +283,11 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
     list_add(&current_thread->children, &user_thread->siblings);
   }
 
-  user_thread->files = user_thread->father->files;
-  /*
+  // user_thread->files = user_thread->father->files;
+
   user_thread->files = normal_page_alloc(0);
   LIST_INIT(&user_thread->files->q);
-  */
+
   UNUSED(data);
   return user_thread;
 }
@@ -341,11 +342,10 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   }
   kernel_thread->state = TASK_RUNNABLE;
 
-  /*  kernel_thread->files = normal_page_alloc(0);
-   LIST_INIT(&kernel_thread->files->q);
-   */
+  kernel_thread->files = normal_page_alloc(0);
+  LIST_INIT(&kernel_thread->files->q);
 
-  kernel_thread->files = kernel_thread->father->files;
+  // kernel_thread->files = kernel_thread->father->files;
 
   /*
     kprintf("Created PID %d\n", user_process->pid);
