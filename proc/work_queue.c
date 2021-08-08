@@ -17,7 +17,7 @@ void work_queue_thread() {
 
   while (TRUE) {
     // We can't be interrupted when updating the work queue
-    // disable_int();
+    disable_int();
     // I should always be able to acquire this lock.
     // It serves only to communicate with the scheduler that we're still doing
     // some high priority work and we don't want to be scheduled away
@@ -40,8 +40,8 @@ void work_queue_thread() {
         unlock(stdin->lock);
       } else {
         list_add(&kwork_queue, &do_me->work_queue);
-       /*  kprintf("Lock owner by other thread %d, switching to it!\n",
-                stdin->lock->owner->pid); */
+        /*  kprintf("Lock owner by other thread %d, switching to it!\n",
+                 stdin->lock->owner->pid); */
         unlock(work_queue_lock);
 
         _switch_to_thread(stdin->lock->owner);
@@ -51,6 +51,6 @@ void work_queue_thread() {
     kwork_thread->state = TASK_UNINTERRUPTIBLE;
     unlock(work_queue_lock);
     // Free lock means there's bytes to be read
-    // enable_int();
+    enable_int();
   }
 }
