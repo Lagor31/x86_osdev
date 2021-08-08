@@ -55,6 +55,7 @@ static void keyboard_callback(registers_t *regs) {
   list_add(&kwork_queue, &w->work_queue);
 
   if (kwork_thread->sleeping_lock == work_queue_lock) {
+    //kprintf("Worker thread waiting...waking it up");
     unlock(work_queue_lock->state);
     kwork_thread->sleeping_lock = NULL;
   }

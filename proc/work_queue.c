@@ -41,11 +41,15 @@ void work_queue_thread() {
         enable_int();
       }
     } else {
+      
+      disable_int();
+      work_queue_lock->state = LOCK_LOCKED;
       current_thread->sleeping_lock = work_queue_lock;
+      enable_int();
+
       sleep_thread(current_thread);
       Thread *n = do_schedule();
       wake_up_thread(n);
-      enable_int();
       _switch_to_thread(n);
     }
 

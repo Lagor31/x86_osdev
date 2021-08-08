@@ -32,7 +32,7 @@ inline u32 ticks_to_millis(u64 tickCount) {
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
 
-  if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
+  //if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
 
   /* if (rand() % 600 == 0) {
     //kprintf("Creating new uthread!\n");
