@@ -36,6 +36,14 @@ void user_input(char *input) {
 
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "lsof")) {
+    List *l;
+    list_for_each(l, &file_descriptors) {
+      FD *f = (FD *)list_entry(l, FD, q);
+      kprintf("%s - %d Size: %d Avail: %d\n", f->name, f->fd, f->size,
+              f->available);
+    }
+
   } else if (!strcmp(input, "top")) {
     Thread *p = NULL;
     p = create_kernel_thread(&top, NULL, "top");

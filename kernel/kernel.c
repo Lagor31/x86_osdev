@@ -1,11 +1,11 @@
 #include "kernel.h"
+#include "../cpu/types.h"
 
 #include "../boot/multiboot.h"
 #include "../cpu/gdt.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "../drivers/timer.h"
-#include "../cpu/types.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
 #include "../lib/constants.h"
@@ -19,6 +19,7 @@
 #include "../lib/shutdown.h"
 #include "../lib/utils.h"
 #include "../bin/binaries.h"
+#include "files.h"
 
 KMultiBoot2Info *kMultiBootInfo;
 
@@ -58,13 +59,15 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Enabling chaching...");
   kMemCacheInit();
   kPrintOKMessage("Kernel caching enabled!");
+  init_kernel_locks();
+
+
+  init_files();
 
   kPrintOKMessage("Enabling kernel procs...");
   init_kernel_proc();
   kPrintOKMessage("Kernel procs enabled!");
 
-  init_kernel_locks();
-  init_files();
   init_work_queue();
 
   kPrintOKMessage("Kernel inizialized!");

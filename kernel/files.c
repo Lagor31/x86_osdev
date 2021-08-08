@@ -1,4 +1,5 @@
 #include "files.h"
+extern Thread *do_schedule();
 
 u32 fd = 0;
 List file_descriptors;
@@ -14,11 +15,11 @@ void init_files() {
 }
 
 FD *create_block_device(char *name, u8 page_size) {
-  return create_device(name, page_size, FD_BLOCK);
+  return create_device(name, page_size, DEV_BLOCK);
 }
 
 FD *create_char_device(char *name, u8 page_size) {
-  return create_device(name, page_size, FD_STREAM);
+  return create_device(name, page_size, DEV_STREAM);
 }
 
 u32 write_byte_stream(FD *file, byte b) {

@@ -1,17 +1,21 @@
 #ifndef FILES_H
 #define FILES_H
 
+#include "fdlist.h"
+#include "../lib/list.h"
+
 #include "../cpu/types.h"
+
+#include "../proc/thread.h"
 #include "../lock/lock.h"
 #include "../mem/mem.h"
-#include "../proc/thread.h"
 #include "../kernel/kernel.h"
-#include "../kernel/scheduler.h"
 
-#define FD_STREAM 0
-#define FD_BLOCK 1
 
-typedef struct file_descriptor {
+#define DEV_STREAM 0
+#define DEV_BLOCK 1
+
+typedef struct FD {
   u8 type;
   u32 fd;
   char *name;
@@ -26,7 +30,6 @@ typedef struct file_descriptor {
   u32 (*write)(u32 fd, u32 count, byte *src);
   u32 (*read)(u32 fd, u32 count, byte *dst);
   u32 (*seek)(u32, u32);
-
 } FD;
 
 extern List file_descriptors;

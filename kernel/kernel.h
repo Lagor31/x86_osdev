@@ -1,6 +1,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
-#include "../proc/thread.h"
+
+#include "../cpu/types.h"
+
 
 #define KERNEL_VIRTUAL_ADDRESS_BASE 0xC0000000
 #define KERNEL_NORMAL_MEMORY_BASE 0xD0000000

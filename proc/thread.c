@@ -11,6 +11,7 @@
 #include "../mem/vma.h"
 #include "../lib/utils.h"
 #include "../users/user.h"
+#include "../kernel/files.h"
 
 List sleep_queue;
 List running_queue;
@@ -142,7 +143,7 @@ void printProcSimple(Thread *p) {
     case TASK_STOPPED:
       s = 'X';
       break;
-    case TASK_UNINSTERRUPTIBLE:
+    case TASK_UNINTERRUPTIBLE:
     case TASK_INTERRUPTIBLE:
       s = 'Z';
       break;
@@ -150,14 +151,19 @@ void printProcSimple(Thread *p) {
       s = '?';
       break;
   }
-  kprintf("%s - PID: %d - N: %d F: %d T: %dms %c\n", p->command, p->pid,
-          p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
-  /*  List *l;
-   list_for_each(l, &p->children) {
-     Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
-     kprintf("%s,", p1->command);
-   }
-   kprintf("\n"); */
+  u32 files = list_length(&p->files->q);
+  kprintf("%s - PID: %d - N: %d F: %d T: OF: %d %dms %c\n", p->command, p->pid,
+          p->nice, p->father->pid, files, ticks_to_millis(p->runtime), s);
+  kprintf("OpenFiles:\n");
+  if (files > 0) {
+    List *l;
+    list_for_each(l, &p->files->q) {
+      FDList *p1 = (FDList *)list_entry(l, FDList, q);
+      kprintf("%s, ", p1->fd->name);
+    }
+  }
+
+  kprintf("\n");
 }
 
 void init_kernel_proc() {
@@ -176,6 +182,25 @@ void init_kernel_proc() {
   init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
   init_thread->father = init_thread;
   init_thread->owner = root;
+  init_thread->files = (FDList *)normal_page_alloc(0);
+
+  LIST_INIT(&init_thread->files->q);
+
+  FDList *i = normal_page_alloc(0);
+  LIST_INIT(&i->q);
+
+  i->fd = stdin;
+  list_add(&init_thread->files->q, &i->q);
+
+  i = normal_page_alloc(0);
+  i->fd = stdout;
+  LIST_INIT(&i->q);
+  list_add(&init_thread->files->q, &i->q);
+
+  i = normal_page_alloc(0);
+  i->fd = stderr;
+  LIST_INIT(&i->q);
+  list_add(&init_thread->files->q, &i->q);
 
   pid = 2;
   wake_up_thread(init_thread);
@@ -209,7 +234,7 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
 
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
-  Thread *user_thread = normal_page_alloc(0);
+  Thread *user_thread = normal_page_alloc(2);
 
   user_thread->ring0 = FALSE;
   user_thread->father = current_thread;
@@ -219,6 +244,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->tcb.page_dir = PA((u32)user_page_directory);
   user_thread->vm = kernel_vm;
   user_thread->wait4child = FALSE;
+
   void *user_stack = normal_page_alloc(0);
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
@@ -256,6 +282,11 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
     list_add(&current_thread->children, &user_thread->siblings);
   }
 
+  user_thread->files = user_thread->father->files;
+  /*
+  user_thread->files = normal_page_alloc(0);
+  LIST_INIT(&user_thread->files->q);
+  */
   UNUSED(data);
   return user_thread;
 }
@@ -263,7 +294,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
   // TODO: cache! chache! cache!
-  Thread *kernel_thread = normal_page_alloc(0);
+  Thread *kernel_thread = normal_page_alloc(2);
 
   kernel_thread->ring0 = TRUE;
   kernel_thread->father = current_thread;
@@ -309,6 +340,13 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
     list_add(&current_thread->children, &kernel_thread->siblings);
   }
   kernel_thread->state = TASK_RUNNABLE;
+
+  /*  kernel_thread->files = normal_page_alloc(0);
+   LIST_INIT(&kernel_thread->files->q);
+   */
+
+  kernel_thread->files = kernel_thread->father->files;
+
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */

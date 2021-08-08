@@ -40,6 +40,7 @@ void work_queue_thread() {
 
     unlock(work_queue_lock);
     // Free lock means there's bytes to be read
+    kwork_thread->state = TASK_UNINTERRUPTIBLE;
     enable_int();
   }
 }
