@@ -11,7 +11,6 @@
 
 
 #include "../kernel/files.h"
-#include "../lock/lock.h"
 #include "../mem/paging.h"
 #include "../mem/vma.h"
 #include "../lib/list.h"

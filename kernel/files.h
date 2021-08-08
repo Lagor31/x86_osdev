@@ -5,6 +5,7 @@
 #include "../lib/list.h"
 
 #include "../cpu/types.h"
+#include "../lock/lock.h"
 
 #include "../proc/thread.h"
 #include "../lock/lock.h"
