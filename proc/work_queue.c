@@ -32,10 +32,15 @@ void work_queue_thread() {
 
     if (found == 1) {
       // kprintf("Doing work!\n", (char)do_me->c);
-      if (stdin->lock->state == LOCK_LOCKED)
+      if (test_lock(stdin->lock) == LOCK_FREE) {
+        if (write_byte_stream(stdin, do_me->c) > 0)
+          unlock(stdin->lock);
+        else {
+          list_add(&kwork_queue, &do_me->work_queue);
+          unlock(stdin->lock);
+        }
+      } else
         list_add(&kwork_queue, &do_me->work_queue);
-      else
-        write_byte_stream(stdin, do_me->c);
     }
 
     unlock(work_queue_lock);

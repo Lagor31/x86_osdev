@@ -23,16 +23,13 @@ FD *create_char_device(char *name, u8 page_size) {
 }
 
 u32 write_byte_stream(FD *file, byte b) {
-  get_lock(file->lock);
   // Buffer full
   if (file->available >= file->size) {
-    unlock(file->lock);
     return -1;
   }
   file->buffer[file->write_ptr++] = b;
   file->write_ptr = file->write_ptr % file->size;
   file->available++;
-  unlock(file->lock);
   return TRUE;
 }
 
