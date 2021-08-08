@@ -183,9 +183,10 @@ void init_kernel_proc() {
   init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
   init_thread->father = init_thread;
   init_thread->owner = root;
-  init_thread->files = (FDList *)normal_page_alloc(0);
+  
+  //init_thread->files = (FDList *)normal_page_alloc(0);
 
-  LIST_INIT(&init_thread->files->q);
+  //LIST_INIT(&init_thread->files->q);
 
   /*  FDList *i = normal_page_alloc(0);
    LIST_INIT(&i->q);
@@ -285,8 +286,8 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
 
   // user_thread->files = user_thread->father->files;
 
-  user_thread->files = normal_page_alloc(0);
-  LIST_INIT(&user_thread->files->q);
+ /*  user_thread->files = normal_page_alloc(0);
+  LIST_INIT(&user_thread->files->q); */
 
   UNUSED(data);
   return user_thread;

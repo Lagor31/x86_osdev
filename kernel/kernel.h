@@ -13,6 +13,7 @@
 
 #define ALLOC_NUM 2
 #define ALLOC_SIZE 0
+#define HOSTNAME "computer"
 
 extern struct kmultiboot2info *kMultiBootInfo;
 
