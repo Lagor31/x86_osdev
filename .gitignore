@@ -3,3 +3,5 @@
 .gdb_history
 *.iso
 *.out
+.vscode/c_cpp_properties.json
+.vscode/settings.json
