@@ -21,7 +21,7 @@ void login() {
           kprintf("\nlogin root: ");
         } else {
           kprintf("\nInvalid login!");
-          kprintf("\nroot password? : ");
+          kprintf("\nlogin root: ");
         }
 
         memset((byte *)my_buf, '\0', PAGE_SIZE);
