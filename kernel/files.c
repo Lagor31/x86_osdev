@@ -23,15 +23,16 @@ FD *create_char_device(char *name, u8 page_size) {
 }
 
 u32 write_byte_stream(FD *file, byte b) {
-  // get_lock(file->lock);
+  get_lock(file->lock);
   // Buffer full
   if (file->available >= file->size) {
+    unlock(file->lock);
     return -1;
   }
   file->buffer[file->write_ptr++] = b;
   file->write_ptr = file->write_ptr % file->size;
   file->available++;
-  //unlock(file->lock);
+  unlock(file->lock);
   return TRUE;
 }
 
@@ -41,6 +42,7 @@ check_lock:
   get_lock(file->lock);
 
   if (file->available <= 0) {
+    // sleep_ms(500);
     unlock(file->lock);
     current_thread->sleeping_lock = file->lock;
     sleep_thread(current_thread);
