@@ -29,7 +29,9 @@ void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
   // current_thread->sched_count = 0;
   sleep_thread(current_thread);
-  _switch_to_thread((Thread *)do_schedule());
+  Thread *n = do_schedule();
+  wake_up_thread(n);
+  _switch_to_thread(n);
 }
 
 void stop_thread(Thread *p) {
@@ -62,6 +64,10 @@ void sleep_thread(Thread *p) {
 void wake_up_thread(Thread *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
   p->state = TASK_RUNNABLE;
+  p->wait4child = FALSE;
+  p->wait4 = 0;
+  p->sleep_timer = 0;
+  p->sleeping_lock = NULL;
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
@@ -151,20 +157,20 @@ void printProcSimple(Thread *p) {
       s = '?';
       break;
   }
-  //u32 files = list_length(&p->files->q);
+  // u32 files = list_length(&p->files->q);
   kprintf("%s - PID: %d - N: %d F: %d T: OF: %d %dms %c\n", p->command, p->pid,
           p->nice, p->father->pid, 0, ticks_to_millis(p->runtime), s);
- /*  kprintf("OpenFiles:\n");
-  if (files > 0) {
-    List *l;
-    list_for_each(l, &p->files->q) {
-      FDList *p1 = (FDList *)list_entry(l, FDList, q);
-      kprintf("%s, ", p1->fd->name);
-    }
-  }
- 
-  kprintf("\n");
-  */
+  /*  kprintf("OpenFiles:\n");
+   if (files > 0) {
+     List *l;
+     list_for_each(l, &p->files->q) {
+       FDList *p1 = (FDList *)list_entry(l, FDList, q);
+       kprintf("%s, ", p1->fd->name);
+     }
+   }
+
+   kprintf("\n");
+   */
 }
 
 void init_kernel_proc() {
@@ -183,10 +189,10 @@ void init_kernel_proc() {
   init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
   init_thread->father = init_thread;
   init_thread->owner = root;
-  
-  //init_thread->files = (FDList *)normal_page_alloc(0);
 
-  //LIST_INIT(&init_thread->files->q);
+  // init_thread->files = (FDList *)normal_page_alloc(0);
+
+  // LIST_INIT(&init_thread->files->q);
 
   /*  FDList *i = normal_page_alloc(0);
    LIST_INIT(&i->q);
@@ -286,8 +292,8 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
 
   // user_thread->files = user_thread->father->files;
 
- /*  user_thread->files = normal_page_alloc(0);
-  LIST_INIT(&user_thread->files->q); */
+  /*  user_thread->files = normal_page_alloc(0);
+   LIST_INIT(&user_thread->files->q); */
 
   UNUSED(data);
   return user_thread;

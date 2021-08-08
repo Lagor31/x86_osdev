@@ -59,6 +59,7 @@ void scheduler_handler(registers_t *regs) {
     }
     if (next_thread->sched_count > 0) next_thread->sched_count--;
     next_thread->runtime++;
+    wake_up_thread(next_thread);
     _switch_to_thread(next_thread);
 
     outb(0x70, 0x0C);  // select register C

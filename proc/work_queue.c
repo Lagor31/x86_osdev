@@ -21,9 +21,7 @@ void work_queue_thread() {
     // I should always be able to acquire this lock.
     // It serves only to communicate with the scheduler that we're still doing
     // some high priority work and we don't want to be scheduled away
-    if (test_lock(work_queue_lock) == LOCK_LOCKED) {
-      goto done_work;
-    }
+
     // work_queue_lock->state = LOCK_LOCKED;
     u8 found = 0;
     list_for_each(wq, &kwork_queue) {
@@ -32,21 +30,25 @@ void work_queue_thread() {
       found = 1;
       break;
     }
+    enable_int();
 
     if (found == 1) {
-      unlock(work_queue_lock);
       // kprintf("Doing work!\n", (char)do_me->c);
       if (write_byte_stream(stdin, do_me->c) < 0) {
-        get_lock(work_queue_lock);
+        // TODO: not so safe!
+        disable_int();
         list_add(&kwork_queue, &do_me->work_queue);
+        enable_int();
       }
+    } else {
+      current_thread->sleeping_lock = work_queue_lock;
+      sleep_thread(current_thread);
+      Thread *n = do_schedule();
+      wake_up_thread(n);
+      enable_int();
+      _switch_to_thread(n);
     }
-    unlock(work_queue_lock);
 
-  done_work:
-
-    kwork_thread->state = TASK_UNINTERRUPTIBLE;
     // Free lock means there's bytes to be read
-    enable_int();
   }
 }

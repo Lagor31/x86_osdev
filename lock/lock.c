@@ -42,7 +42,10 @@ void get_lock(Lock *l) {
   while (_test_spin_lock(&l->state) == LOCK_LOCKED) {
     current_thread->sleeping_lock = l;
     sleep_thread(current_thread);
-    _switch_to_thread((Thread *)do_schedule());
+
+    Thread *n = do_schedule();
+    wake_up_thread(n);
+    _switch_to_thread(n);
   }
   l->owner = current_thread;
   current_thread->sleeping_lock = NULL;
@@ -52,4 +55,5 @@ void unlock(Lock *l) {
   // current_proc->sleeping_lock = NULL;
   l->owner = NULL;
   _free_lock(&l->state);
+  wake_up_all();
 }

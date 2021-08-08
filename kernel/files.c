@@ -42,11 +42,13 @@ check_lock:
   get_lock(file->lock);
 
   if (file->available <= 0) {
-    // sleep_ms(500);
+    // sleep_ms(1000);
     unlock(file->lock);
     current_thread->sleeping_lock = file->lock;
     sleep_thread(current_thread);
-    _switch_to_thread(do_schedule());
+    Thread *n = do_schedule();
+    wake_up_thread(n);
+    _switch_to_thread(n);
     goto check_lock;
   }
   // we have available bytes

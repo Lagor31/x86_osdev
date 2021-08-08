@@ -40,6 +40,8 @@ void init() {
 
   while (TRUE) {
     sleep_thread(current_thread);
-    _switch_to_thread(do_schedule());
+    Thread *n = do_schedule();
+    wake_up_thread(n);
+    _switch_to_thread(n);
   }
 }

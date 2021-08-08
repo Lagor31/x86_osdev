@@ -10,9 +10,8 @@ Thread *do_schedule() {
 
   u32 min_runtime = 0;
 
-
-
-  if (list_length(&kwork_queue) > 0) return kwork_thread;
+  if (list_length(&kwork_queue) > 0 && kwork_thread->sleeping_lock == NULL)
+    return kwork_thread;
 
   list_for_each(l, &running_queue) {
     Thread *p = (Thread *)list_entry(l, Thread, head);
@@ -48,14 +47,14 @@ wake_up:
     list_for_each(l, &sleep_queue) {
       Thread *p = list_entry(l, Thread, head);
       if (p->sleeping_lock != NULL && p->sleeping_lock->state == LOCK_FREE) {
-        p->sleeping_lock = NULL;
+        // p->sleeping_lock = NULL;
         // p->sched_count = 0;
         wake_up_thread(p);
         c++;
         goto wake_up;
 
       } else if (p->sleep_timer != 0 && tick_count >= p->sleep_timer) {
-        p->sleep_timer = 0;
+        // p->sleep_timer = 0;
         // p->sched_count = 0;
         wake_up_thread(p);
         c++;

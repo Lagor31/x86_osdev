@@ -53,8 +53,11 @@ static void keyboard_callback(registers_t *regs) {
   Work *w = normal_page_alloc(0);
   w->c = c;
   list_add(&kwork_queue, &w->work_queue);
-  
-  unlock(work_queue_lock->state);
+
+  if (kwork_thread->sleeping_lock == work_queue_lock) {
+    unlock(work_queue_lock->state);
+    kwork_thread->sleeping_lock = NULL;
+  }
 
   UNUSED(regs);
 }
