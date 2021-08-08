@@ -186,21 +186,21 @@ void init_kernel_proc() {
 
   LIST_INIT(&init_thread->files->q);
 
-  FDList *i = normal_page_alloc(0);
-  LIST_INIT(&i->q);
+  /*  FDList *i = normal_page_alloc(0);
+   LIST_INIT(&i->q);
 
-  i->fd = stdin;
-  list_add(&init_thread->files->q, &i->q);
+   i->fd = stdin;
+   list_add(&init_thread->files->q, &i->q);
 
-  i = normal_page_alloc(0);
-  i->fd = stdout;
-  LIST_INIT(&i->q);
-  list_add(&init_thread->files->q, &i->q);
+   i = normal_page_alloc(0);
+   i->fd = stdout;
+   LIST_INIT(&i->q);
+   list_add(&init_thread->files->q, &i->q);
 
-  i = normal_page_alloc(0);
-  i->fd = stderr;
-  LIST_INIT(&i->q);
-  list_add(&init_thread->files->q, &i->q);
+   i = normal_page_alloc(0);
+   i->fd = stderr;
+   LIST_INIT(&i->q);
+   list_add(&init_thread->files->q, &i->q); */
 
   pid = 2;
   wake_up_thread(init_thread);
