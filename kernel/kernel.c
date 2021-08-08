@@ -64,7 +64,7 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Kernel procs enabled!");
 
   init_kernel_locks();
-  init_stdin();
+  init_files();
   init_work_queue();
 
   kPrintOKMessage("Kernel inizialized!");

@@ -1,5 +1,10 @@
 #include "binaries.h"
 
+void print_single_thread(Thread *p) {
+  kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
+          p->owner->username, millis_to_ticks(p->runtime));
+}
+
 void print_children(List *children, u32 indent) {
   if (list_length(children) == 0) {
     return;
@@ -20,11 +25,6 @@ void print_children(List *children, u32 indent) {
     print_single_thread(p);
     print_children(&p->children, indent + 1);
   }
-}
-
-void print_single_thread(Thread *p) {
-  kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
-          p->owner->username, millis_to_ticks(p->runtime));
 }
 
 void print_tree() {
