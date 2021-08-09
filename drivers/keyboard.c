@@ -15,7 +15,7 @@
 #include "screen.h"
 
 #include "keyboard.h"
-
+#include "../kernel/files.h"
 Stdin stdin;
 
 void init_stdin() {
@@ -47,25 +47,26 @@ const char sc_ascii[] = {
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
 char read_stdin() {
-get_l:
-  get_lock(stdin.read_lock);
-  if (stdin.available <= 0) {
+  return read_byte_stream(stdin_t);
+  /* get_l:
+    get_lock(stdin.read_lock);
+    if (stdin.available <= 0) {
+      unlock(stdin.read_lock);
+      sleep_on_lock(current_thread, stdin.read_lock);
+      yield();
+      goto get_l;
+    }
+
+    char out = stdin.buffer[stdin.last++];
+    stdin.available--;
+    if (stdin.available <= 0) {
+      memset((byte *)stdin.buffer, '\0', PAGE_SIZE * 2);
+      stdin.last = 0;
+    }
+
     unlock(stdin.read_lock);
-    sleep_on_lock(current_thread, stdin.read_lock);
-    yield();
-    goto get_l;
-  }
 
-  char out = stdin.buffer[stdin.last++];
-  stdin.available--;
-  if (stdin.available <= 0) {
-    memset((byte *)stdin.buffer, '\0', PAGE_SIZE * 2);
-    stdin.last = 0;
-  }
-
-  unlock(stdin.read_lock);
-
-  return out;
+    return out; */
 }
 
 static void keyboard_callback(registers_t *regs) {

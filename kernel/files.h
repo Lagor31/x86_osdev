@@ -25,10 +25,10 @@ typedef struct FD {
   Lock *lock;
   byte *buffer;
   u32 size;
-  u32 read_ptr;
+  u32 last;
   u32 available;
-  u32 write_ptr;
   List q;
+
 
   u32 (*write)(u32 fd, u32 count, byte *src);
   u32 (*read)(u32 fd, u32 count, byte *dst);

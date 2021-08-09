@@ -3,6 +3,7 @@
 #include "../drivers/screen.h"
 #include "../lib/strings.h"
 #include "../lock/lock.h"
+#include "../kernel/files.h"
 
 #include "thread.h"
 
@@ -32,10 +33,12 @@ void work_queue_thread() {
       enable_int();
 
       // kprintf("Doing work!\n", (char)do_me->c);
-      get_lock(stdin.read_lock);
-      append(stdin.buffer, do_me->c);
-      stdin.available++;
-      unlock(stdin.read_lock);
+      /*  get_lock(stdin_t->lock);
+       append(stdin_t->buffer, do_me->c);
+       stdin.available++;
+       unlock(stdin.read_lock); */
+
+      write_byte_stream(stdin_t, do_me->c);
 
     } else {
       // Free lock means there's bytes to be read

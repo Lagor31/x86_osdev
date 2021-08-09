@@ -26,18 +26,46 @@ FD *create_char_device(char *name, u8 page_size) {
 
 u32 write_byte_stream(FD *file, byte b) {
   get_lock(file->lock);
-  // Buffer full
-  if (file->available >= file->size) {
-    unlock(file->lock);
-    return -1;
-  }
-  file->buffer[file->write_ptr++] = b;
-  file->write_ptr = file->write_ptr % file->size;
+  append(file->buffer, b);
   file->available++;
   unlock(file->lock);
-  return TRUE;
+  /*
+    get_lock(file->lock);
+    // Buffer full
+    if (file->available >= file->size) {
+      unlock(file->lock);
+      return -1;
+    }
+    file->buffer[file->write_ptr++] = b;
+    file->write_ptr = file->write_ptr % file->size;
+    file->available++;
+    unlock(file->lock);
+   */
+  return 1;
 }
 
+byte read_byte_stream(FD *file) {
+get_l:
+  get_lock(file->lock);
+  if (file->available <= 0) {
+    unlock(file->lock);
+    sleep_on_lock(current_thread, file->lock);
+    yield();
+    goto get_l;
+  }
+
+  char out = file->buffer[file->last++];
+  file->available--;
+  if (file->available <= 0) {
+    memset((byte *)file->buffer, '\0', PAGE_SIZE * 2);
+    file->last = 0;
+  }
+
+  unlock(file->lock);
+
+  return out;
+}
+/*
 byte read_byte_stream(FD *file) {
 check_lock:
   // We need to get this only when there's stuff to read
@@ -62,7 +90,7 @@ check_lock:
 
   return out;
 }
-
+ */
 FD *create_device(char *name, u8 page_size, u8 type) {
   FD *f = normal_page_alloc(0);
 
@@ -73,15 +101,19 @@ FD *create_device(char *name, u8 page_size, u8 type) {
 
   f->name = new_name;
   f->fd = fd++;
-  f->buffer = normal_page_alloc(page_size);
+  // f->buffer = normal_page_alloc(page_size);
+  f->buffer = (char *)normal_page_alloc(page_size);
+  memset((byte *)f->buffer, 0, PAGE_SIZE << page_size);
   f->available = 0;
-  f->write_ptr = 0;
-  f->read_ptr = 0;
-  f->write_ptr = 0;
+  f->last = 0;
   f->lock = make_lock();
   f->lock->state = LOCK_FREE;
   f->type = type;
   f->size = PAGE_SIZE << page_size;
+
+  f->write = NULL;
+  f->read = NULL;
+  f->seek = NULL;
   list_add(&file_descriptors, &f->q);
 
   return f;
