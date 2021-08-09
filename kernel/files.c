@@ -26,8 +26,10 @@ FD *create_char_device(char *name, u8 page_size) {
 
 u32 write_byte_stream(FD *file, byte b) {
   get_lock(file->lock);
+
   append(file->buffer, b);
   file->available++;
+  file->read_lock->state = LOCK_FREE;
   unlock(file->lock);
   /*
     get_lock(file->lock);
@@ -47,9 +49,9 @@ u32 write_byte_stream(FD *file, byte b) {
 byte read_byte_stream(FD *file) {
 get_l:
   get_lock(file->lock);
-  if (file->available <= 0) {
+  if (file->read_lock->state == LOCK_LOCKED) {
     unlock(file->lock);
-    sleep_on_lock(current_thread, file->lock);
+    sleep_on_lock(current_thread, file->read_lock);
     yield();
     goto get_l;
   }
@@ -59,10 +61,12 @@ get_l:
   if (file->available <= 0) {
     memset((byte *)file->buffer, '\0', PAGE_SIZE * 2);
     file->last = 0;
+    file->read_lock->state = LOCK_LOCKED;
+  } else {
+    file->read_lock->state = LOCK_FREE;
   }
 
   unlock(file->lock);
-
   return out;
 }
 /*
@@ -107,6 +111,11 @@ FD *create_device(char *name, u8 page_size, u8 type) {
   f->available = 0;
   f->last = 0;
   f->lock = make_lock();
+
+  // Read is free whene there's stuff to read
+  f->read_lock = make_lock();
+  f->read_lock->state = LOCK_LOCKED;
+
   f->lock->state = LOCK_FREE;
   f->type = type;
   f->size = PAGE_SIZE << page_size;

@@ -75,6 +75,7 @@ void wake_up_thread(Thread *p) {
 }
 
 void yield() {
+  wake_up_all();
   Thread *t = do_schedule();
   wake_up_thread(t);
   _switch_to_thread(t);

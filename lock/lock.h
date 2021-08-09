@@ -3,10 +3,13 @@
 
 #include "../lib/list.h"
 
+typedef struct Thread Thread;
+
 typedef struct spin_lock_t {
   u32 state;
   u32 id;
   List head;
+  Thread *owner;
 } Lock;
 
 extern Lock *screen_lock;

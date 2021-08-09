@@ -40,13 +40,16 @@ u32 test_lock(Lock *l) { return _test_spin_lock(&l->state); }
 void get_lock(Lock *l) {
   while (_test_spin_lock(&l->state) == LOCK_LOCKED) {
     current_thread->sleeping_lock = l;
+    kprintf("Lock kept by: %s!", l->owner->command);
     sleep_thread(current_thread);
     yield();
   }
   current_thread->sleeping_lock = NULL;
+  l->owner = current_thread;
 }
 
 void unlock(Lock *l) {
   // current_proc->sleeping_lock = NULL;
+  l->owner = NULL;
   _free_lock(&l->state);
 }

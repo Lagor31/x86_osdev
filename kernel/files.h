@@ -23,6 +23,7 @@ typedef struct FD {
   u32 fd;
   char *name;
   Lock *lock;
+  Lock *read_lock;
   byte *buffer;
   u32 size;
   u32 last;
