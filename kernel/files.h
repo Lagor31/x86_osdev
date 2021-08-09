@@ -37,7 +37,7 @@ typedef struct FD {
 } FD;
 
 extern List file_descriptors;
-extern FD *stdin_t;
+extern FD *stdin;
 extern FD *stdout;
 extern FD *stderr;
 

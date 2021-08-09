@@ -171,7 +171,7 @@ void init_kernel_proc() {
   FDList *i = normal_page_alloc(0);
   LIST_INIT(&i->q);
 
-  i->fd = stdin_t;
+  i->fd = stdin;
   list_add(&init_thread->files->q, &i->q);
 
   i = normal_page_alloc(0);

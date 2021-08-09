@@ -67,14 +67,11 @@ void kernel_main(u32 magic, u32 addr) {
   init_kernel_proc();
   kPrintOKMessage("Kernel procs enabled!");
 
-  init_stdin();
   init_work_queue();
 
   kPrintOKMessage("Kernel inizialized!");
 
   resetScreenColors();
-
-  // clearScreen();
 
   irq_install();
   srand(tick_count);

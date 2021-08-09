@@ -5,13 +5,13 @@ extern Thread *do_schedule();
 
 u32 fd = 0;
 List file_descriptors;
-FD *stdin_t;
+FD *stdin;
 FD *stdout;
 FD *stderr;
 
 void init_files() {
   LIST_INIT(&file_descriptors);
-  stdin_t = create_char_device("stdin", 10);
+  stdin = create_char_device("stdin", 10);
   stdout = create_block_device("stdout", 2);
   stderr = create_block_device("stderr", 2);
 }
