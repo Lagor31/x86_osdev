@@ -1,8 +1,6 @@
 #ifndef KERNEL_H
 #define KERNEL_H
-
-#include "../cpu/types.h"
-
+#include "../proc/thread.h"
 
 #define KERNEL_VIRTUAL_ADDRESS_BASE 0xC0000000
 #define KERNEL_NORMAL_MEMORY_BASE 0xD0000000
@@ -13,7 +11,7 @@
 
 #define ALLOC_NUM 2
 #define ALLOC_SIZE 0
-#define HOSTNAME "computer"
+#define HOSTNAME "challenger"
 
 extern struct kmultiboot2info *kMultiBootInfo;
 

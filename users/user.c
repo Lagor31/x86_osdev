@@ -1,4 +1,6 @@
 #include "user.h"
+#include "../lib/strings.h"
+
 
 List users;
 u32 uid = 0;

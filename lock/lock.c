@@ -29,7 +29,6 @@ Lock *make_lock() {
   Lock *outSpin = (Lock *)normal_page_alloc(0);
   outSpin->id = locks_id++;
   outSpin->state = LOCK_FREE;
-  outSpin->owner = NULL;
   list_add(&kernel_locks, &outSpin->head);
   return outSpin;
 }
@@ -42,18 +41,12 @@ void get_lock(Lock *l) {
   while (_test_spin_lock(&l->state) == LOCK_LOCKED) {
     current_thread->sleeping_lock = l;
     sleep_thread(current_thread);
-
-    Thread *n = do_schedule();
-    wake_up_thread(n);
-    _switch_to_thread(n);
+    yield();
   }
-  l->owner = current_thread;
   current_thread->sleeping_lock = NULL;
 }
 
 void unlock(Lock *l) {
   // current_proc->sleeping_lock = NULL;
-  l->owner = NULL;
   _free_lock(&l->state);
-  wake_up_all();
 }

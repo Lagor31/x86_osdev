@@ -11,6 +11,7 @@
 #include "../mem/vma.h"
 #include "../lib/utils.h"
 #include "../users/user.h"
+#include "../kernel/fdlist.h"
 #include "../kernel/files.h"
 
 List sleep_queue;
@@ -29,9 +30,7 @@ void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
   // current_thread->sched_count = 0;
   sleep_thread(current_thread);
-  Thread *n = do_schedule();
-  wake_up_thread(n);
-  _switch_to_thread(n);
+  yield();
 }
 
 void stop_thread(Thread *p) {
@@ -64,14 +63,16 @@ void sleep_thread(Thread *p) {
 void wake_up_thread(Thread *p) {
   // kprintf("Waking up process PID %d\n", p->pid);
   p->state = TASK_RUNNABLE;
-  p->wait4child = FALSE;
-  p->wait4 = 0;
-  p->sleep_timer = 0;
-  p->sleeping_lock = NULL;
   // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
   // unlock(sched_lock);
+}
+
+void yield() {
+  Thread *t = do_schedule();
+   wake_up_thread(t);
+  _switch_to_thread(t);
 }
 
 void kill_process(Thread *p) {
@@ -140,39 +141,6 @@ redo:
   // current_proc = NULL;
 }
 
-void printProcSimple(Thread *p) {
-  char s = 'R';
-  switch (p->state) {
-    case TASK_RUNNABLE:
-      s = 'R';
-      break;
-    case TASK_STOPPED:
-      s = 'X';
-      break;
-    case TASK_UNINTERRUPTIBLE:
-    case TASK_INTERRUPTIBLE:
-      s = 'Z';
-      break;
-    default:
-      s = '?';
-      break;
-  }
-  // u32 files = list_length(&p->files->q);
-  kprintf("%s - PID: %d - N: %d F: %d T: OF: %d %dms %c\n", p->command, p->pid,
-          p->nice, p->father->pid, 0, ticks_to_millis(p->runtime), s);
-  /*  kprintf("OpenFiles:\n");
-   if (files > 0) {
-     List *l;
-     list_for_each(l, &p->files->q) {
-       FDList *p1 = (FDList *)list_entry(l, FDList, q);
-       kprintf("%s, ", p1->fd->name);
-     }
-   }
-
-   kprintf("\n");
-   */
-}
-
 void init_kernel_proc() {
   init_users();
 
@@ -190,25 +158,25 @@ void init_kernel_proc() {
   init_thread->father = init_thread;
   init_thread->owner = root;
 
-  // init_thread->files = (FDList *)normal_page_alloc(0);
+  init_thread->files = (FDList *)normal_page_alloc(0);
 
-  // LIST_INIT(&init_thread->files->q);
+  LIST_INIT(&init_thread->files->q);
 
-  /*  FDList *i = normal_page_alloc(0);
-   LIST_INIT(&i->q);
+  FDList *i = normal_page_alloc(0);
+  LIST_INIT(&i->q);
 
-   i->fd = stdin;
-   list_add(&init_thread->files->q, &i->q);
+  i->fd = stdin_t;
+  list_add(&init_thread->files->q, &i->q);
 
-   i = normal_page_alloc(0);
-   i->fd = stdout;
-   LIST_INIT(&i->q);
-   list_add(&init_thread->files->q, &i->q);
+  i = normal_page_alloc(0);
+  i->fd = stdout;
+  LIST_INIT(&i->q);
+  list_add(&init_thread->files->q, &i->q);
 
-   i = normal_page_alloc(0);
-   i->fd = stderr;
-   LIST_INIT(&i->q);
-   list_add(&init_thread->files->q, &i->q); */
+  i = normal_page_alloc(0);
+  i->fd = stderr;
+  LIST_INIT(&i->q);
+  list_add(&init_thread->files->q, &i->q);
 
   pid = 2;
   wake_up_thread(init_thread);
@@ -242,7 +210,7 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
 
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
-  Thread *user_thread = normal_page_alloc(2);
+  Thread *user_thread = normal_page_alloc(0);
 
   user_thread->ring0 = FALSE;
   user_thread->father = current_thread;
@@ -252,7 +220,6 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->tcb.page_dir = PA((u32)user_page_directory);
   user_thread->vm = kernel_vm;
   user_thread->wait4child = FALSE;
-
   void *user_stack = normal_page_alloc(0);
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
@@ -283,17 +250,12 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->siblings);
 
   LIST_INIT(&user_thread->k_proc_list);
-
+  user_thread->files = user_thread->father->files;
   list_add(&k_threads, &user_thread->k_proc_list);
   if (current_thread != NULL) {
     user_thread->owner = current_thread->owner;
     list_add(&current_thread->children, &user_thread->siblings);
   }
-
-  // user_thread->files = user_thread->father->files;
-
-  /*  user_thread->files = normal_page_alloc(0);
-   LIST_INIT(&user_thread->files->q); */
 
   UNUSED(data);
   return user_thread;
@@ -302,7 +264,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
   // TODO: cache! chache! cache!
-  Thread *kernel_thread = normal_page_alloc(2);
+  Thread *kernel_thread = normal_page_alloc(0);
 
   kernel_thread->ring0 = TRUE;
   kernel_thread->father = current_thread;
@@ -341,6 +303,8 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
 
+  kernel_thread->files = kernel_thread->father->files;
+
   LIST_INIT(&kernel_thread->k_proc_list);
   list_add(&k_threads, &kernel_thread->k_proc_list);
   if (current_thread != NULL) {
@@ -348,12 +312,6 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
     list_add(&current_thread->children, &kernel_thread->siblings);
   }
   kernel_thread->state = TASK_RUNNABLE;
-
-  kernel_thread->files = normal_page_alloc(0);
-  LIST_INIT(&kernel_thread->files->q);
-
-  // kernel_thread->files = kernel_thread->father->files;
-
   /*
     kprintf("Created PID %d\n", user_process->pid);
     kprintf("       Proc name %s\n", (u32)proc_name); */

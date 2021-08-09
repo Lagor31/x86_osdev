@@ -8,27 +8,20 @@ void sys_exit(u32 ret_code) {
   stop_thread(p);
   kill_process(p);
   p->exit_value = ret_code;
-  Thread *n = do_schedule();
-  wake_up_thread(n);
-  _switch_to_thread(n);
+  yield();
 }
 
 void sys_wait4(u32 pid) {
   Thread *p = current_thread;
   p->wait4 = pid;
   sleep_thread(current_thread);
-  Thread *n = do_schedule();
-  wake_up_thread(n);
-  _switch_to_thread(n);
+  yield();
 }
 
 void sys_wait4all() {
   sleep_thread(current_thread);
   current_thread->wait4child = TRUE;
-
-  Thread *n = do_schedule();
-  wake_up_thread(n);
-  _switch_to_thread(n);
+  yield();
 }
 
 void sys_printf(u32 number) { kprintf("Input: %x\n", number); }

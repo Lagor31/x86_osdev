@@ -22,37 +22,30 @@ void work_queue_thread() {
     // It serves only to communicate with the scheduler that we're still doing
     // some high priority work and we don't want to be scheduled away
 
-    // work_queue_lock->state = LOCK_LOCKED;
-    u8 found = 0;
-    list_for_each(wq, &kwork_queue) {
-      do_me = list_entry(wq, Work, work_queue);
-      list_remove(&do_me->work_queue);
-      found = 1;
-      break;
-    }
-    enable_int();
-
-    if (found == 1) {
-      // kprintf("Doing work!\n", (char)do_me->c);
-      if (write_byte_stream(stdin, do_me->c) < 0) {
-        // TODO: not so safe!
-        disable_int();
-        list_add(&kwork_queue, &do_me->work_queue);
-        enable_int();
+    if (list_length(&kwork_queue) > 0) {
+      list_for_each(wq, &kwork_queue) {
+        do_me = list_entry(wq, Work, work_queue);
+        list_remove(&do_me->work_queue);
+        break;
       }
-    } else {
-      
-      disable_int();
-      work_queue_lock->state = LOCK_LOCKED;
-      current_thread->sleeping_lock = work_queue_lock;
+
       enable_int();
 
-      sleep_thread(current_thread);
-      Thread *n = do_schedule();
-      wake_up_thread(n);
-      _switch_to_thread(n);
-    }
+      // kprintf("Doing work!\n", (char)do_me->c);
+      get_lock(stdin.read_lock);
+      append(stdin.buffer, do_me->c);
+      stdin.available++;
+      unlock(stdin.read_lock);
 
-    // Free lock means there's bytes to be read
+    } else {
+      // Free lock means there's bytes to be read
+      // unlock(stdin.read_lock);
+      enable_int();
+
+      current_thread->sleeping_lock = work_queue_lock;
+      current_thread->sleeping_lock->state = LOCK_LOCKED;
+      sleep_thread(current_thread);
+      yield();
+    }
   }
 }

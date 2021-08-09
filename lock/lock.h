@@ -3,12 +3,9 @@
 
 #include "../lib/list.h"
 
-typedef struct Thread Thread;
-
 typedef struct spin_lock_t {
   u32 state;
   u32 id;
-  Thread *owner;
   List head;
 } Lock;
 

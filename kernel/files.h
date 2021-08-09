@@ -13,6 +13,8 @@
 #include "../kernel/kernel.h"
 
 
+
+
 #define DEV_STREAM 0
 #define DEV_BLOCK 1
 
@@ -34,7 +36,7 @@ typedef struct FD {
 } FD;
 
 extern List file_descriptors;
-extern FD *stdin;
+extern FD *stdin_t;
 extern FD *stdout;
 extern FD *stderr;
 
@@ -44,4 +46,5 @@ extern FD *create_char_device(char *name, u8 page_size);
 extern u32 write_byte_stream(FD *file, byte b);
 extern byte read_byte_stream(FD *file);
 extern FD *create_device(char *name, u8 page_size, u8 type);
+extern void init_files();
 #endif

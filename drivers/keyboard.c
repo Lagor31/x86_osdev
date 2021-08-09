@@ -16,7 +16,20 @@
 
 #include "keyboard.h"
 
+Stdin stdin;
+
+void init_stdin() {
+  // 16 Kb
+  stdin.buffer = (char *)normal_page_alloc(2);
+  memset((byte *)stdin.buffer, 0, PAGE_SIZE * 2);
+  stdin.read_lock = make_lock();
+  stdin.read_lock->state = LOCK_FREE;
+  stdin.available = 0;
+  stdin.last = 0;
+}
+
 #define SC_MAX 57
+
 const char *sc_name[] = {
     "ERROR",     "Esc",     "1", "2", "3", "4",      "5",
     "6",         "7",       "8", "9", "0", "-",      "=",
@@ -33,7 +46,28 @@ const char sc_ascii[] = {
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z',
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
-byte read_stdin() { return read_byte_stream(stdin); }
+char read_stdin() {
+get_l:
+  get_lock(stdin.read_lock);
+  if (stdin.available <= 0) {
+    unlock(stdin.read_lock);
+    current_thread->sleeping_lock = stdin.read_lock;
+    sleep_thread(current_thread);
+    yield();
+    goto get_l;
+  }
+
+  char out = stdin.buffer[stdin.last++];
+  stdin.available--;
+  if (stdin.available <= 0) {
+    memset((byte *)stdin.buffer, '\0', PAGE_SIZE * 2);
+    stdin.last = 0;
+  }
+
+  unlock(stdin.read_lock);
+
+  return out;
+}
 
 static void keyboard_callback(registers_t *regs) {
   outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C
@@ -53,13 +87,7 @@ static void keyboard_callback(registers_t *regs) {
   Work *w = normal_page_alloc(0);
   w->c = c;
   list_add(&kwork_queue, &w->work_queue);
-
-  if (kwork_thread->sleeping_lock == work_queue_lock) {
-    //kprintf("Worker thread waiting...waking it up");
-    unlock(work_queue_lock->state);
-    kwork_thread->sleeping_lock = NULL;
-  }
-
+  unlock(work_queue_lock);
   UNUSED(regs);
 }
 

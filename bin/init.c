@@ -11,6 +11,7 @@ void init() {
   pid = 2;
 
   kwork_thread = create_kernel_thread(work_queue_thread, NULL, "kworker");
+  wake_up_thread(kwork_thread);
 
   p = create_kernel_thread(&top_bar, NULL, "gui");
   p->nice = 0;
@@ -40,8 +41,6 @@ void init() {
 
   while (TRUE) {
     sleep_thread(current_thread);
-    Thread *n = do_schedule();
-    wake_up_thread(n);
-    _switch_to_thread(n);
+    yield();
   }
 }

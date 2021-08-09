@@ -1,9 +1,39 @@
 #include "binaries.h"
+#include "../kernel/fdlist.h"
+#include "../kernel/files.h"
 
-void print_single_thread(Thread *p) {
-  kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
-          p->owner->username, millis_to_ticks(p->runtime));
+void printProcSimple(Thread *p) {
+  char s = 'R';
+  switch (p->state) {
+    case TASK_RUNNABLE:
+      s = 'R';
+      break;
+    case TASK_STOPPED:
+      s = 'X';
+      break;
+    case TASK_UNINSTERRUPTIBLE:
+    case TASK_INTERRUPTIBLE:
+      s = 'Z';
+      break;
+    default:
+      s = '?';
+      break;
+  }
+  u32 files = list_length(&p->files->q);
+  kprintf("%s - PID: %d - N: %d Parent: %d T: %dms %c\n", p->command, p->pid,
+          p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
+  kprintf("OF: ");
+  if (files > 0) {
+    List *l;
+    list_for_each(l, &p->files->q) {
+      FDList *p1 = (FDList *)list_entry(l, FDList, q);
+      kprintf("%s, ", p1->fd->name);
+    }
+  }
+
+  kprintf("\n");
 }
+
 
 void print_children(List *children, u32 indent) {
   if (list_length(children) == 0) {
@@ -25,6 +55,11 @@ void print_children(List *children, u32 indent) {
     print_single_thread(p);
     print_children(&p->children, indent + 1);
   }
+}
+
+void print_single_thread(Thread *p) {
+  kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
+          p->owner->username, ticks_to_millis(p->runtime));
 }
 
 void print_tree() {
@@ -141,3 +176,5 @@ void top() {
     }
   }
 }
+
+

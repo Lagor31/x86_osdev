@@ -32,13 +32,18 @@ inline u32 ticks_to_millis(u64 tickCount) {
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
 
-  //if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
+  // if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
 
   /* if (rand() % 600 == 0) {
     //kprintf("Creating new uthread!\n");
     Thread *t = create_user_thread(u_simple_proc, NULL, "cuser");
     t->nice = 9;
     wake_up_thread(t);
+  } */
+  Thread *next_thread;
+  /* if (kwork_thread->state = TASK_RUNNABLE) {
+    next_thread = kwork_thread;
+    goto resched;
   } */
 
   // Wake up all processes that no longer need to sleep on locks or timers
@@ -48,7 +53,8 @@ void scheduler_handler(registers_t *regs) {
   }
 
   // reschedule
-  Thread *next_thread = (Thread *)do_schedule();
+  next_thread = (Thread *)do_schedule();
+  if (current_thread == next_thread) goto done_sched;
 
   if (next_thread != NULL) {
     outb(0x70, 0x0C);  // select register C
@@ -59,6 +65,7 @@ void scheduler_handler(registers_t *regs) {
     }
     if (next_thread->sched_count > 0) next_thread->sched_count--;
     next_thread->runtime++;
+
     wake_up_thread(next_thread);
     _switch_to_thread(next_thread);
 

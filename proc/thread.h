@@ -8,9 +8,9 @@
 #define MIN_QUANTUM_MS 1
 #define P_PENALTY 2
 
+#include "../kernel/fdlist.h"
 
-
-#include "../kernel/files.h"
+#include "../lock/lock.h"
 #include "../mem/paging.h"
 #include "../mem/vma.h"
 #include "../lib/list.h"
@@ -18,7 +18,7 @@
 #include "../users/user.h"
 
 #define TASK_RUNNABLE 0
-#define TASK_UNINTERRUPTIBLE 1
+#define TASK_UNINSTERRUPTIBLE 1
 #define TASK_INTERRUPTIBLE 2
 #define TASK_ZOMBIE 3
 #define TASK_STOPPED 4
@@ -98,6 +98,7 @@ void load_current_proc(Thread *p);
 void wake_up_thread(Thread *p);
 void sleep_thread(Thread *p);
 void stop_thread(Thread *);
+void yield();
 
 void sleep_ms(u32 ms);
 

@@ -1,9 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
-#include "files.h"
 
 #include "../proc/thread.h"
-
 #include "../lib/list.h"
 #include "../drivers/timer.h"
 #include "../bin/binaries.h"

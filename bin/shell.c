@@ -1,4 +1,7 @@
 #include "binaries.h"
+#include "../lib/list.h"
+#include "../kernel/files.h"
+#include "../kernel/fdlist.h"
 
 void shell() {
   kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
@@ -7,9 +10,8 @@ void shell() {
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
-      kprintf("\n");
       user_input(my_buf);
-      kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
+      kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
       if (strlen(my_buf) > 0) {
@@ -24,6 +26,7 @@ void shell() {
 }
 
 void user_input(char *input) {
+  kprintf("\n");
   if (strcmp(input, "help") == 0)
     printHelp();
   else if (!strcmp(input, "clear")) {
@@ -90,7 +93,7 @@ void user_input(char *input) {
     kprintf("user: %s uid: %d gid: %d\n", current_thread->owner->username,
             current_thread->owner->uid, current_thread->owner->gid);
   } else {
-    kprintf("Command %s not found!\n", input);
+    kprintf("Command %s not found!", input);
   }
 }
 

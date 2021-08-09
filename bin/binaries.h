@@ -25,5 +25,5 @@ extern void itaFlag();
 extern void init();
 extern void ps();
 extern void login();
-
+extern void print_single_thread(Thread *p);
 #endif
