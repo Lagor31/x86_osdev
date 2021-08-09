@@ -11,7 +11,7 @@ void shell() {
     char read = read_stdin();
     if (read == '\n') {
       user_input(my_buf);
-      kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
+      kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
       if (strlen(my_buf) > 0) {
@@ -93,7 +93,7 @@ void user_input(char *input) {
     kprintf("user: %s uid: %d gid: %d\n", current_thread->owner->username,
             current_thread->owner->uid, current_thread->owner->gid);
   } else {
-    kprintf("Command %s not found!", input);
+    kprintf("Command %s not found!\n", input);
   }
 }
 

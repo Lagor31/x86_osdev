@@ -42,9 +42,8 @@ void work_queue_thread() {
       // unlock(stdin.read_lock);
       enable_int();
 
-      current_thread->sleeping_lock = work_queue_lock;
-      current_thread->sleeping_lock->state = LOCK_LOCKED;
-      sleep_thread(current_thread);
+      work_queue_lock->state = LOCK_LOCKED;
+      sleep_on_lock(current_thread, work_queue_lock);
       yield();
     }
   }

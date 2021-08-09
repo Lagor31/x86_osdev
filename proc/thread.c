@@ -45,6 +45,11 @@ void stop_thread(Thread *p) {
   // unlock(sched_lock);
 }
 
+void sleep_on_lock(Thread *t, Lock *l) {
+  t->sleeping_lock = l;
+  sleep_thread(t);
+}
+
 void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   // kprintf("Sleeping process PID %d\n", p->pid);
@@ -71,7 +76,7 @@ void wake_up_thread(Thread *p) {
 
 void yield() {
   Thread *t = do_schedule();
-   wake_up_thread(t);
+  wake_up_thread(t);
   _switch_to_thread(t);
 }
 

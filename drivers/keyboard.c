@@ -51,8 +51,7 @@ get_l:
   get_lock(stdin.read_lock);
   if (stdin.available <= 0) {
     unlock(stdin.read_lock);
-    current_thread->sleeping_lock = stdin.read_lock;
-    sleep_thread(current_thread);
+    sleep_on_lock(current_thread, stdin.read_lock);
     yield();
     goto get_l;
   }

@@ -99,6 +99,7 @@ void wake_up_thread(Thread *p);
 void sleep_thread(Thread *p);
 void stop_thread(Thread *);
 void yield();
+void sleep_on_lock(Thread *t, Lock *l);
 
 void sleep_ms(u32 ms);
 
