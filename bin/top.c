@@ -100,43 +100,36 @@ void ps() {
   setBackgroundColor(GREEN);
   setTextColor(BLACK);
   kprintf("[RUNNING]\n");
-  disable_int();
   list_for_each(l, &running_queue) {
     p = list_entry(l, Thread, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
-  enable_int();
   resetScreenColors();
 
   c = 0;
   setBackgroundColor(CYAN);
   setTextColor(BLACK);
   kprintf("[SLEEP]\n");
-  disable_int();
 
   list_for_each(l, &sleep_queue) {
     p = list_entry(l, Thread, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
-  enable_int();
   resetScreenColors();
 
   c = 0;
   setBackgroundColor(GRAY);
   setTextColor(RED);
   kprintf("[STOPPED]\n");
-  disable_int();
 
   list_for_each(l, &stopped_queue) {
     p = list_entry(l, Thread, head);
     kprintf("[%d] ", c++);
     printProcSimple(p);
   }
-  enable_int();
   resetScreenColors();
-  disable_int();
 
   if (current_thread != NULL) {
     setBackgroundColor(BLACK);
@@ -144,7 +137,6 @@ void ps() {
     kprintf("[CURRENT]: \n");
     printProcSimple(current_thread);
   }
-  enable_int();
   resetScreenColors();
 
   sys_exit(0);

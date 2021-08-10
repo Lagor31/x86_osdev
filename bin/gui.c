@@ -8,7 +8,7 @@ void gui() {
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
     const char *title =
-        " Uptime: %4ds             Used: %4d / %4d Mb"
+        " Uptime: %5ds            Used: %4d / %4d Mb"
         "               ProcsRunning: %3d ";
     disable_int();
     u32 prevPos = getCursorOffset();

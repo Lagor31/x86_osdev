@@ -5,6 +5,7 @@ extern Thread *do_schedule();
 
 u32 fd = 0;
 List file_descriptors;
+
 FD *stdin;
 FD *stdout;
 FD *stderr;
@@ -74,6 +75,7 @@ FD *create_block_device(char *name, u8 page_size) {
 FD *create_char_device(char *name, u8 page_size) {
   return create_device(name, page_size, DEV_STREAM);
 }
+
 u32 write_byte_stream(FD *file, byte b) {
   get_lock(file->lock);
 

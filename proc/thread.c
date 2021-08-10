@@ -113,7 +113,7 @@ void kill_process(Thread *p) {
   }
 
   list_for_each(l, &p->files) {
-    FD *close_me = list_entry(l, FD, q);
+    //FD *close_me = list_entry(l, FD, q);
     /*
     Close extra FD
     */
@@ -247,7 +247,6 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->std_files[1] = stdout;
   user_thread->std_files[2] = stderr;
 
-  user_thread->files = user_thread->father->files;
 
   list_add(&k_threads, &user_thread->k_proc_list);
   if (current_thread != NULL) {

@@ -36,7 +36,6 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("GTD Installed!\n");
 
   // Just setting a couple of pointers in our C variables, nothing special
-  // kprintf("Kernel memory initialization...\n");
   init_memory_ptrs();
 
   saveMultibootInfo(addr, magic);
@@ -65,12 +64,9 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Enabling kernel procs...");
   init_kernel_proc();
-  kPrintOKMessage("Kernel procs enabled!");
-
   init_work_queue();
-
+  kPrintOKMessage("Kernel procs enabled!");
   kPrintOKMessage("Kernel inizialized!");
-
   resetScreenColors();
 
   irq_install();

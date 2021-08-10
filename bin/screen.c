@@ -12,10 +12,6 @@ void screen_refresh() {
     // printProc(current_proc);
     // clearScreen();
 
-    // clearScreen();
-
-    // clearScreen();
-
     int row = 0;
     int col = 0;
     disable_int();
