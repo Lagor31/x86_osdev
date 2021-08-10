@@ -1,7 +1,6 @@
 #include "binaries.h"
 #include "../lib/list.h"
 #include "../kernel/files.h"
-#include "../kernel/fdlist.h"
 
 void shell() {
   setTextColor(LIGHTGREEN);

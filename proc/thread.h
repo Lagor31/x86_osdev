@@ -8,8 +8,7 @@
 #define MIN_QUANTUM_MS 1
 #define P_PENALTY 2
 
-#include "../kernel/fdlist.h"
-
+#include "../kernel/files.h"
 #include "../lock/lock.h"
 #include "../mem/paging.h"
 #include "../mem/vma.h"
@@ -37,6 +36,7 @@ typedef struct thread_cb {
 } TCB;
 
 typedef struct Thread Thread;
+typedef struct FD FD;
 
 struct Thread {
   TCB tcb; /* Needs to be first to make math easier in asm */

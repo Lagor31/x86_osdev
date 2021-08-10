@@ -1,7 +1,7 @@
 
 #include "binaries.h"
 #include "../kernel/files.h"
-void top_bar() {
+void screen_refresh() {
   kernel_init_ok = TRUE;
   // setCursorOffset(0);
 
@@ -27,17 +27,19 @@ void top_bar() {
         u8 c = stdout->buffer[off];
         // set_pos_block_nb(stdout, getOffset(row, col) + 1);
         u8 att = stdout->buffer[off + 1];
-        if (c != NULL) {
+        /* if (c != '\0') {
           // setTextColor(att);
           // setCursorOffset(i);
           // printCharAt(row, col, c, att);
           vidmem[off] = c;
           vidmem[off + 1] = att;
         } else {
-          u32 pos = getOffset(row, col);
           vidmem[off] = ' ';
           vidmem[off + 1] = att;
-        }
+        } */
+
+        vidmem[off] = c;
+        vidmem[off + 1] = att;
       }
     }
     enable_int();

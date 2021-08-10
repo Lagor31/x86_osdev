@@ -36,9 +36,6 @@ const char sc_ascii[] = {
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
 char read_stdin() {
-  List *l;
-  FD *f1;
-
   if (current_thread->std_files[0] != NULL)
     return read_byte_stream(current_thread->std_files[0]);
   else
@@ -52,9 +49,11 @@ static void keyboard_callback(registers_t *regs) {
   u8 scancode = inb(0x60);
   if (scancode > SC_MAX) return;
   char c = '\0';
-
+  //kprintf("scancode: %d", scancode);
   if (scancode == BACKSPACE)
     c = (char)BACKSPACE;
+  else if (scancode == CTRL)
+    c = (char) CTRL;
   else if (scancode == ENTER)
     c = '\n';
   else

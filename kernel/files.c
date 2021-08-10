@@ -11,7 +11,7 @@ FD *stderr;
 
 u32 set_pos_block(FD *file, u32 pos) {
   get_lock(file->lock);
-  if (pos < 0 || pos >= file->size) {
+  if (pos >= file->size) {
     unlock(file->lock);
     return -1;
   }
@@ -62,7 +62,7 @@ byte read_byte_block(FD *file) {
 
 void init_files() {
   LIST_INIT(&file_descriptors);
-  stdin = create_char_device("stdin", 10);
+  stdin = create_char_device("stdin", 5);
   stdout = create_block_device("stdout", 2);
   stderr = create_block_device("stderr", 2);
 }
@@ -74,26 +74,14 @@ FD *create_block_device(char *name, u8 page_size) {
 FD *create_char_device(char *name, u8 page_size) {
   return create_device(name, page_size, DEV_STREAM);
 }
-
 u32 write_byte_stream(FD *file, byte b) {
   get_lock(file->lock);
 
-  append(file->buffer, b);
+  append((char *)file->buffer, (char)b);
   file->available++;
   file->read_lock->state = LOCK_FREE;
   unlock(file->lock);
-  /*
-    get_lock(file->lock);
-    // Buffer full
-    if (file->available >= file->size) {
-      unlock(file->lock);
-      return -1;
-    }
-    file->buffer[file->write_ptr++] = b;
-    file->write_ptr = file->write_ptr % file->size;
-    file->available++;
-    unlock(file->lock);
-   */
+
   return 1;
 }
 
@@ -148,7 +136,7 @@ FD *create_device(char *name, u8 page_size, u8 type) {
   f->name = new_name;
   f->fd = fd++;
   // f->buffer = normal_page_alloc(page_size);
-  f->buffer = (char *)normal_page_alloc(page_size);
+  f->buffer = (byte *)normal_page_alloc(page_size);
   memset((byte *)f->buffer, 0, PAGE_SIZE << page_size);
 
   if (type == DEV_STREAM)

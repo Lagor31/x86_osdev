@@ -11,7 +11,6 @@
 #include "../mem/vma.h"
 #include "../lib/utils.h"
 #include "../users/user.h"
-#include "../kernel/fdlist.h"
 #include "../kernel/files.h"
 
 List sleep_queue;
@@ -83,6 +82,7 @@ void yield() {
 
 void kill_process(Thread *p) {
   if (p->pid == IDLE_PID) return;
+
   get_lock(sched_lock);
   list_remove(&p->head);
   list_remove(&p->k_proc_list);
@@ -112,10 +112,15 @@ void kill_process(Thread *p) {
     }
   }
 
-// kprintf("Dead father had ->\n");
+  list_for_each(l, &p->files) {
+    FD *close_me = list_entry(l, FD, q);
+    /*
+    Close extra FD
+    */
+  }
+
 // Reparenting
 redo:
-
   list_for_each(l, &p->children) {
     Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
     // LIST_INIT(&p1->siblings);

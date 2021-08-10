@@ -16,7 +16,7 @@
 #include "../kernel/syscall.h"
 #include "../users/user.h"
 
-extern void top_bar();
+extern void screen_refresh();
 extern void k_simple_proc();
 extern void shell();
 extern void u_simple_proc();

@@ -17,7 +17,7 @@ void init() {
   p->nice = 0;
   wake_up_thread(p);
 
-  p = create_kernel_thread(&top_bar, NULL, "screen");
+  p = create_kernel_thread(&screen_refresh, NULL, "screend");
   p->nice = 0;
   wake_up_thread(p);
   /*  p = create_kernel_thread(&shell, NULL, "shell");
