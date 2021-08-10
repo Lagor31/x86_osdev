@@ -113,7 +113,7 @@ void kill_process(Thread *p) {
   }
 
   list_for_each(l, &p->files) {
-    //FD *close_me = list_entry(l, FD, q);
+    // FD *close_me = list_entry(l, FD, q);
     /*
     Close extra FD
     */
@@ -243,10 +243,15 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->k_proc_list);
 
   LIST_INIT(&user_thread->files);
-  user_thread->std_files[0] = stdin;
-  user_thread->std_files[1] = stdout;
-  user_thread->std_files[2] = stderr;
-
+  if (current_thread != NULL) {
+    user_thread->std_files[0] = current_thread->std_files[0];
+    user_thread->std_files[1] = current_thread->std_files[1];
+    user_thread->std_files[2] = current_thread->std_files[2];
+  } else {
+    user_thread->std_files[0] = stdin;
+    user_thread->std_files[1] = stdout;
+    user_thread->std_files[2] = stderr;
+  }
 
   list_add(&k_threads, &user_thread->k_proc_list);
   if (current_thread != NULL) {
@@ -301,9 +306,15 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   LIST_INIT(&kernel_thread->siblings);
 
   LIST_INIT(&kernel_thread->files);
-  kernel_thread->std_files[0] = stdin;
-  kernel_thread->std_files[1] = stdout;
-  kernel_thread->std_files[2] = stderr;
+  if (current_thread != NULL) {
+    kernel_thread->std_files[0] = current_thread->std_files[0];
+    kernel_thread->std_files[1] = current_thread->std_files[1];
+    kernel_thread->std_files[2] = current_thread->std_files[2];
+  } else {
+    kernel_thread->std_files[0] = stdin;
+    kernel_thread->std_files[1] = stdout;
+    kernel_thread->std_files[2] = stderr;
+  }
 
   LIST_INIT(&kernel_thread->k_proc_list);
   list_add(&k_threads, &kernel_thread->k_proc_list);
