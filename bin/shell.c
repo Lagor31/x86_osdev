@@ -4,14 +4,20 @@
 #include "../kernel/fdlist.h"
 
 void shell() {
+  setTextColor(LIGHTGREEN);
+  setBackgroundColor(BLACK);
   kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
+  resetScreenColors();
   char *my_buf = normal_page_alloc(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
       user_input(my_buf);
+      setTextColor(LIGHTGREEN);
+      setBackgroundColor(BLACK);
       kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
+      resetScreenColors();
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
       if (strlen(my_buf) > 0) {

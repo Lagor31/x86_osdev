@@ -14,8 +14,8 @@ void gui() {
     u32 prevPos = getCursorOffset();
 
     setCursorPos(0, 0);
-    setBackgroundColor(BLUE);
-    setTextColor(YELLOW);
+    setBackgroundColor(LIGHTBLUE);
+    setTextColor(WHITE);
     kprintf(title, get_uptime() / 1000, totFree, tot,
             list_length(&running_queue));
 
