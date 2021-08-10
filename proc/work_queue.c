@@ -37,7 +37,6 @@ void work_queue_thread() {
        append(stdin_t->buffer, do_me->c);
        stdin.available++;
        unlock(stdin.read_lock); */
-
       write_byte_stream(stdin, do_me->c);
 
     } else {

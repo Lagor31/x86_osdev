@@ -27,7 +27,7 @@ typedef struct FD {
   u32 last;
   u32 available;
   List q;
-
+  List kfdq;
   u32 (*write)(u32 fd, u32 count, byte *src);
   u32 (*read)(u32 fd, u32 count, byte *dst);
   u32 (*seek)(u32, u32);
@@ -46,6 +46,7 @@ extern u32 write_byte_block(FD *file, byte b);
 extern u32 set_pos_block(FD *file, u32 pos);
 extern byte read_byte_stream(FD *file);
 extern byte read_byte_block(FD *file);
+extern void copy_fd(FD *s, FD *d);
 //extern u32 set_pos_block_nb(FD *file, u32 pos);
 extern FD *create_device(char *name, u8 page_size, u8 type);
 extern void init_files();

@@ -28,6 +28,8 @@ void init() {
   p->nice = 0;
   wake_up_thread(p);
 
+  
+
   /* for (int i = 0; i < ALLOC_NUM; ++i) {
     p = create_user_thread(&u_simple_proc, NULL, "uproc");
     p->nice = 10;

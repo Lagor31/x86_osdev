@@ -19,15 +19,15 @@ void printProcSimple(Thread *p) {
       s = '?';
       break;
   }
-  u32 files = list_length(&p->files->q);
+  u32 files = list_length(&p->files);
   kprintf("%s - PID: %d - N: %d Parent: %d T: %dms %c\n", p->command, p->pid,
           p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
   kprintf("OF: ");
   if (files > 0) {
     List *l;
-    list_for_each(l, &p->files->q) {
-      FDList *p1 = (FDList *)list_entry(l, FDList, q);
-      kprintf("%s, ", p1->fd->name);
+    list_for_each(l, &p->files) {
+      FD *p1 = (FD *)list_entry(l, FD, q);
+      kprintf("%s, ", p1->name);
     }
   }
 

@@ -49,7 +49,7 @@ void user_input(char *input) {
   } else if (!strcmp(input, "lsof")) {
     List *l;
     list_for_each(l, &file_descriptors) {
-      FD *f = (FD *)list_entry(l, FD, q);
+      FD *f = (FD *)list_entry(l, FD, kfdq);
       kprintf("%s - %d Size: %d Avail: %d\n", f->name, f->fd, f->size,
               f->available);
     }

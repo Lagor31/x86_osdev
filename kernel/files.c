@@ -121,6 +121,22 @@ get_l:
   return out;
 }
 
+void copy_fd(FD *s, FD *d) {
+  d->name = s->name;
+  d->buffer = s->buffer;
+  d->fd = s->fd;
+  d->last = s->last;
+  d->lock = s->lock;
+  d->pos = s->pos;
+  d->read = s->read;
+  d->read_lock = s->read_lock;
+  d->seek = s->seek;
+  d->size = s->size;
+  d->type = s->type;
+  d->available = s->available;
+  d->write = s->write;
+}
+
 FD *create_device(char *name, u8 page_size, u8 type) {
   FD *f = normal_page_alloc(0);
 
@@ -139,7 +155,7 @@ FD *create_device(char *name, u8 page_size, u8 type) {
     f->available = 0;
   else
     f->available = PAGE_SIZE << page_size;
-    
+
   f->last = 0;
   f->lock = make_lock();
 
@@ -154,7 +170,11 @@ FD *create_device(char *name, u8 page_size, u8 type) {
   f->write = NULL;
   f->read = NULL;
   f->seek = NULL;
-  list_add(&file_descriptors, &f->q);
+
+  LIST_INIT(&f->kfdq);
+  LIST_INIT(&f->q);
+
+  list_add(&file_descriptors, &f->kfdq);
 
   return f;
 }

@@ -53,7 +53,8 @@ struct Thread {
   u32 sleep_timer;
   List head;
   List k_proc_list;
-  FDList *files;
+  List files;
+  FD *std_files[3];
   Thread *father;
   User *owner;
   List siblings;

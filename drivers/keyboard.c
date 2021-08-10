@@ -17,7 +17,6 @@
 #include "keyboard.h"
 #include "../kernel/files.h"
 
-
 #define SC_MAX 57
 
 const char *sc_name[] = {
@@ -36,7 +35,15 @@ const char sc_ascii[] = {
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z',
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '?',  '?', ' '};
 
-char read_stdin() { return read_byte_stream(stdin); }
+char read_stdin() {
+  List *l;
+  FD *f1;
+
+  if (current_thread->std_files[0] != NULL)
+    return read_byte_stream(current_thread->std_files[0]);
+  else
+    return read_byte_stream(stdin);
+}
 
 static void keyboard_callback(registers_t *regs) {
   outb(PIC_CMD_RESET, PORT_PIC_MASTER_CMD);  // select register C

@@ -163,28 +163,8 @@ void init_kernel_proc() {
   init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
   init_thread->father = init_thread;
   init_thread->owner = root;
-
-  init_thread->files = (FDList *)normal_page_alloc(0);
-
-  LIST_INIT(&init_thread->files->q);
-
-  FDList *i = normal_page_alloc(0);
-  LIST_INIT(&i->q);
-
-  i->fd = stdin;
-  list_add(&init_thread->files->q, &i->q);
-
-  i = normal_page_alloc(0);
-  i->fd = stdout;
-  LIST_INIT(&i->q);
-  list_add(&init_thread->files->q, &i->q);
-
-  i = normal_page_alloc(0);
-  i->fd = stderr;
-  LIST_INIT(&i->q);
-  list_add(&init_thread->files->q, &i->q);
-
   pid = 2;
+
   wake_up_thread(init_thread);
 
   // current_thread = idle_thread;
@@ -256,7 +236,14 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->siblings);
 
   LIST_INIT(&user_thread->k_proc_list);
+
+  LIST_INIT(&user_thread->files);
+  user_thread->std_files[0] = stdin;
+  user_thread->std_files[1] = stdout;
+  user_thread->std_files[2] = stderr;
+
   user_thread->files = user_thread->father->files;
+
   list_add(&k_threads, &user_thread->k_proc_list);
   if (current_thread != NULL) {
     user_thread->owner = current_thread->owner;
@@ -309,7 +296,10 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
 
-  kernel_thread->files = kernel_thread->father->files;
+  LIST_INIT(&kernel_thread->files);
+  kernel_thread->std_files[0] = stdin;
+  kernel_thread->std_files[1] = stdout;
+  kernel_thread->std_files[2] = stderr;
 
   LIST_INIT(&kernel_thread->k_proc_list);
   list_add(&k_threads, &kernel_thread->k_proc_list);
