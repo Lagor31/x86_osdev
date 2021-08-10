@@ -9,6 +9,57 @@ FD *stdin;
 FD *stdout;
 FD *stderr;
 
+u32 set_pos_block(FD *file, u32 pos) {
+  get_lock(file->lock);
+  if (pos < 0 || pos >= file->size) {
+    unlock(file->lock);
+    return -1;
+  }
+  file->pos = pos;
+  unlock(file->lock);
+  return 1;
+}
+
+u32 write_byte_block(FD *file, byte b) {
+  get_lock(file->lock);
+  file->buffer[file->pos] = b;
+  // file->available++;
+  // file->read_lock->state = LOCK_FREE;
+  unlock(file->lock);
+  /*
+    get_lock(file->lock);
+    // Buffer full
+    if (file->available >= file->size) {
+      unlock(file->lock);
+      return -1;
+    }
+    file->buffer[file->write_ptr++] = b;
+    file->write_ptr = file->write_ptr % file->size;
+    file->available++;
+    unlock(file->lock);
+   */
+  return 1;
+}
+
+byte read_byte_block(FD *file) {
+  get_lock(file->lock);
+  get_lock(file->read_lock);
+
+  char out = file->buffer[file->pos];
+  // file->available--;
+  /* if (file->available <= 0) {
+    memset((byte *)file->buffer, '\0', PAGE_SIZE * 2);
+    file->last = 0;
+    file->read_lock->state = LOCK_LOCKED;
+  } else {
+    file->read_lock->state = LOCK_FREE;
+  } */
+
+  unlock(file->read_lock);
+  unlock(file->lock);
+  return out;
+}
+
 void init_files() {
   LIST_INIT(&file_descriptors);
   stdin = create_char_device("stdin", 10);
@@ -69,32 +120,7 @@ get_l:
   unlock(file->lock);
   return out;
 }
-/*
-byte read_byte_stream(FD *file) {
-check_lock:
-  // We need to get this only when there's stuff to read
-  get_lock(file->lock);
 
-  if (file->available <= 0) {
-    // sleep_ms(1000);
-    unlock(file->lock);
-    current_thread->sleeping_lock = file->lock;
-    sleep_thread(current_thread);
-    Thread *n = do_schedule();
-    wake_up_thread(n);
-    _switch_to_thread(n);
-    goto check_lock;
-  }
-  // we have available bytes
-  byte out = file->buffer[file->read_ptr++];
-  file->read_ptr = file->read_ptr % file->size;
-  file->available--;
-
-  unlock(file->lock);
-
-  return out;
-}
- */
 FD *create_device(char *name, u8 page_size, u8 type) {
   FD *f = normal_page_alloc(0);
 
@@ -108,7 +134,12 @@ FD *create_device(char *name, u8 page_size, u8 type) {
   // f->buffer = normal_page_alloc(page_size);
   f->buffer = (char *)normal_page_alloc(page_size);
   memset((byte *)f->buffer, 0, PAGE_SIZE << page_size);
-  f->available = 0;
+
+  if (type == DEV_STREAM)
+    f->available = 0;
+  else
+    f->available = PAGE_SIZE << page_size;
+    
   f->last = 0;
   f->lock = make_lock();
 

@@ -174,3 +174,37 @@ _syscall:
 
     pop ebp
 ret
+
+
+global _setreg
+_setreg:
+    push  ebp         ; Save the stack-frame base pointer (of the calling function).
+    mov   ebp, esp    ; Set the stack-frame base pointer to be the current
+                        ; location on the stack.
+
+    cmp DWORD [ebp + 8], 0
+    je c_eax
+    cmp DWORD [ebp + 8], 1
+    je c_ebx
+    cmp DWORD [ebp + 8], 2
+    je c_ecx
+    cmp DWORD [ebp + 8], 3
+    je c_edx
+
+    c_eax:
+    mov eax,DWORD [ebp + 12]
+    jmp end
+    c_ebx:
+    mov ebx,DWORD [ebp + 12]
+    jmp end
+    c_ecx:
+    mov ecx,DWORD [ebp + 12]
+    jmp end
+    c_edx:
+    mov edx,DWORD [ebp + 12]
+    jmp end
+  end:
+
+    pop ebp
+ret
+

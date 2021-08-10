@@ -10,8 +10,9 @@
 #define SLEEPMS 3
 #define WAIT4ALL 4
 #define WAIT4 5
+#define RANDOM 6
 
-extern void _syscall(u32 num);
+extern u32 _syscall(u32 num);
 
 void syscall_handler(registers_t *regs);
 void sys_exit(u32 ret_code);

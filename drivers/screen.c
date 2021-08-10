@@ -8,7 +8,9 @@
 
 #include "screen.h"
 
+#include "../kernel/files.h"
 u8 textColor = DEFAULT_ATTR;
+u32 last_offset = 0;
 
 void setTextColor(u8 fgColor) {
   textColor = (textColor >> 4) << 4 | (0x0f & fgColor);
@@ -209,11 +211,13 @@ int getCursorOffset() {
   return offset * 2; /* Position * size of character cell */
 }
 
-void  setCursorPos(int row, int col) { setCursorOffset(getOffset(row, col)); }
+void setCursorPos(int row, int col) { setCursorOffset(getOffset(row, col)); }
 
 void setCursorOffset(int offset) {
   /* Similar to get_cursor_offset, but instead of reading we write data */
   offset /= 2;
+  last_offset = offset;
+  stdout->pos = offset;
   outb(VGA_CTRL_PORT, 14);
   outb(VGA_DATA_PORT, (unsigned char)(offset >> 8));
   outb(VGA_CTRL_PORT, 15);
@@ -222,7 +226,7 @@ void setCursorOffset(int offset) {
 
 void clearScreen() {
   textColor = DEFAULT_ATTR;
-  for (int r = 0; r < VGA_ROWS; r++) {
+  for (int r = 1; r < VGA_ROWS; r++) {
     clearRow(r);
   }
   setCursorPos(1, 0);
@@ -276,14 +280,24 @@ int printCharAt(int row, int col, char c, char attr) {
     row = getOffsetRow(offset);
     offset = getOffset(row + 1, 0);
   } else {
-    vidmem[offset] = c;
-    vidmem[offset + 1] = textColor;
+    if (kernel_init_ok == TRUE) {
+      set_pos_block(stdout, offset);
+      write_byte_block(stdout, c);
+      set_pos_block(stdout, offset + 1);
+      write_byte_block(stdout, textColor);
+    } else {
+      vidmem[offset] = c;
+      vidmem[offset + 1] = textColor;
+    }
     offset += 2;
   }
 
   if (offset >= VGA_ROWS * VGA_COLUMNS * 2) {
-    memcopy((u8 *)VA(VGA_ADDRESS) + getOffset(1, 0),
-            (u8 *)VA(VGA_ADDRESS), getOffset(VGA_ROWS - 1, VGA_COLUMNS));
+    memcopy((u8 *)VA(VGA_ADDRESS) + getOffset(1, 0), (u8 *)VA(VGA_ADDRESS),
+            getOffset(VGA_ROWS - 1, VGA_COLUMNS));
+    if (kernel_init_ok == TRUE)
+      memcopy(stdout->buffer + getOffset(1, 0), stdout->buffer,
+              getOffset(VGA_ROWS - 1, VGA_COLUMNS));
     // clearRow(VGA_ROWS - 1);
     offset = getOffset(VGA_ROWS - 1, 0);
   }

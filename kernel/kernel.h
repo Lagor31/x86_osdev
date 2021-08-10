@@ -14,7 +14,7 @@
 #define HOSTNAME "challenger"
 
 extern struct kmultiboot2info *kMultiBootInfo;
-
+extern bool kernel_init_ok;
 extern struct rfsHeader *krfsHeader;
 extern struct fileTableEntry *kfileTable;
 

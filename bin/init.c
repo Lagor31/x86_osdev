@@ -13,10 +13,13 @@ void init() {
   kwork_thread = create_kernel_thread(work_queue_thread, NULL, "kworker");
   wake_up_thread(kwork_thread);
 
-  p = create_kernel_thread(&top_bar, NULL, "gui");
+  p = create_kernel_thread(&gui, NULL, "gui");
   p->nice = 0;
   wake_up_thread(p);
 
+  p = create_kernel_thread(&top_bar, NULL, "screen");
+  p->nice = 0;
+  wake_up_thread(p);
   /*  p = create_kernel_thread(&shell, NULL, "shell");
    p->nice = 0;
    wake_up_thread(p); */

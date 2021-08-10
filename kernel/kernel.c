@@ -22,7 +22,7 @@
 #include "../bin/binaries.h"
 
 KMultiBoot2Info *kMultiBootInfo;
-
+bool kernel_init_ok = FALSE;
 /*
   After running the content of meminit.asm we get called here
 */
@@ -74,6 +74,7 @@ void kernel_main(u32 magic, u32 addr) {
   resetScreenColors();
 
   irq_install();
+
   srand(tick_count);
 
   while (TRUE) hlt();

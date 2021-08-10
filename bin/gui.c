@@ -1,10 +1,8 @@
-
 #include "binaries.h"
 
-void top_bar() {
+void gui() {
   while (TRUE) {
-    // kprintf("1) PID %d\n", current_proc->pid);
-    // printProc(current_proc);
+    u8 prevTextColor = textColor;
 
     int totFree = total_used_memory / 1024 / 1024;
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
@@ -12,7 +10,7 @@ void top_bar() {
     const char *title =
         " Uptime: %4ds             Used: %4d / %4d Mb"
         "               ProcsRunning: %3d ";
-    get_lock(screen_lock);
+    disable_int();
     u32 prevPos = getCursorOffset();
 
     setCursorPos(0, 0);
@@ -22,9 +20,8 @@ void top_bar() {
             list_length(&running_queue));
 
     setCursorOffset(prevPos);
-    resetScreenColors();
-
-    unlock(screen_lock);
-    sleep_ms(100);
+    textColor = prevTextColor;
+    enable_int();
+    sleep_ms(200);
   }
 }

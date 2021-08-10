@@ -12,9 +12,6 @@
 #include "../mem/mem.h"
 #include "../kernel/kernel.h"
 
-
-
-
 #define DEV_STREAM 0
 #define DEV_BLOCK 1
 
@@ -26,10 +23,10 @@ typedef struct FD {
   Lock *read_lock;
   byte *buffer;
   u32 size;
+  u32 pos;
   u32 last;
   u32 available;
   List q;
-
 
   u32 (*write)(u32 fd, u32 count, byte *src);
   u32 (*read)(u32 fd, u32 count, byte *dst);
@@ -45,7 +42,11 @@ extern void init_files();
 extern FD *create_block_device(char *name, u8 page_size);
 extern FD *create_char_device(char *name, u8 page_size);
 extern u32 write_byte_stream(FD *file, byte b);
+extern u32 write_byte_block(FD *file, byte b);
+extern u32 set_pos_block(FD *file, u32 pos);
 extern byte read_byte_stream(FD *file);
+extern byte read_byte_block(FD *file);
+//extern u32 set_pos_block_nb(FD *file, u32 pos);
 extern FD *create_device(char *name, u8 page_size, u8 type);
 extern void init_files();
 #endif

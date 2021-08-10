@@ -26,4 +26,7 @@ extern void init();
 extern void ps();
 extern void login();
 extern void print_single_thread(Thread *p);
+extern void gui();
+extern void k_child_proc();
+
 #endif

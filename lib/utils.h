@@ -8,6 +8,9 @@
  * and this is a solution to avoid the 'unused parameter' compiler warning */
 #define UNUSED(x) (void)(x)
 
+
+extern void _setreg(u32 reg, u32 value);
+
 void hlt();
 
 void saveMultibootInfo(uint32_t addr, uint32_t magic);

@@ -34,7 +34,6 @@ void printProcSimple(Thread *p) {
   kprintf("\n");
 }
 
-
 void print_children(List *children, u32 indent) {
   if (list_length(children) == 0) {
     return;
@@ -153,9 +152,10 @@ void ps() {
 }
 
 void draw_thread() {
+  clearScreen();
+
   while (TRUE) {
     // get_lock(screen_lock);
-    clearScreen();
     setCursorPos(1, 0);
     // printTop();
     print_tree();
@@ -176,5 +176,3 @@ void top() {
     }
   }
 }
-
-
