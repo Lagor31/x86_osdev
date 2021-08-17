@@ -34,14 +34,11 @@ void sleep_ms(u32 ms) {
 
 void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
-  // kprintf("Stopping process PID %d\n", p->pid);
-  // get_lock(sched_lock);
+  disable_int();
   p->state = TASK_STOPPED;
   list_remove(&p->head);
   list_add(&stopped_queue, &p->head);
-  //_switch_to_thread((Thread *)do_schedule());
-
-  // unlock(sched_lock);
+  enable_int();
 }
 
 void sleep_on_lock(Thread *t, Lock *l) {
@@ -51,30 +48,22 @@ void sleep_on_lock(Thread *t, Lock *l) {
 
 void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
-  // kprintf("Sleeping process PID %d\n", p->pid);
-  // get_lock(sched_lock);
+  disable_int();
   p->state = TASK_INTERRUPTIBLE;
   list_remove(&p->head);
   list_add(&sleep_queue, &p->head);
-  //_switch_to_thread((Thread *)do_schedule());
-
-  // unlock(sched_lock);
-
-  // do_schedule();
-  //_switch_to_task(current_proc);
+  enable_int();
 }
 
 void wake_up_thread(Thread *p) {
-  // kprintf("Waking up process PID %d\n", p->pid);
+  disable_int();
   p->state = TASK_RUNNABLE;
-  // get_lock(sched_lock);
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
-  // unlock(sched_lock);
+  enable_int();
 }
 
 void yield() {
-  wake_up_all();
   Thread *t = do_schedule();
   wake_up_thread(t);
   _switch_to_thread(t);
@@ -83,10 +72,11 @@ void yield() {
 void kill_process(Thread *p) {
   if (p->pid == IDLE_PID) return;
 
-  get_lock(sched_lock);
+  disable_int();
   list_remove(&p->head);
   list_remove(&p->k_proc_list);
   p->state = TASK_ZOMBIE;
+  enable_int();
 
   List *l;
   /*   if (p->father->wait4child) {
@@ -112,12 +102,10 @@ void kill_process(Thread *p) {
     }
   }
 
-  list_for_each(l, &p->files) {
+  /* list_for_each(l, &p->files) {
     // FD *close_me = list_entry(l, FD, q);
-    /*
-    Close extra FD
-    */
-  }
+
+  } */
 
 // Reparenting
 redo:
@@ -136,8 +124,6 @@ redo:
   list_remove(&p->children);
   list_remove(&p->siblings);
 
-  unlock(sched_lock);
-
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
   // Do separetly
@@ -145,10 +131,10 @@ redo:
    */  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   // Do separetly
 
-  // kfree_normal(p->tcb.user_stack_bot);
-  // kfree_normal(p->tcb.kernel_stack_bot);
+  kfree_normal(p->tcb.user_stack_bot);
+  kfree_normal(p->tcb.kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  // kfree_normal((void *)p);
+  kfree_normal((void *)p);
   // current_proc = NULL;
 }
 
@@ -201,7 +187,7 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
 
 Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   // TODO: cache! chache! cache!
-  Thread *user_thread = normal_page_alloc(0);
+  Thread *user_thread = normal_page_alloc(1);
 
   user_thread->ring0 = FALSE;
   user_thread->father = current_thread;
@@ -240,9 +226,11 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->children);
   LIST_INIT(&user_thread->siblings);
 
+  disable_int();
   LIST_INIT(&user_thread->k_proc_list);
-
   LIST_INIT(&user_thread->files);
+  enable_int();
+
   if (current_thread != NULL) {
     user_thread->std_files[0] = current_thread->std_files[0];
     user_thread->std_files[1] = current_thread->std_files[1];
@@ -252,8 +240,9 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
     user_thread->std_files[1] = stdout;
     user_thread->std_files[2] = stderr;
   }
-
+  disable_int();
   list_add(&k_threads, &user_thread->k_proc_list);
+  enable_int();
   if (current_thread != NULL) {
     user_thread->owner = current_thread->owner;
     list_add(&current_thread->children, &user_thread->siblings);
@@ -266,7 +255,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
   // TODO: cache! chache! cache!
-  Thread *kernel_thread = normal_page_alloc(0);
+  Thread *kernel_thread = normal_page_alloc(1);
 
   kernel_thread->ring0 = TRUE;
   kernel_thread->father = current_thread;
@@ -305,7 +294,11 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
 
+  disable_int();
+  LIST_INIT(&kernel_thread->k_proc_list);
   LIST_INIT(&kernel_thread->files);
+  enable_int();
+
   if (current_thread != NULL) {
     kernel_thread->std_files[0] = current_thread->std_files[0];
     kernel_thread->std_files[1] = current_thread->std_files[1];
@@ -315,9 +308,9 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
     kernel_thread->std_files[1] = stdout;
     kernel_thread->std_files[2] = stderr;
   }
-
-  LIST_INIT(&kernel_thread->k_proc_list);
+  disable_int();
   list_add(&k_threads, &kernel_thread->k_proc_list);
+  enable_int();
   if (current_thread != NULL) {
     kernel_thread->owner = current_thread->owner;
     list_add(&current_thread->children, &kernel_thread->siblings);

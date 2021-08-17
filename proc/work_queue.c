@@ -32,7 +32,7 @@ void work_queue_thread() {
 
       enable_int();
 
-      // kprintf("Doing work!\n", (char)do_me->c);
+      //kprintf("Doing work!\n", (char)do_me->c);
       /*  get_lock(stdin_t->lock);
        append(stdin_t->buffer, do_me->c);
        stdin.available++;
@@ -44,8 +44,8 @@ void work_queue_thread() {
       // unlock(stdin.read_lock);
       enable_int();
 
-      work_queue_lock->state = LOCK_LOCKED;
-      sleep_on_lock(current_thread, work_queue_lock);
+      /* work_queue_lock->state = LOCK_LOCKED;
+      sleep_on_lock(current_thread, work_queue_lock); */
       yield();
     }
   }

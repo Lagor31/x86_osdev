@@ -46,33 +46,38 @@ void scheduler_handler(registers_t *regs) {
     goto resched;
   } */
 
-  // Wake up all processes that no longer need to sleep on locks or timers
-  if (wake_up_all() == 0) {
-    if (current_thread != NULL && current_thread->sched_count > 0)
-      goto done_sched;
-  }
-
-  // reschedule
-  next_thread = (Thread *)do_schedule();
-  if (current_thread == next_thread) goto done_sched;
-
-  if (next_thread != NULL) {
-    outb(0x70, 0x0C);  // select register C
-    inb(0x71);         // just throw away contents
-    if (regs->int_no >= IRQ8) {
-      outb(0xA0, 0x20); /* slave */
-      outb(0x20, 0x20);
+  if (test_lock(sched_lock) == LOCK_FREE || sched_lock->owner == current_thread) {
+    // Wake up all processes that no longer need to sleep on locks or timers
+    unlock(sched_lock);
+  
+    if (wake_up_all() == 0) {
+      if (current_thread != NULL && current_thread->sched_count > 0)
+        goto done_sched;
     }
-    if (next_thread->sched_count > 0) next_thread->sched_count--;
-    next_thread->runtime++;
 
-    wake_up_thread(next_thread);
-    _switch_to_thread(next_thread);
+    // reschedule
+    next_thread = (Thread *)do_schedule();
+    if (current_thread == next_thread) goto done_sched;
 
-    outb(0x70, 0x0C);  // select register C
-    inb(0x71);         // just throw away contents
-    return;
+    if (next_thread != NULL) {
+      outb(0x70, 0x0C);  // select register C
+      inb(0x71);         // just throw away contents
+      if (regs->int_no >= IRQ8) {
+        outb(0xA0, 0x20); /* slave */
+        outb(0x20, 0x20);
+      }
+      if (next_thread->sched_count > 0) next_thread->sched_count--;
+      next_thread->runtime++;
+
+      // wake_up_thread(next_thread);
+      _switch_to_thread(next_thread);
+
+      outb(0x70, 0x0C);  // select register C
+      inb(0x71);         // just throw away contents
+      return;
+    }
   }
+
 done_sched:
   current_thread->runtime++;
   if (current_thread->sched_count > 0) current_thread->sched_count--;

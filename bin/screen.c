@@ -33,9 +33,8 @@ void screen_refresh() {
           vidmem[off] = ' ';
           vidmem[off + 1] = att;
         } */
-
-        vidmem[off] = c;
-        vidmem[off + 1] = att;
+        if (vidmem[off] != c) vidmem[off] = c;
+        if (vidmem[off + 1] != att) vidmem[off + 1] = att;
       }
     }
     enable_int();

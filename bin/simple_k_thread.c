@@ -1,7 +1,7 @@
 #include "binaries.h"
 
 void k_child_proc() {
-  sleep_ms(rand() % 90000);
+  sleep_ms(rand() % 5000);
   sys_exit(0);
 }
 
@@ -20,7 +20,7 @@ void k_simple_proc() {
 
     sleep_ms(rand() % 5 * 1000);
 
-    if (i++ == 10) {
+    if (i++ == 5) {
       Thread *t = create_kernel_thread(k_child_proc, NULL, "k-child");
       t->nice = 9;
       wake_up_thread(t);
@@ -34,8 +34,8 @@ void k_simple_proc() {
        wake_up_thread(t); */
 
       sys_wait4all();
-      /* kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
-              t->pid); */
+      kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
+              t->pid);
       sys_exit(0);
     }
 

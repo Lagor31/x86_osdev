@@ -56,8 +56,12 @@ void print_children(List *children, u32 indent) {
 }
 
 void print_single_thread(Thread *p) {
+  if (!p->ring0) {
+    setTextColor(GREEN);
+  }
   kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
           p->owner->username, ticks_to_millis(p->runtime));
+  resetScreenColors();
 }
 
 void print_tree() {

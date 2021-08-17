@@ -9,8 +9,8 @@ Thread *do_schedule() {
   Thread *next = NULL;
 
   u32 min_runtime = 0;
-
-    list_for_each(l, &running_queue) {
+  //disable_int();
+  list_for_each(l, &running_queue) {
     Thread *p = (Thread *)list_entry(l, Thread, head);
     if (proc_num == 0) {
       min_runtime = p->runtime;
@@ -23,6 +23,7 @@ Thread *do_schedule() {
     ++proc_num;
   }
 
+  //enable_int();
   pAvg = pTot / (proc_num);
 
   int q = MAX_QUANTUM_MS / proc_num;
@@ -39,6 +40,7 @@ Thread *do_schedule() {
 u32 wake_up_all() {
   List *l;
   int c = 0;
+  disable_int();
 wake_up:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
@@ -59,5 +61,6 @@ wake_up:
       }
     }
   }
+  enable_int();
   return c;
 }

@@ -3,7 +3,7 @@
 # $^ = all dependencies
 
 
-QEMU-MEM = 256M 
+QEMU-MEM = 2G 
 GDB = gdb
 CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 		 -Wall -Wextra  -ffreestanding

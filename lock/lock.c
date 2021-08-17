@@ -51,6 +51,6 @@ void get_lock(Lock *l) {
 void unlock(Lock *l) {
   // current_proc->sleeping_lock = NULL;
   l->owner = NULL;
-  wake_up_all();
+  //wake_up_all();
   _free_lock(&l->state);
 }
