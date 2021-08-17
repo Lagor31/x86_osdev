@@ -44,6 +44,6 @@ void k_simple_proc() {
     // sleep_ms(10);
 
     // sleep_process(current_proc);
-    //_switch_to_task((Proc *)do_schedule());
+    //_switch_to_task((Proc *)pick_next_thread());
   }
 }

@@ -34,57 +34,37 @@ void scheduler_handler(registers_t *regs) {
   ++tick_count;
   read_rtc();
 
-  // if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
-
-  /* if (rand() % 600 == 0) {
-    //kprintf("Creating new uthread!\n");
-    Thread *t = create_user_thread(u_simple_proc, NULL, "cuser");
-    t->nice = 9;
-    wake_up_thread(t);
-  } */
   Thread *next_thread;
-  /* if (kwork_thread->state = TASK_RUNNABLE) {
-    next_thread = kwork_thread;
-    goto resched;
-  } */
 
-  if (test_lock(sched_lock) == LOCK_FREE || sched_lock->owner == current_thread) {
-    // Wake up all processes that no longer need to sleep on locks or timers
-    unlock(sched_lock);
-  
-    if (wake_up_all() == 0) {
-      if (current_thread != NULL && current_thread->sched_count > 0)
-        goto done_sched;
+  // Wake up all processes that no longer need to sleep on locks or timers
+  if (wake_up_all() == 0)
+    if (current_thread != NULL && current_thread->timeslice > 0)
+      goto no_resched;
+
+  // reschedule
+  next_thread = (Thread *)pick_next_thread();
+  if (current_thread == next_thread) goto no_resched;
+
+  if (next_thread != NULL) {
+    outb(0x70, 0x0C);  // select register C
+    inb(0x71);         // just throw away contents
+    if (regs->int_no >= IRQ8) {
+      outb(0xA0, 0x20); /* slave */
+      outb(0x20, 0x20);
     }
+    if (next_thread->timeslice > 0) next_thread->timeslice--;
+    next_thread->runtime++;
 
-    // reschedule
-    next_thread = (Thread *)do_schedule();
-    if (current_thread == next_thread) goto done_sched;
+    _switch_to_thread(next_thread);
 
-    if (next_thread != NULL) {
-      outb(0x70, 0x0C);  // select register C
-      inb(0x71);         // just throw away contents
-      if (regs->int_no >= IRQ8) {
-        outb(0xA0, 0x20); /* slave */
-        outb(0x20, 0x20);
-      }
-      if (next_thread->sched_count > 0) next_thread->sched_count--;
-      next_thread->runtime++;
-
-      // wake_up_thread(next_thread);
-      _switch_to_thread(next_thread);
-
-      outb(0x70, 0x0C);  // select register C
-      inb(0x71);         // just throw away contents
-      return;
-    }
+    outb(0x70, 0x0C);  // select register C
+    inb(0x71);         // just throw away contents
+    return;
   }
 
-done_sched:
+no_resched:
   current_thread->runtime++;
-  if (current_thread->sched_count > 0) current_thread->sched_count--;
-  // Enable interrupts if no context switch was necessary
-  // regs->eflags |= 0x200;
+  if (current_thread->timeslice > 0) current_thread->timeslice--;
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
   */

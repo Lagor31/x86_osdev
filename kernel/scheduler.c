@@ -1,6 +1,6 @@
 #include "scheduler.h"
 
-Thread *do_schedule() {
+Thread *pick_next_thread() {
   List *l;
 
   u32 proc_num = 0;
@@ -31,9 +31,9 @@ Thread *do_schedule() {
   q += penalty;
 
   if (q <= 0)
-    next->sched_count = millis_to_ticks(MIN_QUANTUM_MS);
+    next->timeslice = millis_to_ticks(MIN_QUANTUM_MS);
   else
-    next->sched_count = millis_to_ticks((u32)q);
+    next->timeslice = millis_to_ticks((u32)q);
   return next;
 }
 

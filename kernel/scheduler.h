@@ -6,7 +6,7 @@
 #include "../drivers/timer.h"
 #include "../bin/binaries.h"
 
-extern Thread *do_schedule();
+extern Thread *pick_next_thread();
 extern u32 wake_up_all();
 
 #endif

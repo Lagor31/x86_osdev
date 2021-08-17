@@ -6,7 +6,7 @@ void init() {
   idle_thread = create_kernel_thread(idle, NULL, "idle");
   idle_thread->pid = IDLE_PID;
   idle_thread->nice = MIN_PRIORITY;
-  idle_thread->sched_count = ticks_to_millis(MIN_QUANTUM_MS);
+  idle_thread->timeslice = ticks_to_millis(MIN_QUANTUM_MS);
 
   pid = 2;
 

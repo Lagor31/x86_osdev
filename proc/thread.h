@@ -48,7 +48,7 @@ struct Thread {
   VMRegion *vm;
   u8 nice;
   u32 runtime;
-  u32 sched_count;
+  u32 timeslice;
   Lock *sleeping_lock;
   u32 sleep_timer;
   List head;

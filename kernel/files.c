@@ -1,7 +1,7 @@
 #include "files.h"
 #include "../lib/strings.h"
 
-extern Thread *do_schedule();
+extern Thread *pick_next_thread();
 
 u32 fd = 0;
 List file_descriptors;

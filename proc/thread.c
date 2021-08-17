@@ -64,7 +64,7 @@ void wake_up_thread(Thread *p) {
 }
 
 void yield() {
-  Thread *t = do_schedule();
+  Thread *t = pick_next_thread();
   wake_up_thread(t);
   _switch_to_thread(t);
 }
@@ -151,7 +151,7 @@ void init_kernel_proc() {
   init_thread = create_kernel_thread(init, NULL, "initd");
   init_thread->nice = MAX_PRIORITY;
   init_thread->pid = 1;
-  init_thread->sched_count = ticks_to_millis(MAX_QUANTUM_MS);
+  init_thread->timeslice = ticks_to_millis(MAX_QUANTUM_MS);
   init_thread->father = init_thread;
   init_thread->owner = root;
   pid = 2;
@@ -218,7 +218,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->sleep_timer = 0;
 
   user_thread->command = proc_name;
-  user_thread->sched_count = 0;
+  user_thread->timeslice = 0;
   user_thread->runtime = 0;
 
   user_thread->tgid = user_thread->pid;
@@ -287,7 +287,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->sleep_timer = 0;
 
   kernel_thread->command = proc_name;
-  kernel_thread->sched_count = 0;
+  kernel_thread->timeslice = 0;
   kernel_thread->runtime = 0;
 
   kernel_thread->tgid = kernel_thread->pid;
