@@ -8,8 +8,8 @@ void gui() {
     int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;
 
     const char *title =
-        "%2d/%02d/%4d - %2d:%2d:%2d      Used: %4d / %4d Mb"
-        "               ProcsRunning: %3d ";
+        " %2d/%02d/%4d - %02d:%02d:%02d      Used: %4d/%4d Mb"
+        "                           P: %3d ";
     disable_int();
     u32 prevPos = getCursorOffset();
 

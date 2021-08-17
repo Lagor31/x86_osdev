@@ -349,7 +349,7 @@ void printUptime() {
   /*  stdDate_t *uptime = getSystemDate();
    kprintf("%u days, %02u:%02u:%02u\n", uptime->days, uptime->hours,
            uptime->minutes, uptime->seconds); */
-  kprintf("Uptime %d s", get_uptime() / 1000);
+  kprintf("Uptime %d s\n", get_uptime() / 1000);
 }
 
 // Enable/Disable non maskable interrupt

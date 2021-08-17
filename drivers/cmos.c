@@ -4,6 +4,7 @@
 #include "screen.h"
 
 #define CURRENT_YEAR 2021  // Change this each year!
+#define TIME_ZONE_DIFF 2
 
 int century_register = 0x00;  // Set by ACPI table parsing code if possible
 
@@ -110,4 +111,6 @@ void read_rtc() {
     rtc_year += (CURRENT_YEAR / 100) * 100;
     if (rtc_year < CURRENT_YEAR) rtc_year += 100;
   }
+
+  rtc_hour += TIME_ZONE_DIFF;
 }
