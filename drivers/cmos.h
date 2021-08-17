@@ -9,4 +9,5 @@ extern unsigned char rtc_month;
 extern unsigned int rtc_year;
 
 void print_date();
+void read_rtc();
 #endif
