@@ -1,7 +1,7 @@
 #include "binaries.h"
 #include "../lib/list.h"
 #include "../kernel/files.h"
-
+#include "../drivers/cmos.h"
 void shell() {
   setTextColor(LIGHTGREEN);
   setBackgroundColor(BLACK);
@@ -42,9 +42,10 @@ void user_input(char *input) {
     asm volatile("cli");
     itaFlag();
     asm volatile("sti");
-
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "date")) {
+    print_date();
   } else if (!strcmp(input, "lsof")) {
     List *l;
     list_for_each(l, &file_descriptors) {

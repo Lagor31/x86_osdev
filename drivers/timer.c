@@ -12,6 +12,7 @@
 #include "../lib/utils.h"
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
+#include "cmos.h"
 
 /*
    Even at the highest frequency (4096 ticks/s, given by RTC_PHASE = 4) it
@@ -31,6 +32,7 @@ inline u32 ticks_to_millis(u64 tickCount) {
 
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
+  read_rtc();
 
   // if (work_queue_lock->state == LOCK_LOCKED) goto done_sched;
 

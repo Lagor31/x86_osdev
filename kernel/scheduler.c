@@ -40,7 +40,7 @@ Thread *do_schedule() {
 u32 wake_up_all() {
   List *l;
   int c = 0;
-  disable_int();
+  //disable_int();
 wake_up:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
@@ -61,6 +61,6 @@ wake_up:
       }
     }
   }
-  enable_int();
+  //enable_int();
   return c;
 }
