@@ -82,7 +82,7 @@ u32 write_byte_stream(FD *file, byte b) {
 
   append((char *)file->buffer, (char)b);
   file->available++;
-  file->read_lock->state = LOCK_FREE;
+  unlock(file->read_lock);
   unlock(file->lock);
 
   return 1;
@@ -90,24 +90,28 @@ u32 write_byte_stream(FD *file, byte b) {
 
 byte read_byte_stream(FD *file) {
 get_l:
-  get_lock(file->lock);
-  if (file->read_lock->state == LOCK_LOCKED) {
-    unlock(file->lock);
-    sleep_on_lock(current_thread, file->read_lock);
+  get_lock(file->read_lock);
+
+  if (test_lock(file->lock) == LOCK_LOCKED) {
+    file->read_lock->state = LOCK_FREE;
     reschedule();
     goto get_l;
   }
-
+  /*
+  We arrive here with stuff to read and with the global lock acquired
+  */
   char out = file->buffer[file->last++];
   file->available--;
   if (file->available <= 0) {
     memset((byte *)file->buffer, '\0', PAGE_SIZE * 2);
     file->last = 0;
-    file->read_lock->state = LOCK_LOCKED;
   } else {
-    file->read_lock->state = LOCK_FREE;
+    /*
+    Still stuff to read? We wake up the others waiting on the read lock
+    */
+    unlock(file->read_lock);
   }
-
+  //Always unlock the global lock
   unlock(file->lock);
   return out;
 }

@@ -37,8 +37,8 @@ void scheduler_handler(registers_t *regs) {
 
   Thread *next_thread;
 
-  // Wake up all processes that no longer need to sleep on locks or timers
-  wake_up_all();
+  // Wake up all processes that no longer need to sleep on timers
+  wake_up_timers();
 
   if (current_thread != NULL && current_thread->timeslice > 0) goto no_resched;
 

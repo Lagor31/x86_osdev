@@ -49,11 +49,11 @@ static void keyboard_callback(registers_t *regs) {
   u8 scancode = inb(0x60);
   if (scancode > SC_MAX) return;
   char c = '\0';
-  //kprintf("scancode: %d", scancode);
+  // kprintf("scancode: %d", scancode);
   if (scancode == BACKSPACE)
     c = (char)BACKSPACE;
   else if (scancode == CTRL)
-    c = (char) CTRL;
+    c = (char)CTRL;
   else if (scancode == ENTER)
     c = '\n';
   else
@@ -62,7 +62,7 @@ static void keyboard_callback(registers_t *regs) {
   Work *w = normal_page_alloc(0);
   w->c = c;
   list_add(&kwork_queue, &w->work_queue);
-  //unlock(work_queue_lock);
+  // if (work_queue_lock->state == LOCK_LOCKED) unlock(work_queue_lock);
   wake_up_thread(kwork_thread);
   UNUSED(regs);
 }

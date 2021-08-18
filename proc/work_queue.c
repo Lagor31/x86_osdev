@@ -16,6 +16,7 @@ void init_work_queue() { LIST_INIT(&kwork_queue); }
 void work_queue_thread() {
   List *wq;
   Work *do_me;
+  //get_lock(work_queue_lock);
 
   while (TRUE) {
     // We can't be interrupted when updating the work queue
@@ -45,11 +46,13 @@ void work_queue_thread() {
       // Free lock means there's bytes to be read
       // unlock(stdin.read_lock);
       enable_int();
-
-      /* work_queue_lock->state = LOCK_LOCKED;
-      sleep_on_lock(current_thread, work_queue_lock); */
       sleep_thread(current_thread);
       reschedule();
+      /* work_queue_lock->state = LOCK_LOCKED;
+      sleep_on_lock(current_thread, work_queue_lock); */
+      // sleep_thread(current_thread);
+      // reschedule();
+      // unlock(work_queue_lock);
     }
   }
 }

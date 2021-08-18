@@ -37,23 +37,11 @@ Thread *pick_next_thread() {
   return next;
 }
 
-u32 wake_up_all() {
-  List *l;
+/*
+Only executed in interrupt context with no int enabled
+*/
+u32 wake_up_timers() {
   int c = 0;
-  // disable_int();
-wake_up:
-  if (list_length(&sleep_queue) > 0) {
-    list_for_each(l, &sleep_queue) {
-      Thread *p = list_entry(l, Thread, head);
-      if (p->sleeping_lock != NULL && p->sleeping_lock->state == LOCK_FREE) {
-        p->sleeping_lock = NULL;
-        // p->sched_count = 0;
-        wake_up_thread(p);
-        c++;
-        goto wake_up;
-      }
-    }
-  }
   List *tlist;
 do_timers:
   if (list_length(&kernel_timers) > 0) {
@@ -68,7 +56,6 @@ do_timers:
       }
     }
   }
-  // enable_int();
   return c;
 }
 

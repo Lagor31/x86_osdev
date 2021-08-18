@@ -2,6 +2,7 @@
 #define LOCK_H
 
 #include "../lib/list.h"
+#include "../kernel/wait_queue.h"
 
 typedef struct Thread Thread;
 
@@ -10,6 +11,7 @@ typedef struct spin_lock_t {
   u32 id;
   List head;
   Thread *owner;
+  WaitQ *wait_q;
 } Lock;
 
 extern Lock *screen_lock;

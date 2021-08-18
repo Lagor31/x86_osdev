@@ -229,7 +229,8 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->state = TASK_RUNNABLE;
   LIST_INIT(&user_thread->children);
   LIST_INIT(&user_thread->siblings);
-
+  LIST_INIT(&user_thread->waitq);
+  
   disable_int();
   LIST_INIT(&user_thread->k_proc_list);
   LIST_INIT(&user_thread->files);
@@ -297,6 +298,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->tgid = kernel_thread->pid;
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
+  LIST_INIT(&kernel_thread->waitq);
 
   disable_int();
   LIST_INIT(&kernel_thread->k_proc_list);

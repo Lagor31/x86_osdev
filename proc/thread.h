@@ -51,6 +51,7 @@ struct Thread {
   unsigned long long last_activation;
   u32 timeslice;
   Lock *sleeping_lock;
+  List waitq;
   List head;
   List k_proc_list;
   List files;

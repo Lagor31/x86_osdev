@@ -7,7 +7,7 @@
 #include "../bin/binaries.h"
 
 extern Thread *pick_next_thread();
-extern u32 wake_up_all();
+extern u32 wake_up_timers();
 extern void reschedule();
 
 #endif
