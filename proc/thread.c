@@ -12,6 +12,7 @@
 #include "../lib/utils.h"
 #include "../users/user.h"
 #include "../kernel/files.h"
+#include "../kernel/timer.h"
 
 List sleep_queue;
 List running_queue;
@@ -26,8 +27,10 @@ Thread *init_thread;
 u32 pid = IDLE_PID;
 
 void sleep_ms(u32 ms) {
-  current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
-  // current_thread->sched_count = 0;
+  Timer *t = normal_page_alloc(0);
+  t->expiration = millis_to_ticks(ms) + tick_count;
+  t->thread = current_thread;
+  list_add(&kernel_timers, &t->q);
   sleep_thread(current_thread);
   reschedule();
 }
@@ -78,6 +81,14 @@ void kill_process(Thread *p) {
       p->father->wait4child = FALSE;
     } */
   bool wake_up_parent = TRUE;
+
+  list_for_each(l, &kernel_timers) {
+    Timer *activeT = list_entry(l, Timer, q);
+    if (activeT->thread->pid == p->pid) {
+      list_remove(&activeT->q);
+      break;
+    }
+  }
 
   if (p->father->wait4child) {
     list_for_each(l, &p->father->children) {
@@ -134,7 +145,7 @@ redo:
 
 void init_kernel_proc() {
   init_users();
-
+  init_kernel_timers();
   LIST_INIT(&sleep_queue);
   LIST_INIT(&running_queue);
   LIST_INIT(&stopped_queue);
@@ -209,7 +220,6 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   proc_name[name_length] = '\0';
 
   user_thread->sleeping_lock = NULL;
-  user_thread->sleep_timer = 0;
 
   user_thread->command = proc_name;
   user_thread->timeslice = 0;
@@ -278,13 +288,12 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   proc_name[name_length] = '\0';
 
   kernel_thread->sleeping_lock = NULL;
-  kernel_thread->sleep_timer = 0;
 
   kernel_thread->command = proc_name;
   kernel_thread->timeslice = 0;
   kernel_thread->runtime = 0;
   kernel_thread->last_activation = 0;
-  
+
   kernel_thread->tgid = kernel_thread->pid;
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
@@ -303,7 +312,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
     kernel_thread->std_files[1] = stdout;
     kernel_thread->std_files[2] = stderr;
   }
-  
+
   disable_int();
   list_add(&k_threads, &kernel_thread->k_proc_list);
   enable_int();

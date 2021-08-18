@@ -1,5 +1,5 @@
 #include "scheduler.h"
-
+#include "timer.h"
 Thread *pick_next_thread() {
   List *l;
 
@@ -51,13 +51,20 @@ wake_up:
         wake_up_thread(p);
         c++;
         goto wake_up;
-
-      } else if (p->sleep_timer != 0 && tick_count >= p->sleep_timer) {
-        p->sleep_timer = 0;
-        // p->sched_count = 0;
-        wake_up_thread(p);
+      }
+    }
+  }
+  List *tlist;
+do_timers:
+  if (list_length(&kernel_timers) > 0) {
+    list_for_each(tlist, &kernel_timers) {
+      Timer *activeT = list_entry(tlist, Timer, q);
+      if (tick_count >= activeT->expiration) {
+        list_remove(&activeT->q);
+        wake_up_thread(activeT->thread);
+        kfree_normal(activeT);
         c++;
-        goto wake_up;
+        goto do_timers;
       }
     }
   }
