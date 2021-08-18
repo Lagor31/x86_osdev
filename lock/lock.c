@@ -41,10 +41,10 @@ void spin_lock(Lock *l) { _spin_lock(&l->state); }
 u32 test_lock(Lock *l) { return _test_spin_lock(&l->state); }
 
 void get_lock(Lock *l) {
-  while (test_lock(&l->state) == LOCK_LOCKED) {
+  while (test_lock(l) == LOCK_LOCKED) {
     // current_thread->sleeping_lock = l;
     list_add(&l->wait_q->threads_waiting, &current_thread->waitq);
-    //if (l->owner != NULL) kprintf("Lock kept by: %s!", l->owner->command);
+    // if (l->owner != NULL) kprintf("Lock kept by: %s!", l->owner->command);
     sleep_thread(current_thread);
     reschedule();
   }
