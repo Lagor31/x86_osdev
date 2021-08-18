@@ -35,10 +35,6 @@ inline u32 ticks_to_millis(u64 tickCount) {
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
 
-  unsigned long long cur_cycles = rdtscl();
-  cycles_passed = cur_cycles - last_timer_int;
-  last_timer_int = cur_cycles;
-
   Thread *next_thread;
 
   // Wake up all processes that no longer need to sleep on locks or timers

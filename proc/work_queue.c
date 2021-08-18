@@ -4,6 +4,7 @@
 #include "../lib/strings.h"
 #include "../lock/lock.h"
 #include "../kernel/files.h"
+#include "../kernel/scheduler.h"
 
 #include "thread.h"
 
