@@ -3,6 +3,7 @@
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
 #include "../lib/utils.h"
+
 VMRegion *kernel_vm;
 
 void init_kernel_vma(u32 base_address) {
@@ -13,9 +14,9 @@ void init_kernel_vma(u32 base_address) {
   UNUSED(base_address);
 }
 
-bool is_valid_va(u32 va) {
-  UNUSED(va);
+bool is_valid_va(u32 va, Thread *t) {
+  if (t == NULL) return TRUE;
   /*  kprintf("Checking address %x in [%x - %x]\n", va, kernel_vm->start,
            kernel_vm->end); */
-  return (va <= kernel_vm->end && va >= kernel_vm->start);
+  return (va <= t->vm->end && va >= t->vm->start);
 }

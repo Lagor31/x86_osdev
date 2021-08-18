@@ -18,6 +18,7 @@
 #include "../drivers/timer.h"
 
 #include "paging.h"
+#include "../proc/thread.h"
 
 u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
 u32 user_page_directory[1024] __attribute__((aligned(4096)));
@@ -28,10 +29,10 @@ void gpFaultHandler(registers_t *regs) {
 
   setBackgroundColor(BLUE);
   setTextColor(RED);
-  //if (current_thread != NULL) printProc(current_thread);
+  if (current_thread != NULL) printProcSimple(current_thread);
 
-  kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs, regs->eip,
-          regs->err_code, regs->ebx);
+  kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs,
+          regs->eip, regs->err_code, regs->ebx);
   resetScreenColors();
   hlt();
 }
@@ -44,10 +45,10 @@ void pageFaultHandler(registers_t *regs) {
           regs->err_code);
   kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
-  //if (current_proc != NULL) printProc(current_proc);
+  // if (current_proc != NULL) printProc(current_proc);
 
   u32 faultAddress = getRegisterValue(CR2);
-  if (!is_valid_va(faultAddress)) {
+  if (!is_valid_va(faultAddress, current_thread)) {
     resetScreenColors();
     kprintfColor(RED, "0x%x - Not a kernel address!", (u32)faultAddress);
     hlt();
@@ -84,8 +85,6 @@ void pageFaultHandler(registers_t *regs) {
 
     kernel_page_directory[pd_pos] = pde_phys;
   }
-  //_loadPageDirectory((u32 *)PA((u32)&kernel_page_directory));
-
   resetScreenColors();
 }
 

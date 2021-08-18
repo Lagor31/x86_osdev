@@ -8,8 +8,10 @@ typedef struct virtual_memory_region {
   List head;
 } VMRegion;
 
+typedef struct Thread Thread;
+
 extern VMRegion *kernel_vm;
 void init_kernel_vma(u32 base_address);
-bool is_valid_va(u32 va);
+bool is_valid_va(u32 va, Thread *t);
 
 #endif
