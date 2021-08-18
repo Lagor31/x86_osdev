@@ -60,10 +60,12 @@ void print_children(List *children, u32 indent) {
 }
 
 void print_single_thread(Thread *p) {
-  if (!p->ring0) setTextColor(GREEN);
-
-  kprintf("%s pid: %d S:(%c) %s\n", p->command, p->pid, get_thread_state(p),
-          p->owner->username);
+  if (!p->ring0)
+    setTextColor(GREEN);
+  else
+    setTextColor(WHITE);
+  kprintf("%s pid:%d (%c) %s %u\n", p->command, p->pid, get_thread_state(p),
+          p->owner->username, p->runtime >> 32);
   resetScreenColors();
 }
 
@@ -147,7 +149,6 @@ void ps() {
 
   sys_exit(0);
 }
-
 void draw_thread() {
   clearScreen();
 
@@ -160,7 +161,6 @@ void draw_thread() {
     sleep_ms(1000);
   }
 }
-
 void top() {
   Thread *draw = create_kernel_thread(&draw_thread, NULL, "draw");
   draw->nice = 0;

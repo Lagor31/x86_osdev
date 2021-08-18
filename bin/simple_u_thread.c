@@ -1,8 +1,9 @@
 #include "binaries.h"
 
 void u_child_proc() {
+  _setreg(EBX, 2000);
   _syscall(SLEEPMS);
-  _syscall(SLEEPMS);
+  _setreg(EBX, 0);
   _syscall(EXIT);
 }
 
@@ -20,7 +21,10 @@ void u_simple_proc() {
     setCursorOffset(pos); */
     // enable_int();
     // sleep_ms(rand() % 1000);
-
+    _setreg(EBX, 1000);
+    _syscall(RANDOM);
+    u32 r = getRegisterValue(EAX);
+    _setreg(EBX, 1000);
     _syscall(SLEEPMS);
     // kprintf("Creating new uthread!\n");
     /* Thread *t = create_user_thread(u_simple_proc, NULL, "cuser");
@@ -42,7 +46,9 @@ void u_simple_proc() {
       _syscall(WAIT4ALL);
       kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
               t->pid);
+      _setreg(EBX, 1000);
       _syscall(SLEEPMS);
+      _setreg(EBX, 0);
       _syscall(EXIT);
     }
   }
