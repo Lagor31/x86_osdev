@@ -8,8 +8,8 @@ Thread *pick_next_thread() {
   u32 pTot = 0;
   Thread *next = NULL;
 
-  u32 min_runtime = 0;
-  //disable_int();
+  unsigned long long min_runtime = 0;
+  // disable_int();
   list_for_each(l, &running_queue) {
     Thread *p = (Thread *)list_entry(l, Thread, head);
     if (proc_num == 0) {
@@ -23,7 +23,7 @@ Thread *pick_next_thread() {
     ++proc_num;
   }
 
-  //enable_int();
+  // enable_int();
   pAvg = pTot / (proc_num);
 
   int q = MAX_QUANTUM_MS / proc_num;
@@ -40,7 +40,7 @@ Thread *pick_next_thread() {
 u32 wake_up_all() {
   List *l;
   int c = 0;
-  //disable_int();
+  // disable_int();
 wake_up:
   if (list_length(&sleep_queue) > 0) {
     list_for_each(l, &sleep_queue) {
@@ -61,6 +61,15 @@ wake_up:
       }
     }
   }
-  //enable_int();
+  // enable_int();
   return c;
+}
+
+void reschedule() {
+  Thread *next = pick_next_thread();
+  unsigned long long now = rdtscl();
+  next->last_activation = now;
+  // In CPU cycles
+  current_thread->runtime += (now - current_thread->last_activation);
+  _switch_to_thread(next);
 }

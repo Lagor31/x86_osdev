@@ -15,6 +15,7 @@
 
 extern uint64_t tick_count;
 extern tss_entry_t tss;
+extern unsigned long long cycles_passed;
 
 void scheduler_handler(registers_t* regs);
 void init_scheduler_timer();
@@ -23,5 +24,6 @@ void set_timer_phase(uint16_t hz);
 uint64_t millis_to_ticks(uint32_t millis);
 uint32_t ticks_to_millis(uint64_t ticks);
 uint32_t get_uptime();
+unsigned long long rdtscl();
 
 #endif

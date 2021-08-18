@@ -37,6 +37,7 @@ void user_input(char *input) {
   else if (!strcmp(input, "clear")) {
     clearScreen();
   } else if (!strcmp(input, "exit")) {
+    clearScreen();
     sys_exit(0);
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");

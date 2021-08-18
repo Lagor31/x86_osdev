@@ -46,6 +46,6 @@ void init() {
 
   while (TRUE) {
     sleep_thread(current_thread);
-    yield();
+    reschedule();
   }
 }

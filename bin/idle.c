@@ -3,6 +3,6 @@
 void idle() {
   while (TRUE) {
     hlt();
-    yield();
+    reschedule();
   }
 }

@@ -14,11 +14,13 @@
 #include "../cpu/ports.h"
 #include "cmos.h"
 
+unsigned long long last_timer_int = 0;
 /*
    Even at the highest frequency (4096 ticks/s, given by RTC_PHASE = 4) it
    would take 139.4  MILLENNIA to wrap around, i think we're safe...
 */
 u64 tick_count = 0;
+unsigned long long cycles_passed = 0;
 
 /* Returns the number of milliseconds since RTC setup */
 u32 get_uptime() { return (u32)ticks_to_millis(tick_count); }
@@ -32,14 +34,17 @@ inline u32 ticks_to_millis(u64 tickCount) {
 
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
-  read_rtc();
+
+  unsigned long long cur_cycles = rdtscl();
+  cycles_passed = cur_cycles - last_timer_int;
+  last_timer_int = cur_cycles;
 
   Thread *next_thread;
 
   // Wake up all processes that no longer need to sleep on locks or timers
-  if (wake_up_all() == 0)
-    if (current_thread != NULL && current_thread->timeslice > 0)
-      goto no_resched;
+  wake_up_all();
+
+  if (current_thread != NULL && current_thread->timeslice > 0) goto no_resched;
 
   // reschedule
   next_thread = (Thread *)pick_next_thread();
@@ -53,8 +58,10 @@ void scheduler_handler(registers_t *regs) {
       outb(0x20, 0x20);
     }
     if (next_thread->timeslice > 0) next_thread->timeslice--;
-    next_thread->runtime++;
-
+    next_thread->last_activation = rdtscl();
+    if (current_thread != NULL)
+      current_thread->runtime +=
+          (next_thread->last_activation - current_thread->last_activation);
     _switch_to_thread(next_thread);
 
     outb(0x70, 0x0C);  // select register C
@@ -63,7 +70,10 @@ void scheduler_handler(registers_t *regs) {
   }
 
 no_resched:
-  current_thread->runtime++;
+  // current_thread->runtime++;
+  unsigned long long now = rdtscl();
+  current_thread->runtime += (now - current_thread->last_activation);
+  current_thread->last_activation = now;
   if (current_thread->timeslice > 0) current_thread->timeslice--;
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
@@ -98,4 +108,10 @@ void set_timer_phase(u16 rate) {
   outb(0x71, prev | 0x40); /* write the previous value ORed with 0x40. This
                             turns on bit 6 of register B */
   NMI_enable();
+}
+
+unsigned long long rdtscl() {
+  unsigned int lo, hi;
+  __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+  return ((unsigned long long)lo) | (((unsigned long long)hi) << 32);
 }

@@ -1,9 +1,9 @@
 #include "binaries.h"
 #include "../kernel/files.h"
 
-void printProcSimple(Thread *p) {
+char get_thread_state(Thread *t) {
   char s = 'R';
-  switch (p->state) {
+  switch (t->state) {
     case TASK_RUNNABLE:
       s = 'R';
       break;
@@ -18,9 +18,13 @@ void printProcSimple(Thread *p) {
       s = '?';
       break;
   }
+
+  return s;
+}
+void printProcSimple(Thread *p) {
   u32 files = list_length(&p->files);
-  kprintf("%s - PID: %d - N: %d Parent: %d T: %dms %c\n", p->command, p->pid,
-          p->nice, p->father->pid, ticks_to_millis(p->runtime), s);
+  kprintf("%s - PID: %d - N: %d Parent: %d  %c\n", p->command, p->pid, p->nice,
+          p->father->pid, get_thread_state(p));
   kprintf("OF: ");
   if (files > 0) {
     List *l;
@@ -56,11 +60,10 @@ void print_children(List *children, u32 indent) {
 }
 
 void print_single_thread(Thread *p) {
-  if (!p->ring0) {
-    setTextColor(GREEN);
-  }
-  kprintf("%s pid: %d S:(%d)  O:%s %dms\n", p->command, p->pid, p->state,
-          p->owner->username, ticks_to_millis(p->runtime));
+  if (!p->ring0) setTextColor(GREEN);
+
+  kprintf("%s pid: %d S:(%c) %s\n", p->command, p->pid, get_thread_state(p),
+          p->owner->username);
   resetScreenColors();
 }
 
@@ -68,6 +71,7 @@ void print_tree() {
   // clearScreen();
   print_single_thread(init_thread);
   print_children(&init_thread->children, 1);
+  kprintf("Cycles: %u\n", cycles_passed);
   kprintf(" q to quit\n");
 }
 

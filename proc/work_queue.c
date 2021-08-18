@@ -32,12 +32,13 @@ void work_queue_thread() {
 
       enable_int();
 
-      //kprintf("Doing work!\n", (char)do_me->c);
+      // kprintf("Doing work!\n", (char)do_me->c);
       /*  get_lock(stdin_t->lock);
        append(stdin_t->buffer, do_me->c);
        stdin.available++;
        unlock(stdin.read_lock); */
       write_byte_stream(stdin, do_me->c);
+      kfree_normal(do_me);
 
     } else {
       // Free lock means there's bytes to be read
@@ -46,7 +47,8 @@ void work_queue_thread() {
 
       /* work_queue_lock->state = LOCK_LOCKED;
       sleep_on_lock(current_thread, work_queue_lock); */
-      yield();
+      sleep_thread(current_thread);
+      reschedule();
     }
   }
 }

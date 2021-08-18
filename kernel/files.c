@@ -1,5 +1,6 @@
 #include "files.h"
 #include "../lib/strings.h"
+#include "../kernel/scheduler.h"
 
 extern Thread *pick_next_thread();
 
@@ -93,7 +94,7 @@ get_l:
   if (file->read_lock->state == LOCK_LOCKED) {
     unlock(file->lock);
     sleep_on_lock(current_thread, file->read_lock);
-    yield();
+    reschedule();
     goto get_l;
   }
 

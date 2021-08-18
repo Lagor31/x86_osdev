@@ -29,7 +29,7 @@ void sleep_ms(u32 ms) {
   current_thread->sleep_timer = millis_to_ticks(ms) + tick_count;
   // current_thread->sched_count = 0;
   sleep_thread(current_thread);
-  yield();
+  reschedule();
 }
 
 void stop_thread(Thread *p) {
@@ -61,12 +61,6 @@ void wake_up_thread(Thread *p) {
   list_remove(&p->head);
   list_add(&running_queue, &p->head);
   enable_int();
-}
-
-void yield() {
-  Thread *t = pick_next_thread();
-  wake_up_thread(t);
-  _switch_to_thread(t);
 }
 
 void kill_process(Thread *p) {
@@ -220,7 +214,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->command = proc_name;
   user_thread->timeslice = 0;
   user_thread->runtime = 0;
-
+  user_thread->last_activation = 0;
   user_thread->tgid = user_thread->pid;
   user_thread->state = TASK_RUNNABLE;
   LIST_INIT(&user_thread->children);
@@ -289,7 +283,8 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->command = proc_name;
   kernel_thread->timeslice = 0;
   kernel_thread->runtime = 0;
-
+  kernel_thread->last_activation = 0;
+  
   kernel_thread->tgid = kernel_thread->pid;
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
@@ -308,6 +303,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
     kernel_thread->std_files[1] = stdout;
     kernel_thread->std_files[2] = stderr;
   }
+  
   disable_int();
   list_add(&k_threads, &kernel_thread->k_proc_list);
   enable_int();

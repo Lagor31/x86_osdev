@@ -15,7 +15,8 @@ void gui() {
 
     setCursorPos(0, 0);
     setBackgroundColor(BLUE);
-    setTextColor(WHITE);
+    setTextColor(YELLOW);
+    read_rtc();
     kprintf(title, rtc_day, rtc_month, rtc_year, rtc_hour, rtc_minute,
             rtc_second, totFree, tot, list_length(&running_queue));
 

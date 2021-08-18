@@ -47,7 +47,8 @@ struct Thread {
   bool ring0;
   VMRegion *vm;
   u8 nice;
-  u32 runtime;
+  unsigned long long runtime;
+  unsigned long long last_activation;
   u32 timeslice;
   Lock *sleeping_lock;
   u32 sleep_timer;
