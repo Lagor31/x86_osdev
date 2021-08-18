@@ -68,10 +68,8 @@ void print_single_thread(Thread *p) {
 }
 
 void print_tree() {
-  // clearScreen();
   print_single_thread(init_thread);
   print_children(&init_thread->children, 1);
-  kprintf("Cycles: %u\n", cycles_passed);
   kprintf(" q to quit\n");
 }
 
