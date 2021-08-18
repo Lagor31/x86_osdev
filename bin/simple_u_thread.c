@@ -1,8 +1,9 @@
 #include "binaries.h"
 
 void u_child_proc() {
-  sleep_ms(rand() % 5000);
-  sys_exit(0);
+  _syscall(SLEEPMS);
+  _syscall(SLEEPMS);
+  _syscall(EXIT);
 }
 
 void u_simple_proc() {
@@ -38,15 +39,11 @@ void u_simple_proc() {
       t->nice = 9;
       wake_up_thread(t);
 
-    
-
-      sys_wait4all();
+      _syscall(WAIT4ALL);
       kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
               t->pid);
-      sleep_ms(2000);
-
-      sys_exit(0);
+      _syscall(SLEEPMS);
+      _syscall(EXIT);
     }
-    //_syscall(2);
   }
 }
