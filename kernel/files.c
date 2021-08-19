@@ -25,38 +25,14 @@ u32 set_pos_block(FD *file, u32 pos) {
 u32 write_byte_block(FD *file, byte b) {
   get_lock(file->lock);
   file->buffer[file->pos] = b;
-  // file->available++;
-  // file->read_lock->state = LOCK_FREE;
   unlock(file->lock);
-  /*
-    get_lock(file->lock);
-    // Buffer full
-    if (file->available >= file->size) {
-      unlock(file->lock);
-      return -1;
-    }
-    file->buffer[file->write_ptr++] = b;
-    file->write_ptr = file->write_ptr % file->size;
-    file->available++;
-    unlock(file->lock);
-   */
   return 1;
 }
 
 byte read_byte_block(FD *file) {
   get_lock(file->lock);
   get_lock(file->read_lock);
-
   char out = file->buffer[file->pos];
-  // file->available--;
-  /* if (file->available <= 0) {
-    memset((byte *)file->buffer, '\0', PAGE_SIZE * 2);
-    file->last = 0;
-    file->read_lock->state = LOCK_LOCKED;
-  } else {
-    file->read_lock->state = LOCK_FREE;
-  } */
-
   unlock(file->read_lock);
   unlock(file->lock);
   return out;
@@ -111,7 +87,7 @@ get_l:
     */
     unlock(file->read_lock);
   }
-  //Always unlock the global lock
+  // Always unlock the global lock
   unlock(file->lock);
   return out;
 }
@@ -154,7 +130,7 @@ FD *create_device(char *name, u8 page_size, u8 type) {
   f->last = 0;
   f->lock = make_lock();
 
-  // Read is free whene there's stuff to read
+  // Read is free when there's stuff to read
   f->read_lock = make_lock();
   f->read_lock->state = LOCK_LOCKED;
 
@@ -169,7 +145,7 @@ FD *create_device(char *name, u8 page_size, u8 type) {
   LIST_INIT(&f->kfdq);
   LIST_INIT(&f->q);
 
-  list_add(&file_descriptors, &f->kfdq);
+  list_add_head(&file_descriptors, &f->kfdq);
 
   return f;
 }

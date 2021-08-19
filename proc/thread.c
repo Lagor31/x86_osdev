@@ -30,7 +30,7 @@ void sleep_ms(u32 ms) {
   Timer *t = normal_page_alloc(0);
   t->expiration = millis_to_ticks(ms) + tick_count;
   t->thread = current_thread;
-  list_add(&kernel_timers, &t->q);
+  list_add_head(&kernel_timers, &t->q);
   sleep_thread(current_thread);
   reschedule();
 }
@@ -40,7 +40,7 @@ void stop_thread(Thread *p) {
   disable_int();
   p->state = TASK_STOPPED;
   list_remove(&p->head);
-  list_add(&stopped_queue, &p->head);
+  list_add_head(&stopped_queue, &p->head);
   enable_int();
 }
 
@@ -54,7 +54,7 @@ void sleep_thread(Thread *p) {
   disable_int();
   p->state = TASK_INTERRUPTIBLE;
   list_remove(&p->head);
-  list_add(&sleep_queue, &p->head);
+  list_add_head(&sleep_queue, &p->head);
   enable_int();
 }
 
@@ -62,7 +62,7 @@ void wake_up_thread(Thread *p) {
   disable_int();
   p->state = TASK_RUNNABLE;
   list_remove(&p->head);
-  list_add(&running_queue, &p->head);
+  list_add_head(&running_queue, &p->head);
   enable_int();
 }
 
@@ -121,7 +121,7 @@ redo:
     list_remove(&p1->siblings);
 
     p1->father = p->father;
-    list_add(&p->father->children, &p1->siblings);
+    list_add_head(&p->father->children, &p1->siblings);
     goto redo;
   }
   // kprintf("\n");
@@ -219,8 +219,6 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
 
-  user_thread->sleeping_lock = NULL;
-
   user_thread->command = proc_name;
   user_thread->timeslice = 0;
   user_thread->runtime = 0;
@@ -230,7 +228,7 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   LIST_INIT(&user_thread->children);
   LIST_INIT(&user_thread->siblings);
   LIST_INIT(&user_thread->waitq);
-  
+  user_thread->wait_flags = 1;
   disable_int();
   LIST_INIT(&user_thread->k_proc_list);
   LIST_INIT(&user_thread->files);
@@ -246,11 +244,11 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
     user_thread->std_files[2] = stderr;
   }
   disable_int();
-  list_add(&k_threads, &user_thread->k_proc_list);
+  list_add_head(&k_threads, &user_thread->k_proc_list);
   enable_int();
   if (current_thread != NULL) {
     user_thread->owner = current_thread->owner;
-    list_add(&current_thread->children, &user_thread->siblings);
+    list_add_head(&current_thread->children, &user_thread->siblings);
   }
 
   UNUSED(data);
@@ -288,8 +286,6 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
 
-  kernel_thread->sleeping_lock = NULL;
-
   kernel_thread->command = proc_name;
   kernel_thread->timeslice = 0;
   kernel_thread->runtime = 0;
@@ -299,7 +295,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   LIST_INIT(&kernel_thread->children);
   LIST_INIT(&kernel_thread->siblings);
   LIST_INIT(&kernel_thread->waitq);
-
+  kernel_thread->wait_flags = 1;
   disable_int();
   LIST_INIT(&kernel_thread->k_proc_list);
   LIST_INIT(&kernel_thread->files);
@@ -316,11 +312,11 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   }
 
   disable_int();
-  list_add(&k_threads, &kernel_thread->k_proc_list);
+  list_add_head(&k_threads, &kernel_thread->k_proc_list);
   enable_int();
   if (current_thread != NULL) {
     kernel_thread->owner = current_thread->owner;
-    list_add(&current_thread->children, &kernel_thread->siblings);
+    list_add_head(&current_thread->children, &kernel_thread->siblings);
   }
   kernel_thread->state = TASK_RUNNABLE;
   /*

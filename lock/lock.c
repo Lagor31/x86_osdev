@@ -31,7 +31,7 @@ Lock *make_lock() {
   Lock *outSpin = (Lock *)normal_page_alloc(0);
   outSpin->id = locks_id++;
   outSpin->state = LOCK_FREE;
-  list_add(&kernel_locks, &outSpin->head);
+  list_add_head(&kernel_locks, &outSpin->head);
   outSpin->wait_q = create_wait_queue();
   return outSpin;
 }
@@ -43,7 +43,10 @@ u32 test_lock(Lock *l) { return _test_spin_lock(&l->state); }
 void get_lock(Lock *l) {
   while (test_lock(l) == LOCK_LOCKED) {
     // current_thread->sleeping_lock = l;
-    list_add(&l->wait_q->threads_waiting, &current_thread->waitq);
+    if (current_thread->wait_flags == 0)
+      list_add_head(&l->wait_q->threads_waiting, &current_thread->waitq);
+    else
+      list_add_tail(&l->wait_q->threads_waiting, &current_thread->waitq);
     // if (l->owner != NULL) kprintf("Lock kept by: %s!", l->owner->command);
     sleep_thread(current_thread);
     reschedule();
@@ -64,7 +67,8 @@ wake_up_sleeping_threads:
     Thread *waiting_thread = list_entry(tList, Thread, waitq);
     list_remove(&waiting_thread->waitq);
     wake_up_thread(waiting_thread);
+    if (waiting_thread->wait_flags == 1) break;
     goto wake_up_sleeping_threads;
   }
-  LIST_INIT(&l->wait_q->threads_waiting);
+  //LIST_INIT(&l->wait_q->threads_waiting);
 }

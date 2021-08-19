@@ -39,7 +39,15 @@ static inline void LIST_INIT(List *list) {
  Adds element before the list head
  O(1) time complexity
 */
-static inline void list_add(List *first, List *new) {
+static inline void list_add_head(List *first, List *new) {
+  List *second = first->next;
+  second->prev = new;
+  new->next = second;
+  new->prev = first;
+  first->next = new;
+}
+
+static inline void list_add_tail(List *first, List *new) {
   List *last = first->prev;
   last->next = new;
   new->next = first;

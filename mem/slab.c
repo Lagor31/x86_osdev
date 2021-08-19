@@ -7,12 +7,12 @@ MemCache kMemCache;
 
 void kMemCacheInit() {
   LIST_INIT(&kMemCache.free->head);
-  list_add(&kMemCache.free->head, &createSlab(8)->head);
-  list_add(&kMemCache.free->head, &createSlab(16)->head);
-  list_add(&kMemCache.free->head, &createSlab(16)->head);
-  list_add(&kMemCache.free->head, &createSlab(32)->head);
-  list_add(&kMemCache.free->head, &createSlab(48)->head);
-  list_add(&kMemCache.free->head, &createSlab(64)->head);
+  list_add_head(&kMemCache.free->head, &createSlab(8)->head);
+  list_add_head(&kMemCache.free->head, &createSlab(16)->head);
+  list_add_head(&kMemCache.free->head, &createSlab(16)->head);
+  list_add_head(&kMemCache.free->head, &createSlab(32)->head);
+  list_add_head(&kMemCache.free->head, &createSlab(48)->head);
+  list_add_head(&kMemCache.free->head, &createSlab(64)->head);
   kMemCache.empty = NULL;
   kMemCache.used = NULL;
   List *p;

@@ -52,6 +52,7 @@ struct Thread {
   u32 timeslice;
   Lock *sleeping_lock;
   List waitq;
+  u8 wait_flags;
   List head;
   List k_proc_list;
   List files;

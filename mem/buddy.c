@@ -97,7 +97,7 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
       for (i = 0; i < number_of_blocks; ++i) {
         int curr_buddy_pos = i * PAGES_PER_BLOCK(MAX_ORDER);
         bb[curr_buddy_pos].order = MAX_ORDER;
-        list_add(&buddy_ext[curr_order].free_list, &bb[curr_buddy_pos].item);
+        list_add_head(&buddy_ext[curr_order].free_list, &bb[curr_buddy_pos].item);
         // total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
         /*  if (kernel_alloc)
            total_kfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
@@ -201,17 +201,17 @@ void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
     u8 higher_order = b->order + 1;
     b->order = higher_order;
     if (kernel_alloc)
-      list_add(&buddy[higher_order].free_list, &b->item);
+      list_add_head(&buddy[higher_order].free_list, &b->item);
     else
-      list_add(&normal_buddy[higher_order].free_list, &b->item);
+      list_add_head(&normal_buddy[higher_order].free_list, &b->item);
     set_block_usage(b, b->order, FREE, kernel_alloc);
   } else {
     
     // Adding block to its free list
     if (kernel_alloc)
-      list_add(&buddy[b->order].free_list, &b->item);
+      list_add_head(&buddy[b->order].free_list, &b->item);
     else
-      list_add(&normal_buddy[b->order].free_list, &b->item);
+      list_add_head(&normal_buddy[b->order].free_list, &b->item);
     // Mark it free
     set_block_usage(b, b->order, FREE, kernel_alloc);
   }
@@ -253,9 +253,9 @@ BuddyBlock *get_buddy_block(int order, u8 kernel_alloc) {
     foundBuddy->order = found->order;
 
     if (kernel_alloc)
-      list_add(&buddy[order].free_list, &foundBuddy->item);
+      list_add_head(&buddy[order].free_list, &foundBuddy->item);
     else
-      list_add(&normal_buddy[order].free_list, &foundBuddy->item);
+      list_add_head(&normal_buddy[order].free_list, &foundBuddy->item);
     /*  kprintf("List[%d].length = %d\n", order + 1,
              list_length(&buddy[order + 1].free_list));
      kprintf("List[%d].length = %d\n", order,

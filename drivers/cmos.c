@@ -16,6 +16,7 @@ unsigned char rtc_month;
 unsigned int rtc_year;
 
 enum { cmos_address = 0x70, cmos_data = 0x71 };
+
 void print_date() {
   kprintf("%d/%d/%d - %d:%d:%d\n", rtc_day, rtc_month, rtc_year, rtc_hour, rtc_minute, rtc_second);
 }
