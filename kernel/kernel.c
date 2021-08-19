@@ -38,7 +38,7 @@ void kernel_main(u32 magic, u32 addr) {
   // Just setting a couple of pointers in our C variables, nothing special
   init_memory_ptrs();
 
-  saveMultibootInfo(addr, magic);
+  save_multiboot2_info(addr, magic);
   parse_multiboot_info(&kMultiBootInfo);
 
   kPrintOKMessage("Installing IRQs/ISRs...\n");

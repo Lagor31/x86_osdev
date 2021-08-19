@@ -28,7 +28,7 @@ void hlt() { __asm__ __volatile__("hlt"); }
 
 void srand(uint32_t seed) { next = seed; }
 
-void saveMultibootInfo(uint32_t addr, uint32_t magic) {
+void save_multiboot2_info(uint32_t addr, uint32_t magic) {
   size_t size = *(uint16_t *)addr;
   kprintf("Bootinfo address in save: 0x%x Magic:  0x%x Size: %d\n", addr, magic,
           size);

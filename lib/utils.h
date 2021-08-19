@@ -13,7 +13,7 @@ extern void _setreg(u32 reg, u32 value);
 
 void hlt();
 
-void saveMultibootInfo(uint32_t addr, uint32_t magic);
+void save_multiboot2_info(uint32_t addr, uint32_t magic);
 void printMultibootInfo(KMultiBoot2Info *info, uint8_t onlyMem);
 void printKernelMemInfo();
 void printInitScreen();
