@@ -13,7 +13,7 @@
 #define ALLOC_SIZE 0
 #define HOSTNAME "challenger"
 
-extern struct kmultiboot2info *kMultiBootInfo;
+extern KMultiBoot2Info kMultiBootInfo;
 extern bool kernel_init_ok;
 extern struct rfsHeader *krfsHeader;
 extern struct fileTableEntry *kfileTable;

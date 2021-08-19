@@ -21,7 +21,7 @@
 #include "../lib/utils.h"
 #include "../bin/binaries.h"
 
-KMultiBoot2Info *kMultiBootInfo;
+KMultiBoot2Info kMultiBootInfo;
 bool kernel_init_ok = FALSE;
 /*
   After running the content of meminit.asm we get called here
@@ -39,7 +39,7 @@ void kernel_main(u32 magic, u32 addr) {
   init_memory_ptrs();
 
   saveMultibootInfo(addr, magic);
-  parse_multiboot_info((KMultiBoot2Info *)kMultiBootInfo);
+  parse_multiboot_info(&kMultiBootInfo);
 
   kPrintOKMessage("Installing IRQs/ISRs...\n");
   isr_install();

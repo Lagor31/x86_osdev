@@ -82,16 +82,16 @@ void user_input(char *input) {
       p->nice = 10;
       wake_up_thread(p);
     }
-  } else if (!strcmp(input, "bootinfo")) {
-    printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 0);
-  } else if (!strcmp(input, "mmap")) {
-    printMultibootInfo((KMultiBoot2Info *)kMultiBootInfo, 1);
+  } else if (!strcmp(input, "boot-info")) {
+    printMultibootInfo(&kMultiBootInfo, 0);
+  } else if (!strcmp(input, "boot-mmap")) {
+    printMultibootInfo(&kMultiBootInfo, 1);
   } else if (!strcmp(input, "gdt")) {
     printGdt();
   } else if (!strcmp(input, "uptime")) {
     printUptime();
   } else if (!strcmp(input, "mods")) {
-    printModuleInfo(getModule(kMultiBootInfo));
+    printModuleInfo(getModule(&kMultiBootInfo));
   } else if (!strcmp(input, "shutdown")) {
     shutdown();
   } else if (!strcmp(input, "reboot")) {
@@ -100,7 +100,7 @@ void user_input(char *input) {
     kprintf("user: %s uid: %d gid: %d\n", current_thread->owner->username,
             current_thread->owner->uid, current_thread->owner->gid);
   } else {
-    kprintf("Command %s not found!\n", input);
+    kprintf("Command '%s' not found!\n", input);
   }
 }
 

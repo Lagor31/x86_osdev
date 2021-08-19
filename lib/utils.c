@@ -32,16 +32,16 @@ void saveMultibootInfo(uint32_t addr, uint32_t magic) {
   size_t size = *(uint16_t *)addr;
   kprintf("Bootinfo address in save: 0x%x Magic:  0x%x Size: %d\n", addr, magic,
           size);
-  kMultiBootInfo->info = (uint8_t *)boot_alloc(size, 1);
-  memcopy((uint8_t *)addr, kMultiBootInfo->info, size);
-  kMultiBootInfo->magic = magic;
+  kMultiBootInfo.info = (uint8_t *)boot_alloc(size, 1);
+  memcopy((uint8_t *)addr, kMultiBootInfo.info, size);
+  kMultiBootInfo.magic = magic;
 }
 
 
 /*
   Only loading first module is supported by now
 */
-struct multiboot_tag_module *getModule(struct kmultiboot2info *info) {
+struct multiboot_tag_module *getModule(KMultiBoot2Info *info) {
   struct multiboot_tag *tag;
 
   for (tag = (struct multiboot_tag *)(info->info + 8);
@@ -84,7 +84,7 @@ inline uint32_t getRegisterValue(uint8_t reg) {
   return regValue;
 }
 
-void printMultibootInfo(struct kmultiboot2info *info, uint8_t onlyMem) {
+void printMultibootInfo(KMultiBoot2Info *info, uint8_t onlyMem) {
   struct multiboot_tag *tag;
   unsigned size;
 
@@ -342,7 +342,7 @@ void getStandardDate(uint32_t millis, stdDate_t *date) {
 void printModuleInfo(struct multiboot_tag_module *module) {
   kprintf("Module start:     0x%x\n", module->mod_start);
   kprintf("Module end  :     0x%x\n", module->mod_end);
-  kprintf("Module size :     %d", module->mod_end - module->mod_start);
+  kprintf("Module size :     %d\n", module->mod_end - module->mod_start);
 }
 
 void printUptime() {

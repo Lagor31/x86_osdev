@@ -146,7 +146,7 @@ void memory_alloc_init() {
   // After this, you can no longer use boot_alloc
 }
 
-u8 parse_multiboot_info(struct kmultiboot2info *info) {
+u8 parse_multiboot_info(KMultiBoot2Info *info) {
   struct multiboot_tag *tag;
 
   /*  Am I booted by a Multiboot-compliant boot loader? */
