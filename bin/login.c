@@ -4,7 +4,7 @@ void login() {
 
   
   while (TRUE) {
-    kprintf("\nlogin root: ");
+    kprintf("\n\n\nlogin root: ");
     char prev_read = '\0';
     char *my_buf = normal_page_alloc(0);
     memset((byte *)my_buf, '\0', PAGE_SIZE);
