@@ -77,7 +77,8 @@ u32 strcmp(char s1[], char s2[]) {
   return s1[i] - s2[i];
 }
 
-u32 strtokn(const char *input, char *out_token, char delim, u32 tok_num) {
+u32 strtokn(const char *input, unsigned char *out_token, char delim,
+            u32 tok_num) {
   u32 count = 0;
   u32 i = 0;
   u32 last_tkn_start = 0;
@@ -113,50 +114,4 @@ u32 strtokn(const char *input, char *out_token, char delim, u32 tok_num) {
     out_token[0] = '\0';
     return 0;
   }
-}
-
-char *strtok(register char *s, register const char *delim, char *out_tok) {
-  register char *spanp;
-  register int c, sc;
-  char *tok;
-  // static char *last;
-
-  if (s == NULL) return (NULL);
-
-  /*
-   * Skip (span) leading delimiters (s += strspn(s, delim), sort of).
-   */
-cont:
-  c = *s++;
-  for (spanp = (char *)delim; (sc = *spanp++) != 0;) {
-    if (c == sc) goto cont;
-  }
-
-  if (c == 0) { /* no non-delimiter characters */
-    // last = NULL;
-    return (NULL);
-  }
-  tok = s - 1;
-
-  /*
-   * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
-   * Note that delim must have one NUL; we stop if we see that, too.
-   */
-  for (;;) {
-    c = *s++;
-    spanp = (char *)delim;
-    do {
-      if ((sc = *spanp++) == c) {
-        if (c == 0)
-          s = NULL;
-        else
-          s[-1] = 0;
-
-        memcopy(tok, out_tok, c);
-        // last = s;
-        return (s);
-      }
-    } while (sc != 0);
-  }
-  /* NOTREACHED */
 }

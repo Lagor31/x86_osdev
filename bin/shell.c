@@ -2,6 +2,8 @@
 #include "../lib/list.h"
 #include "../kernel/files.h"
 #include "../drivers/cmos.h"
+#include "../drivers/pci.h"
+
 void shell() {
   setTextColor(LIGHTGREEN);
   setBackgroundColor(BLACK);
@@ -15,20 +17,21 @@ void shell() {
       char *command = normal_page_alloc(0);
       char *temp = normal_page_alloc(0);
       u32 i = 0;
-      if (strtokn(my_buf, temp, ' ', i) == 0) {
-        memcopy(my_buf, command, strlen(my_buf) + 1);
+      if (strtokn((const char *)my_buf, (byte *)temp, ' ', i) == 0) {
+        memcopy((byte *)my_buf, (byte *)command, strlen(my_buf) + 1);
       } else {
         i = 0;
         kprintf("\n");
-        while (strtokn(my_buf, temp, ' ', i) != 0) {
+        while (strtokn((const char *)my_buf, (byte *)temp, ' ', i) != 0) {
           kprintf("[%d] %s\n", i, temp);
-          if (i == 0) memcopy(temp, command, strlen(temp) + 1);
+          if (i == 0) memcopy((byte *)temp, (byte *)command, strlen(temp) + 1);
           ++i;
         }
       }
 
       user_input(command);
       kfree_normal(command);
+      kfree_normal(temp);
       setTextColor(LIGHTGREEN);
       setBackgroundColor(BLACK);
       kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
@@ -61,6 +64,8 @@ void user_input(char *input) {
     asm volatile("sti");
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "pci")) {
+    checkAllBuses();
   } else if (!strcmp(input, "date")) {
     print_date();
   } else if (!strcmp(input, "lsof")) {
@@ -107,7 +112,7 @@ void user_input(char *input) {
     char *tok = normal_page_alloc(0);
     // temp = split_me;
     u32 i = 0;
-    while (strtokn(split_me, tok, ' ', i++) > 0) {
+    while (strtokn(split_me, (byte *)tok, ' ', i++) > 0) {
       kprintf("%s\n", tok);
     }
 

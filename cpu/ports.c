@@ -37,3 +37,13 @@ unsigned short inw(unsigned short port) {
 void outw(unsigned short port, unsigned short data) {
   __asm__("out %%ax, %%dx" : : "a"(data), "d"(port));
 }
+
+void outdw(unsigned short port, u32 data) {
+  __asm__("out %%eax, %%dx" : : "a"(data), "d"(port));
+}
+
+u32 indw(unsigned short port) {
+  u32 result;
+  __asm__("in %%dx, %%eax" : "=a"(result) : "d"(port));
+  return result;
+}
