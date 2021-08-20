@@ -12,7 +12,23 @@ void shell() {
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
-      user_input(my_buf);
+      char *command = normal_page_alloc(0);
+      char *temp = normal_page_alloc(0);
+      u32 i = 0;
+      if (strtokn(my_buf, temp, ' ', i) == 0) {
+        memcopy(my_buf, command, strlen(my_buf) + 1);
+      } else {
+        i = 0;
+        kprintf("\n");
+        while (strtokn(my_buf, temp, ' ', i) != 0) {
+          kprintf("[%d] %s\n", i, temp);
+          if (i == 0) memcopy(temp, command, strlen(temp) + 1);
+          ++i;
+        }
+      }
+
+      user_input(command);
+      kfree_normal(command);
       setTextColor(LIGHTGREEN);
       setBackgroundColor(BLACK);
       kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
@@ -75,7 +91,7 @@ void user_input(char *input) {
       p->nice = 10;
       wake_up_thread(p);
     }
-    //sys_wait4all();
+    // sys_wait4all();
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
@@ -83,8 +99,19 @@ void user_input(char *input) {
       p->nice = 10;
       wake_up_thread(p);
     }
-    //sys_wait4all();
+    // sys_wait4all();
 
+  } else if (!strcmp(input, "parse")) {
+    char *split_me = "dio schifoso cane -a      b    ";
+
+    char *tok = normal_page_alloc(0);
+    // temp = split_me;
+    u32 i = 0;
+    while (strtokn(split_me, tok, ' ', i++) > 0) {
+      kprintf("%s\n", tok);
+    }
+
+    kfree_normal(tok);
   } else if (!strcmp(input, "boot-info")) {
     printMultibootInfo(&kMultiBootInfo, 0);
   } else if (!strcmp(input, "boot-mmap")) {
