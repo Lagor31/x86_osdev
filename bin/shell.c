@@ -75,6 +75,7 @@ void user_input(char *input) {
       p->nice = 10;
       wake_up_thread(p);
     }
+    //sys_wait4all();
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
@@ -82,6 +83,8 @@ void user_input(char *input) {
       p->nice = 10;
       wake_up_thread(p);
     }
+    //sys_wait4all();
+
   } else if (!strcmp(input, "boot-info")) {
     printMultibootInfo(&kMultiBootInfo, 0);
   } else if (!strcmp(input, "boot-mmap")) {

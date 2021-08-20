@@ -24,7 +24,7 @@ void u_simple_proc() {
     _setreg(EBX, 1000);
     _syscall(RANDOM);
     u32 r = getRegisterValue(EAX);
-    _setreg(EBX, 1000);
+    _setreg(EBX, r);
     _syscall(SLEEPMS);
     // kprintf("Creating new uthread!\n");
     /* Thread *t = create_user_thread(u_simple_proc, NULL, "cuser");
