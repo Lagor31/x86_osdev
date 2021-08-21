@@ -49,8 +49,7 @@ os.iso: kernel/kernel.elf
 	grub-mkrescue -o os.iso iso
 
 run-iso: os.iso
-	qemu-system-i386 -m ${QEMU-MEM} -cdrom $< -net nic -net user
-
+	qemu-system-i386 -m ${QEMU-MEM} -cdrom $<
 # Generic rules for wildcards
 # To make an object, always compile from its .c
 %.o: %.c ${HEADERS}

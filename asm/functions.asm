@@ -208,3 +208,7 @@ _setreg:
     pop ebp
 ret
 
+
+
+section .files  progbits  alloc   exec    write  align=32
+incbin 'external/user_program'

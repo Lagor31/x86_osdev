@@ -3,6 +3,8 @@
 #include "../kernel/files.h"
 #include "../drivers/cmos.h"
 #include "../drivers/pci.h"
+#include "../kernel/kernel.h"
+#include "../kernel/elf.h"
 
 void shell() {
   setTextColor(LIGHTGREEN);
@@ -58,6 +60,15 @@ void user_input(char *input) {
   } else if (!strcmp(input, "exit")) {
     clearScreen();
     sys_exit(0);
+  } else if (!strcmp(input, "files")) {
+    kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start, &files_end);
+    Elf32_Ehdr *b = (Elf32_Ehdr *)&files_start;
+    kprintf("%c%c%c\n", b->e_ident[1], b->e_ident[2], b->e_ident[3]);
+    print_elf_header(b);
+    Elf32_Phdr *ph = ((u32)b + (u32)b->e_phoff);
+    int i = 0;
+    for (i = 0; i < b->e_phnum; ++i) print_elf_program_header(&ph[i]);
+
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");
     itaFlag();
@@ -108,7 +119,6 @@ void user_input(char *input) {
 
   } else if (!strcmp(input, "parse")) {
     char *split_me = "dio schifoso cane -a      b    ";
-
     char *tok = normal_page_alloc(0);
     // temp = split_me;
     u32 i = 0;

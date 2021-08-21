@@ -25,6 +25,9 @@ extern u32 _stack_address;
 extern u32 _random(void);
 extern void *userProcess;
 
+extern u32 files_start;
+extern u32 files_end;
+
 void shutdown();
 void printInitScreen();
 void user_input(char *);

@@ -66,14 +66,30 @@ SECTIONS {
         *(.text)
        
     }
+
+    .files ALIGN (0x1000): AT(ADDR(.files) - 0xC0000000)
+    {
+        files_start = .;
+        *(.files)
+        files_end = .;
+
+
+    }
+
     .data ALIGN (0x1000): AT(ADDR(.data) - 0xC0000000)
     {
         *(.data)
     }
+
+
+    
+
     .bss ALIGN (0x1000): AT(ADDR(.bss) - 0xC0000000)
     {
         *(.bss)
     }
+
+
 
     /*
         Kernel size = kimag_end - kimage_start;
