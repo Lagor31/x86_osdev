@@ -11,6 +11,7 @@
 #define WAIT4ALL 4
 #define WAIT4 5
 #define RANDOM 6
+#define EXIT_USR 7
 
 extern u32 _syscall(u32 num);
 

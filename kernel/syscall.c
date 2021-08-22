@@ -11,6 +11,14 @@ void sys_exit(u32 ret_code) {
   reschedule();
 }
 
+void sys_exit_usr() {
+  Thread *p = current_thread;
+  stop_thread(p);
+  // kill_process(p);
+  // p->exit_value = ret_code;
+  reschedule();
+}
+
 void sys_wait4(u32 pid) {
   Thread *p = current_thread;
   p->wait4 = pid;
@@ -24,7 +32,10 @@ void sys_wait4all() {
   reschedule();
 }
 
-void sys_printf(u32 number) { kprintf("Input: %x\n", number); }
+void sys_printf(u32 number) {
+  kprintf("PID: %d\n", current_thread->pid);
+  UNUSED(number);
+}
 
 void sys_sleepms(u32 millis) { sleep_ms(millis); }
 u32 sys_random(u32 max) { return rand() % max; }
@@ -34,7 +45,6 @@ void syscall_handler(registers_t *regs) {
   // kprintf("Called syscall %d!\n", syscall_num);
   switch (syscall_num) {
     case EXIT:
-      // kprintf("Stopping process PID: %d\n", current_thread->pid);
       sys_exit(regs->ebx);
       break;
     case PRINTF:

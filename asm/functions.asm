@@ -211,4 +211,4 @@ ret
 
 
 section .files  progbits  alloc   exec    write  align=32
-incbin 'external/user_program'
+incbin 'external/user_program.out'

@@ -1,12 +1,12 @@
-extern void _system_call(int n);
+extern void _system_call(int n, int par);
 
-
-
-int a(){
-  return 1;
-}
+int a() { return 1; }
 
 int _start() {
-  _system_call(10);
+  while (1) {
+    _system_call(3, 3000);
+    _system_call(2, 3131);
+  }
+  _system_call(1, 0);
   return 0;
 }

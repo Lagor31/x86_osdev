@@ -18,6 +18,7 @@ OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o asm/functions.o}
 # First rule is the one executed when no parameters are fed to the Makefile
 
 kernel/kernel.elf: boot/meminit.o ${OBJ} 
+	make process
 	nasm -f elf32 boot/multiboot_header.asm
 	ld  -m elf_i386  -n -T linker.ld  -o $@  boot/multiboot_header.o  $^ --oformat=elf32-i386
 
@@ -34,15 +35,14 @@ debug-iso: os.iso kernel/kernel.elf
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel/kernel.elf"
 
 clean:
-	rm -f *.bin boot/*.bin boot/*.o kernel/*.o bin/*.o kernel/*.elf kernel/*.bin drivers/*.o proc/*.o cpu/*.o lib/*.o mem/*.o  *.iso  iso/boot/*.elf asm/*.o lock/*.o
+	rm -f *.bin boot/*.bin boot/*.o kernel/*.o bin/*.o kernel/*.elf kernel/*.bin drivers/*.o proc/*.o cpu/*.o lib/*.o mem/*.o  *.iso  iso/boot/*.elf asm/*.o lock/*.o external/*.o external/*.out
 
 process:
 	nasm external/lib.asm -f elf32 -o external/lib.o
-	${CC} ${CFLAGS} -c external/prog.c -o external/prog
-	ld -m elf_i386 external/prog external/lib.o -o external/user_program --oformat=elf32-i386
+	${CC} ${CFLAGS} -c external/prog.c -o external/prog.out
+	ld -m elf_i386 external/prog.out external/lib.o -o external/user_program.out --oformat=elf32-i386
 
-external: external/user_process.asm
-	 nasm -f elf32  external/user_process.asm -o iso/boot/user_process
+
 
 os.iso: kernel/kernel.elf
 	cp $< iso/boot/

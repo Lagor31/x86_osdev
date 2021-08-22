@@ -16,24 +16,9 @@ void shell() {
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
-      char *command = normal_page_alloc(0);
-      char *temp = normal_page_alloc(0);
-      u32 i = 0;
-      if (strtokn((const char *)my_buf, (byte *)temp, ' ', i) == 0) {
-        memcopy((byte *)my_buf, (byte *)command, strlen(my_buf) + 1);
-      } else {
-        i = 0;
-        kprintf("\n");
-        while (strtokn((const char *)my_buf, (byte *)temp, ' ', i) != 0) {
-          kprintf("[%d] %s\n", i, temp);
-          if (i == 0) memcopy((byte *)temp, (byte *)command, strlen(temp) + 1);
-          ++i;
-        }
-      }
-
-      user_input(command);
-      kfree_normal(command);
-      kfree_normal(temp);
+      user_input(my_buf);
+      /*  kfree_normal(command);
+       kfree_normal(temp); */
       setTextColor(LIGHTGREEN);
       setBackgroundColor(BLACK);
       kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
@@ -51,8 +36,26 @@ void shell() {
   }
 }
 
-void user_input(char *input) {
+void user_input(char *command) {
   kprintf("\n");
+  char *input = normal_page_alloc(0);
+  char *args = normal_page_alloc(0);
+  u32 i = 0;
+  if (strtokn((const char *)command, (byte *)args, ' ', i) == 0) {
+    memcopy((byte *)command, (byte *)input, strlen(command) + 1);
+  } else {
+    i = 0;
+    kprintf("\n");
+    while (strtokn((const char *)command, (byte *)args, ' ', i) != 0) {
+      kprintf("[%d] %s\n", i, args);
+      if (i == 0) {
+        memcopy((byte *)args, (byte *)input, strlen(args) + 1);
+        break;
+      }
+      ++i;
+    }
+  }
+
   if (strcmp(input, "help") == 0)
     printHelp();
   else if (!strcmp(input, "clear")) {
@@ -63,11 +66,10 @@ void user_input(char *input) {
   } else if (!strcmp(input, "files")) {
     kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start, &files_end);
     Elf32_Ehdr *b = (Elf32_Ehdr *)&files_start;
-    kprintf("%c%c%c\n", b->e_ident[1], b->e_ident[2], b->e_ident[3]);
-    print_elf_header(b);
-    Elf32_Phdr *ph = ((u32)b + (u32)b->e_phoff);
-    int i = 0;
-    for (i = 0; i < b->e_phnum; ++i) print_elf_program_header(&ph[i]);
+    print_elf(b);
+    Thread *run_me = load_elf(b);
+    wake_up_thread(run_me);
+    _switch_to_thread(run_me);
 
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");
