@@ -22,7 +22,7 @@
 #include "../kernel/scheduler.h"
 
 u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
-u32 user_page_directory[1024] __attribute__((aligned(4096)));
+// u32 user_page_directory[1024] __attribute__((aligned(4096)));
 u32 pdPhysical = 0;
 
 void gpFaultHandler(registers_t *regs) {
@@ -187,10 +187,10 @@ Pte *make_user_pte(uint32_t pdRow) {
   return pte;
 }
 
-void init_test_user_paging() {
+void init_user_paging(u32 *user_pd) {
   kprintf("Setting up test user paging...\n");
   u16 i = 0;
-  //int num_entries = (total_kernel_pages >> 10);
+  // int num_entries = (total_kernel_pages >> 10);
 
   for (i = 0; i < PD_SIZE; i++) {
     // Mapping the higher half kernel
@@ -203,14 +203,14 @@ void init_test_user_paging() {
     else if (i == 0)
       ptePhys = PA((u32)make_kernel_pte(i));
     else {
-      user_page_directory[i] = 0;
+      user_pd[i] = 0;
       continue;
     }
 
     setPresent(&ptePhys);
     setReadWrite(&ptePhys);
 
-    user_page_directory[i] = ptePhys;
+    user_pd[i] = ptePhys;
 
     /* if (i == 0 ||
         (i >= KERNEL_LOWEST_PDIR && i < KERNEL_LOWEST_PDIR + num_entries))

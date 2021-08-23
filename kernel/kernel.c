@@ -51,7 +51,7 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Enabling kernel paging...");
   init_kernel_paging();
-  init_test_user_paging();
+  //init_user_paging();
 
   kPrintOKMessage("Kernel paging enabled!");
 

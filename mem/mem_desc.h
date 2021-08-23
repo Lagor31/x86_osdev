@@ -14,6 +14,7 @@ typedef struct memory_descriptor_t {
   u32 data_start;
   u32 data_size;
   u32 stack_top;
+  u32 page_directory;
 } MemDesc;
 
 #endif

@@ -14,6 +14,7 @@
 #include "../kernel/files.h"
 #include "../kernel/timer.h"
 #include "../mem/mem_desc.h"
+#include "../kernel/elf.h"
 
 List sleep_queue;
 List running_queue;
@@ -201,7 +202,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   user_thread->nice = 0;
   user_thread->pid = pid++;
   LIST_INIT(&user_thread->head);
-  user_thread->tcb.page_dir = PA((u32)user_page_directory);
+  user_thread->tcb.page_dir = PA(mem->page_directory);
   user_thread->mem = mem;
   user_thread->wait4child = FALSE;
   void *user_stack = normal_page_alloc(0);
@@ -209,7 +210,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
 
   set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
-               0x02233445 + PAGE_SIZE);
+               USER_STACK_ADDR + PAGE_SIZE);
   user_thread->tcb.user_stack_bot = user_stack;
 
   void *kernel_stack = normal_page_alloc(0);
