@@ -113,7 +113,7 @@ void user_input(char *command) {
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_user_thread(&u_simple_proc, NULL, "u-extra");
+      p = create_user_thread(&u_simple_proc, NULL, NULL, "u-extra");
       p->nice = 10;
       wake_up_thread(p);
     }

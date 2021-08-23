@@ -15,6 +15,7 @@
 #include "../lib/list.h"
 #include "../lib/constants.h"
 #include "../users/user.h"
+#include "../mem/mem_desc.h"
 
 #define TASK_RUNNABLE 0
 #define TASK_UNINSTERRUPTIBLE 1
@@ -45,7 +46,8 @@ struct Thread {
   u16 pid;
   u16 tgid;
   bool ring0;
-  VMRegion *vm;
+  //VMRegion *vm;
+  MemDesc *mem;
   u8 nice;
   unsigned long long runtime;
   unsigned long long last_activation;
@@ -86,7 +88,7 @@ extern void _switch_to_thread(Thread *);
 
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...);
-Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...);
+Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data, char *args, ...);
 
 void printProc(Thread *);
 void printTop();

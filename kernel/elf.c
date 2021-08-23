@@ -3,8 +3,27 @@
 #include "../proc/thread.h"
 
 Thread *load_elf(Elf32_Ehdr *elf) {
-  Thread *t = create_user_thread((void *)(elf->e_entry - 0x08048000 + (u32)elf),
-                                 NULL, "elf_usr");
+  MemDesc *thread_mem = kernel_page_alloc(0);
+  LIST_INIT(&thread_mem->vm_areas);
+  int i = 0;
+  Elf32_Phdr *ph = (Elf32_Phdr *)((u32)elf + (u32)elf->e_phoff);
+
+  for (i = 0; i < elf->e_phnum; ++i) {
+    if (ph[i].p_type == 1) {
+      VMArea *vm = create_vmregion(ph[i].p_vaddr, ph[i].p_vaddr + ph[i].p_memsz,
+                                   PA((u32)elf + ph[i].p_offset), 0);
+      list_add_tail(&thread_mem->vm_areas, &vm->head);
+    }
+  }
+
+  Thread *t =
+      create_user_thread((void *)(elf->e_entry), thread_mem, "elf_usr", NULL);
+
+  u32 user_stack_bottom = 0x02233445;
+  VMArea *stack =
+      create_vmregion(user_stack_bottom, user_stack_bottom + PAGE_SIZE,
+                      PA((u32)t->tcb.user_stack_bot + PAGE_SIZE), 0);
+  list_add_tail(&thread_mem->vm_areas, &stack->head);
 
   return t;
 }

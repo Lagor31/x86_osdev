@@ -35,11 +35,11 @@ void u_simple_proc() {
     t->nice = 9;
     wake_up_thread(t); */
     if (i++ == 5) {
-      Thread *t = create_user_thread(u_child_proc, NULL, "child");
+      Thread *t = create_user_thread(u_child_proc, NULL, NULL, "child");
       t->nice = 9;
       wake_up_thread(t);
 
-      t = create_user_thread(u_child_proc, NULL, "child");
+      t = create_user_thread(u_child_proc, NULL, NULL, "child");
       t->nice = 9;
       wake_up_thread(t);
 

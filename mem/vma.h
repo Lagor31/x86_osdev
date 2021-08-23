@@ -1,17 +1,21 @@
 #ifndef VMA_H
 #define VMA_H
 #include "../lib/list.h"
+#include "mem_desc.h"
 
 typedef struct virtual_memory_region {
   u32 start;
   u32 end;
   List head;
-} VMRegion;
+  u32 phys_start;
+  u32 size;
+} VMArea;
 
 typedef struct Thread Thread;
-
-extern VMRegion *kernel_vm;
-void init_kernel_vma(u32 base_address);
+// extern VMArea *kernel_vm_area;
+extern MemDesc *kernel_mem;
+void init_kernel_vma();
 bool is_valid_va(u32 va, Thread *t);
-
+VMArea *create_vmregion(u32 base_address, u32 end_address, u32 phys_start,
+                        u32 flags);
 #endif

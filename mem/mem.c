@@ -142,7 +142,7 @@ void memory_alloc_init() {
           firstNUsedPages, ++four_megs_pages);
   for (i = 0; i < four_megs_pages; ++i) kernel_page_alloc(10);
   kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
-  init_kernel_vma(KERNEL_VIRTUAL_ADDRESS_BASE + phys_normal_offset);
+  init_kernel_vma();
   // After this, you can no longer use boot_alloc
 }
 

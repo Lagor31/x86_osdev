@@ -13,6 +13,7 @@
 #include "../users/user.h"
 #include "../kernel/files.h"
 #include "../kernel/timer.h"
+#include "../mem/mem_desc.h"
 
 List sleep_queue;
 List running_queue;
@@ -180,7 +181,7 @@ void set_kernel_esp(u32 *kesp, u32 entry_point) {
 void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
   uesp[9] = USER_DS;      // SS
   uesp[8] = user_stack;   // ESP
-  uesp[7] = 0x3200;       // FLAGS
+  uesp[7] = 0x200;        // FLAGS
   uesp[6] = USER_CS;      // CS
   uesp[5] = entry_point;  // EIP
   uesp[4] = 0;            // EBP
@@ -190,7 +191,8 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
   uesp[0] = USER_DS;      // DS
 }
 
-Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
+Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
+                           char *args, ...) {
   // TODO: cache! chache! cache!
   Thread *user_thread = normal_page_alloc(1);
 
@@ -200,14 +202,14 @@ Thread *create_user_thread(void (*entry_point)(), void *data, char *args, ...) {
   user_thread->pid = pid++;
   LIST_INIT(&user_thread->head);
   user_thread->tcb.page_dir = PA((u32)user_page_directory);
-  user_thread->vm = kernel_vm;
+  user_thread->mem = mem;
   user_thread->wait4child = FALSE;
   void *user_stack = normal_page_alloc(0);
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
 
   set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
-               (u32)(user_stack + PAGE_SIZE));
+               0x02233445 + PAGE_SIZE);
   user_thread->tcb.user_stack_bot = user_stack;
 
   void *kernel_stack = normal_page_alloc(0);
@@ -266,7 +268,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->pid = pid++;
   LIST_INIT(&kernel_thread->head);
   kernel_thread->tcb.page_dir = PA((u32)kernel_page_directory);
-  kernel_thread->vm = kernel_vm;
+  kernel_thread->mem = kernel_mem;
   kernel_thread->wait4child = FALSE;
 
   void *user_stack = normal_page_alloc(0);

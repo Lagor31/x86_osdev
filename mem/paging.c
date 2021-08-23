@@ -19,6 +19,7 @@
 
 #include "paging.h"
 #include "../proc/thread.h"
+#include "../kernel/scheduler.h"
 
 u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
 u32 user_page_directory[1024] __attribute__((aligned(4096)));
@@ -37,6 +38,21 @@ void gpFaultHandler(registers_t *regs) {
   hlt();
 }
 
+u32 calc_pfn(u32 addr, MemDesc *mem_desc) {
+  VMArea *vma;
+  List *l;
+  list_for_each(l, &mem_desc->vm_areas) {
+    vma = list_entry(l, VMArea, head);
+    if (addr < vma->end && addr >= vma->start) {
+      u32 virt_offset = addr - vma->start;
+      u32 phys_addr = vma->phys_start + virt_offset;
+
+      return phys_addr >> 12;
+    }
+  }
+  return -1;
+}
+
 void pageFaultHandler(registers_t *regs) {
   UNUSED(regs);
   /* setBackgroundColor(BLUE);
@@ -45,45 +61,101 @@ void pageFaultHandler(registers_t *regs) {
           regs->err_code);
   kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
-  // if (current_proc != NULL) printProc(current_proc);
-
   u32 faultAddress = getRegisterValue(CR2);
-  if (!is_valid_va(faultAddress, current_thread)) {
+
+  /* Handling user mode pagefault */
+  if (current_thread != NULL && current_thread->ring0 != TRUE) {
+    setBackgroundColor(RED);
+    setTextColor(WHITE);
+    kprintf("Page fault CS:EIP 0x%x:0x%x Code: %d\n", regs->cs, regs->eip,
+            regs->err_code);
+    kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2));
     resetScreenColors();
-    kprintfColor(RED, "0x%x - Not a kernel address!", (u32)faultAddress);
-    hlt();
-  }
 
-  u32 pd_pos = faultAddress >> 22;
-  u32 pte_pos = faultAddress >> 12 & 0x3FF;
-  u32 pfn = PA(faultAddress) >> 12;
-  if (isPresent(&kernel_page_directory[pd_pos])) {
-    /*  kprintf(
-        "The 4Mb Page containing the address has already been allocated, "
-        "checking PTE...\n");  */
-    Pte *pte = (Pte *)VA(kernel_page_directory[pd_pos] & 0xFFFFF000);
-    if (!isPresent(&pte[pte_pos])) {
-      /*   kprintf(
-            "4KB page containing the address is not mapped.\nNeeds to be set to
-         " "pfn %d\n", pfn); */
-      setPfn(&pte[pte_pos], pfn);
-      setPresent(&pte[pte_pos]);
-      setReadWrite(&pte[pte_pos]);
+    if (!is_valid_va(faultAddress, current_thread)) {
+      setBackgroundColor(RED);
+      setTextColor(WHITE);
+      kprintf("0x%x - Not a thread address!\n", faultAddress);
+      kill_process(current_thread);
+      reschedule();
+      return;
     }
+
+    u32 pd_pos = faultAddress >> 22;
+    u32 pte_pos = faultAddress >> 12 & 0x3FF;
+    u32 pfn = calc_pfn(faultAddress, current_thread->mem);
+
+    u32 *user_pd = (u32 *)VA(current_thread->tcb.page_dir);
+    if (isPresent((u32 *)user_pd[pd_pos])) {
+      kprintf(
+          "The 4Mb Page containing the address has already been allocated, "
+          "checking PTE...\n");
+      Pte *pte = (Pte *)VA(user_pd[pd_pos] & 0xFFFFF000);
+      if (!isPresent(&pte[pte_pos])) {
+        kprintf(
+            "4KB page containing the address is not mapped.\nNeeds to be set   "
+            "        to "
+            "pfn %d\n",
+            pfn);
+        setPfn(&pte[pte_pos], pfn);
+        setPresent(&pte[pte_pos]);
+        setReadWrite(&pte[pte_pos]);
+        setUsermode(&pte[pte_pos]);
+      }
+    } else {
+      kprintf("The 4MB page was NOT allocated!\n");
+
+      Pte *newPte = (Pte *)kernel_page_alloc(0);
+      memset((byte *)newPte, 0, PAGE_SIZE);
+      setPfn(&newPte[pte_pos], pfn);
+      setPresent(&newPte[pte_pos]);
+      setReadWrite(&newPte[pte_pos]);
+      setUsermode(&newPte[pte_pos]);
+
+      u32 pde_phys = PA((u32)newPte);
+      setReadWrite(&pde_phys);
+      setPresent(&pde_phys);
+      setUsermode(&pde_phys);
+      user_pd[pd_pos] = pde_phys;
+      // kernel_page_directory[pd_pos] = pde_phys;
+    }
+
+    /* kill_process(current_thread);
+    reschedule(); */
+    return;
   } else {
-    /*     kprintf("The 4MB page was NOT allocated!\n");
-     */
-    Pte *newPte = (Pte *)kernel_page_alloc(0);
-    memset((byte *)newPte, 0, PAGE_SIZE);
-    setPfn(&newPte[pte_pos], pfn);
-    setPresent(&newPte[pte_pos]);
-    setReadWrite(&newPte[pte_pos]);
+    /* Handling kernel mode page fault */
+    u32 pd_pos = faultAddress >> 22;
+    u32 pte_pos = faultAddress >> 12 & 0x3FF;
+    u32 pfn = PA(faultAddress) >> 12;
+    if (isPresent(&kernel_page_directory[pd_pos])) {
+      /*  kprintf(
+          "The 4Mb Page containing the address has already been allocated, "
+          "checking PTE...\n");  */
+      Pte *pte = (Pte *)VA(kernel_page_directory[pd_pos] & 0xFFFFF000);
+      if (!isPresent(&pte[pte_pos])) {
+        /*   kprintf(
+              "4KB page containing the address is not mapped.\nNeeds to be set
+           to " "pfn %d\n", pfn); */
+        setPfn(&pte[pte_pos], pfn);
+        setPresent(&pte[pte_pos]);
+        setReadWrite(&pte[pte_pos]);
+      }
+    } else {
+      /*     kprintf("The 4MB page was NOT allocated!\n");
+       */
+      Pte *newPte = (Pte *)kernel_page_alloc(0);
+      memset((byte *)newPte, 0, PAGE_SIZE);
+      setPfn(&newPte[pte_pos], pfn);
+      setPresent(&newPte[pte_pos]);
+      setReadWrite(&newPte[pte_pos]);
 
-    u32 pde_phys = PA((u32)newPte);
-    setReadWrite(&pde_phys);
-    setPresent(&pde_phys);
+      u32 pde_phys = PA((u32)newPte);
+      setReadWrite(&pde_phys);
+      setPresent(&pde_phys);
 
-    kernel_page_directory[pd_pos] = pde_phys;
+      kernel_page_directory[pd_pos] = pde_phys;
+    }
   }
   resetScreenColors();
 }
@@ -118,20 +190,33 @@ Pte *make_user_pte(uint32_t pdRow) {
 void init_test_user_paging() {
   kprintf("Setting up test user paging...\n");
   u16 i = 0;
+  //int num_entries = (total_kernel_pages >> 10);
+
   for (i = 0; i < PD_SIZE; i++) {
     // Mapping the higher half kernel
     // Mapping the first page because we have some low addresses
     // lying around from earlier stages of the kernel
+
     u32 ptePhys;
     if (i >= KERNEL_LOWEST_PDIR)
-      ptePhys = PA((u32)make_user_pte(i - KERNEL_LOWEST_PDIR));
-    else
-      ptePhys = PA((u32)make_user_pte(i));
+      ptePhys = PA((u32)make_kernel_pte(i - KERNEL_LOWEST_PDIR));
+    else if (i == 0)
+      ptePhys = PA((u32)make_kernel_pte(i));
+    else {
+      user_page_directory[i] = 0;
+      continue;
+    }
 
     setPresent(&ptePhys);
     setReadWrite(&ptePhys);
-    setUsermode(&ptePhys);
+
     user_page_directory[i] = ptePhys;
+
+    /* if (i == 0 ||
+        (i >= KERNEL_LOWEST_PDIR && i < KERNEL_LOWEST_PDIR + num_entries))
+      user_page_directory[i] = kernel_page_directory[i];
+ */
+    // setUsermode(&ptePhys);
   }
 }
 
@@ -144,7 +229,7 @@ void init_kernel_paging() {
     // Mapping the first page because we have some low addresses
     // lying around from earlier stages of the kernel
     if (i == 0) {
-      u32 ptePhys = PA((uint32_t)make_kernel_pte(i));
+      u32 ptePhys = PA((u32)make_kernel_pte(i));
       setPresent(&ptePhys);
       setReadWrite(&ptePhys);
       kernel_page_directory[i] = ptePhys;
