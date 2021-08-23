@@ -11,14 +11,6 @@ void sys_exit(u32 ret_code) {
   reschedule();
 }
 
-void sys_exit_usr() {
-  Thread *p = current_thread;
-  stop_thread(p);
-  // kill_process(p);
-  // p->exit_value = ret_code;
-  reschedule();
-}
-
 void sys_wait4(u32 pid) {
   Thread *p = current_thread;
   p->wait4 = pid;

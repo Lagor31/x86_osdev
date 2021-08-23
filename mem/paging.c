@@ -26,7 +26,6 @@ u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
 u32 pdPhysical = 0;
 
 void gpFaultHandler(registers_t *regs) {
-  //_loadPageDirectory((uint32_t *)PA((uint32_t)kernel_page_directory));
 
   setBackgroundColor(BLUE);
   setTextColor(RED);
@@ -55,12 +54,8 @@ u32 calc_pfn(u32 addr, MemDesc *mem_desc) {
 
 void pageFaultHandler(registers_t *regs) {
   UNUSED(regs);
-  /* setBackgroundColor(BLUE);
-  setTextColor(RED);
-  kprintf("Page fault CS:EIP 0x%x:0x%x Code: %d\n", regs->cs, regs->eip,
-          regs->err_code);
-  kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2)); */
 
+  //TODO: check pf code for permission violations and such
   u32 faultAddress = getRegisterValue(CR2);
 
   /* Handling user mode pagefault */
