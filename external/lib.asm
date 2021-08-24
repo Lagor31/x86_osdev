@@ -6,7 +6,7 @@ _system_call:
     mov   ebp, esp    ; Set the stack-frame base pointer to be the current
                         ; location on the stack.
     mov eax, [ebp + 8]
-    ;mov ebx, [ebp + 12]
+    mov ebx, [ebp + 12]
     int 31
     pop ebp
 ret 

@@ -69,7 +69,7 @@ void user_input(char *command) {
     print_elf(b);
     Thread *run_me = load_elf(b);
     wake_up_thread(run_me);
-    //_switch_to_thread(run_me);
+    _switch_to_thread(run_me);
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");
     itaFlag();
@@ -87,7 +87,6 @@ void user_input(char *command) {
       kprintf("%s - %d Size: %d Avail: %d\n", f->name, f->fd, f->size,
               f->available);
     }
-
   } else if (!strcmp(input, "top")) {
     Thread *p = NULL;
     p = create_kernel_thread(&top, NULL, "top");
@@ -112,22 +111,21 @@ void user_input(char *command) {
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_user_thread(&u_simple_proc, NULL, NULL, "u-extra");
+      MemDesc *thread_mem = normal_page_alloc(0);
+      LIST_INIT(&thread_mem->vm_areas);
+      thread_mem->page_directory = (u32)kernel_page_alloc(0);
+      init_user_paging((u32 *)thread_mem->page_directory);
+
+      p = create_user_thread(&u_simple_proc, thread_mem, NULL, "u-extra");
       p->nice = 10;
-      wake_up_thread(p);
+      VMArea *stack =
+          create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
+                          PA((u32)p->tcb.user_stack_bot), 0);
+      list_add_tail(&thread_mem->vm_areas, &stack->head);
     }
+    wake_up_thread(p);
+
     // sys_wait4all();
-
-  } else if (!strcmp(input, "parse")) {
-    char *split_me = "dio schifoso cane -a      b    ";
-    char *tok = normal_page_alloc(0);
-    // temp = split_me;
-    u32 i = 0;
-    while (strtokn(split_me, (byte *)tok, ' ', i++) > 0) {
-      kprintf("%s\n", tok);
-    }
-
-    kfree_normal(tok);
   } else if (!strcmp(input, "boot-info")) {
     printMultibootInfo(&kMultiBootInfo, 0);
   } else if (!strcmp(input, "boot-mmap")) {
