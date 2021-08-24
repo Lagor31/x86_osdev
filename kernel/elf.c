@@ -4,9 +4,10 @@
 #include "../mem/paging.h"
 
 Thread *load_elf(Elf32_Ehdr *elf) {
-  MemDesc *thread_mem = kernel_page_alloc(0);
+  disable_int();
+  MemDesc *thread_mem = normal_page_alloc(0);
   LIST_INIT(&thread_mem->vm_areas);
-  thread_mem->page_directory = (u32)normal_page_alloc(0);
+  thread_mem->page_directory = (u32)kernel_page_alloc(0);
   init_user_paging((u32 *)thread_mem->page_directory);
   int i = 0;
   Elf32_Phdr *ph = (Elf32_Phdr *)((u32)elf + (u32)elf->e_phoff);
@@ -20,13 +21,12 @@ Thread *load_elf(Elf32_Ehdr *elf) {
   }
 
   Thread *t =
-      create_user_thread((void *)(elf->e_entry), thread_mem, "elf_usr", NULL);
-
-  VMArea *stack =
-      create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
-                      PA((u32)t->tcb.user_stack_bot + PAGE_SIZE), 0);
+      create_user_thread((void *)(elf->e_entry), thread_mem, NULL, "elf_user");
+  t->nice = MIN_PRIORITY;
+  VMArea *stack = create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
+                                  PA((u32)t->tcb.user_stack_bot), 0);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
-
+  enable_int();
   return t;
 }
 

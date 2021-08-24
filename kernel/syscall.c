@@ -43,7 +43,7 @@ void syscall_handler(registers_t *regs) {
       sys_printf(regs->ebx);
       break;
     case SLEEPMS:
-      sys_sleepms(regs->ebx);
+      sys_sleepms(rand() % 3000);
       break;
     case WAIT4ALL:
       sys_wait4all();

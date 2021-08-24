@@ -4,9 +4,9 @@
 #define IDLE_PID 0
 #define MIN_PRIORITY 20
 #define MAX_PRIORITY 0
-#define MAX_QUANTUM_MS 100
+#define MAX_QUANTUM_MS 200
 #define MIN_QUANTUM_MS 1
-#define P_PENALTY 2
+#define P_PENALTY 5
 
 #include "../kernel/files.h"
 #include "../lock/lock.h"

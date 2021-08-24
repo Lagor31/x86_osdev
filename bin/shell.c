@@ -69,8 +69,7 @@ void user_input(char *command) {
     print_elf(b);
     Thread *run_me = load_elf(b);
     wake_up_thread(run_me);
-    _switch_to_thread(run_me);
-
+    //_switch_to_thread(run_me);
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");
     itaFlag();
