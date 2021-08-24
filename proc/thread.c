@@ -209,8 +209,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
 
-  set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
-               USER_STACK_TOP);
+  set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point, USER_STACK_TOP);
   user_thread->tcb.user_stack_bot = user_stack;
 
   void *kernel_stack = normal_page_alloc(0);

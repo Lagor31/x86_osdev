@@ -1,7 +1,7 @@
 #ifndef ELF__H
 #define ELF__H
 
-#define USER_STACK_TOP 0x08000000
+#define USER_STACK_TOP 0xC0000000
 
 #include "../cpu/types.h"
 #include "../drivers/screen.h"
