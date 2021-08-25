@@ -1,15 +1,13 @@
-extern void _system_call(int num, int par);
+#include "libc.h"
 
-int a() { return 1; }
-int _start() {
+int x;
+void _start() {
   int i = 0;
-  while (i++ < 20) {
-    _system_call(3, 3000);
-    _system_call(2, 3131);
-
-    /*   char *nono = (char *)0x0804a000;
-      nono[0] = 'F'; */
+  while (i++ < 200) {
+    unsigned r = random(6000);
+    x++;
+    sleepms(r);
+    printf();
   }
-  _system_call(1, 0);
-  return 0;
+  exit(0);
 }

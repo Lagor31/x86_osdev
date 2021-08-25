@@ -38,9 +38,11 @@ clean:
 	rm -f *.bin boot/*.bin boot/*.o kernel/*.o bin/*.o kernel/*.elf kernel/*.bin drivers/*.o proc/*.o cpu/*.o lib/*.o mem/*.o  *.iso  iso/boot/*.elf asm/*.o lock/*.o external/*.o external/*.out
 
 process:
-	nasm external/lib.asm -f elf32 -o external/lib.o
-	${CC} ${CFLAGS} -c external/prog.c -o external/prog.out
-	ld -m elf_i386 external/prog.out external/lib.o -o external/user_program.out --oformat=elf32-i386
+	nasm external/syscalls.asm -f elf32 -o external/syscalls.o
+	${CC} ${CFLAGS} -c external/prog.c -o external/prog.o
+	${CC} ${CFLAGS} -c external/libc.c -o external/libc.o
+
+	ld -m elf_i386 external/prog.o external/libc.o external/syscalls.o -o external/user_program.out --oformat=elf32-i386
 
 
 

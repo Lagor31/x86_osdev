@@ -4,7 +4,6 @@
 #include "../mem/paging.h"
 
 Thread *load_elf(Elf32_Ehdr *elf) {
-  disable_int();
   MemDesc *thread_mem = normal_page_alloc(0);
   LIST_INIT(&thread_mem->vm_areas);
   thread_mem->page_directory = (u32)kernel_page_alloc(0);
@@ -13,9 +12,19 @@ Thread *load_elf(Elf32_Ehdr *elf) {
   Elf32_Phdr *ph = (Elf32_Phdr *)((u32)elf + (u32)elf->e_phoff);
 
   for (i = 0; i < elf->e_phnum; ++i) {
+    VMArea *vm;
+    u32 phys_addr;
     if (ph[i].p_type == 1) {
-      VMArea *vm = create_vmregion(ph[i].p_vaddr, ph[i].p_vaddr + ph[i].p_memsz,
-                                   PA((u32)elf + ph[i].p_offset), 0);
+      if (ph[i].p_filesz == 0) {
+        // Assuming it's a .bss 0-initialized section
+        byte *bss = (byte *) normal_page_alloc(0);
+        memset(bss, 0, PAGE_SIZE);
+        phys_addr = PA(bss);
+      } else
+        phys_addr = PA((u32)elf + ph[i].p_offset);
+
+      vm = create_vmregion(ph[i].p_vaddr, ph[i].p_vaddr + ph[i].p_memsz,
+                           phys_addr, ph[i].p_flags);
       list_add_tail(&thread_mem->vm_areas, &vm->head);
     }
   }
@@ -26,7 +35,8 @@ Thread *load_elf(Elf32_Ehdr *elf) {
   VMArea *stack = create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
                                   PA((u32)t->tcb.user_stack_bot), 0);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
-  enable_int();
+
+  print_mem_desc(thread_mem);
   return t;
 }
 

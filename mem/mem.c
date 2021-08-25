@@ -25,6 +25,16 @@ Page *normal_pages;
 
 BootMmap boot_mmap;
 
+void print_mem_desc(MemDesc *m) {
+  List *l;
+  VMArea *area;
+  list_for_each(l, &m->vm_areas) {
+    area = list_entry(l, VMArea, head);
+    kprintf("S: 0x%x, E: 0x%x, S: 0x%x, PS: 0x%x\n", area->start, area->end,
+            area->size, area->phys_start);
+  }
+}
+
 void printFree() {
   int totFree = total_used_memory / 1024 / 1024;
   int tot = boot_mmap.total_pages * 4096 / 1024 / 1024;

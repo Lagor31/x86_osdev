@@ -88,15 +88,15 @@ void pageFaultHandler(registers_t *regs) {
     pfn = calc_pfn(fault_address, current_thread->mem);
   }
 
-  if (isPresent((u32 *)thread_pgdir[pd_pos])) {
+  if (isPresent(&thread_pgdir[pd_pos])) {
     kprintf(
         "The 4Mb Page containing the address has already been allocated, "
         "checking PTE...\n");
     Pte *pte = (Pte *)VA(thread_pgdir[pd_pos] & 0xFFFFF000);
     if (!isPresent(&pte[pte_pos])) {
       kprintf(
-          "4KB page containing the address is not mapped.\nNeeds to be set   "
-          "        to "
+          "4KB page containing the address is not mapped.\nNeeds to be set "
+          "to "
           "pfn %d\n",
           pfn);
       setPfn(&pte[pte_pos], pfn);

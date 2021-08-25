@@ -3,9 +3,9 @@
 
 #include "../mem/buddy.h"
 #include "../boot/multiboot.h"
+#include "mem_desc.h"
 
 #define STACK_SIZE 0x1000
-#define PHYS_MEM_FRAMES 100
 // 1048576
 
 typedef struct boot_mmap {
@@ -35,4 +35,5 @@ void *normal_page_alloc(u32 order);
 void kfree_normal(void *ptr);
 void kfree(void *ptr);
 void printFree();
+void print_mem_desc(MemDesc *m);
 #endif
