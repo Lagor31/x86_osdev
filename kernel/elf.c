@@ -17,9 +17,9 @@ Thread *load_elf(Elf32_Ehdr *elf) {
     if (ph[i].p_type == 1) {
       if (ph[i].p_filesz == 0) {
         // Assuming it's a .bss 0-initialized section
-        byte *bss = (byte *) normal_page_alloc(0);
+        byte *bss = (byte *)normal_page_alloc(0);
         memset(bss, 0, PAGE_SIZE);
-        phys_addr = PA(bss);
+        phys_addr = PA((u32)bss);
       } else
         phys_addr = PA((u32)elf + ph[i].p_offset);
 
