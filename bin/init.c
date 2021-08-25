@@ -7,6 +7,7 @@ void init() {
   idle_thread->pid = IDLE_PID;
   idle_thread->nice = MIN_PRIORITY;
   idle_thread->timeslice = ticks_to_millis(MIN_QUANTUM_MS);
+  idle_thread->runtime = UINT64_MAX;
 
   pid = 2;
 

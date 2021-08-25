@@ -64,6 +64,7 @@ void reschedule() {
   unsigned long long now = rdtscl();
   next->last_activation = now;
   // In CPU cycles
-  current_thread->runtime += (now - current_thread->last_activation);
+  if (current_thread != idle_thread)
+    current_thread->runtime += (now - current_thread->last_activation);
   _switch_to_thread(next);
 }

@@ -55,7 +55,7 @@ void scheduler_handler(registers_t *regs) {
     }
     if (next_thread->timeslice > 0) next_thread->timeslice--;
     next_thread->last_activation = rdtscl();
-    if (current_thread != NULL)
+    if (current_thread != NULL && current_thread != idle_thread)
       current_thread->runtime +=
           (next_thread->last_activation - current_thread->last_activation);
     _switch_to_thread(next_thread);
@@ -68,7 +68,8 @@ void scheduler_handler(registers_t *regs) {
 no_resched:
   // current_thread->runtime++;
   unsigned long long now = rdtscl();
-  current_thread->runtime += (now - current_thread->last_activation);
+  if (current_thread != idle_thread)
+    current_thread->runtime += (now - current_thread->last_activation);
   current_thread->last_activation = now;
   if (current_thread->timeslice > 0) current_thread->timeslice--;
   /*
