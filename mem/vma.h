@@ -9,6 +9,7 @@ typedef struct virtual_memory_region {
   List head;
   u32 phys_start;
   u32 size;
+  u32 flags;
 } VMArea;
 
 typedef struct Thread Thread;

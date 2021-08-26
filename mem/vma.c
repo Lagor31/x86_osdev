@@ -27,7 +27,7 @@ VMArea *create_vmregion(u32 base_address, u32 end_address, u32 phys_start,
   out_region->end = end_address;
   out_region->phys_start = phys_start;
   out_region->size = end_address - base_address;
-  UNUSED(flags);
+  out_region->flags = flags;
   LIST_INIT(&out_region->head);
   return out_region;
 }

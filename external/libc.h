@@ -7,6 +7,9 @@
 #define SYS_WAIT4ALL 4
 #define SYS_WAIT4 5
 #define SYS_RANDOM 6
+#define SYS_WRITE 7
+#define SYS_GETPID 8
+
 
 extern unsigned int _system_call0(unsigned int num);
 
@@ -22,5 +25,6 @@ void exit(int exit_code);
 void sleepms(unsigned ms);
 void printf();
 unsigned int random(unsigned int max);
-
+unsigned write(unsigned fd, char* buf, unsigned len);
+unsigned getpid();
 #endif

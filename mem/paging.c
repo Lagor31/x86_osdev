@@ -63,6 +63,7 @@ void pageFaultHandler(registers_t *regs) {
   u32 pd_pos = fault_address >> 22;
   u32 pte_pos = fault_address >> 12 & 0x3FF;
   u32 pfn = PA(fault_address) >> 12;
+  pfn = calc_pfn(fault_address, current_thread->mem);
 
   u32 *thread_pgdir = kernel_page_directory;
   if (current_thread != NULL)

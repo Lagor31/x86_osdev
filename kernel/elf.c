@@ -30,10 +30,11 @@ Thread *load_elf(Elf32_Ehdr *elf) {
   }
 
   Thread *t =
-      create_user_thread((void *)(elf->e_entry), thread_mem, NULL, "elf_user");
+      create_user_thread((void *)(elf->e_entry), thread_mem, NULL, "elf");
   t->nice = MIN_PRIORITY;
+
   VMArea *stack = create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
-                                  PA((u32)t->tcb.user_stack_bot), 0);
+                                  PA((u32)t->tcb.user_stack_bot), PF_X | PF_W | PF_R);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
 
   print_mem_desc(thread_mem);

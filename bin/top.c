@@ -169,7 +169,7 @@ void top() {
     char read = read_stdin();
     if (read == 'q') {
       kill_process(draw);
-      sys_exit(EXIT);
+      sys_exit(SYS_EXIT);
     }
   }
 }

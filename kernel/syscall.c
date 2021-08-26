@@ -29,6 +29,18 @@ void sys_printf(u32 number) {
   UNUSED(number);
 }
 
+u32 sys_write(u32 fd, byte *buf, size_t len) {
+  UNUSED(fd);
+  int i = 0;
+  // char c = buf[0];
+  kprintf(buf);
+  /* while (i++ < len) {
+    write_byte_stream(stdout, buf[i]);
+  } */
+}
+
+u32 sys_getpid() { return (u32)current_thread->pid; }
+
 void sys_sleepms(u32 millis) { sleep_ms(millis); }
 u32 sys_random(u32 max) { return rand() % max; }
 
@@ -36,23 +48,29 @@ void syscall_handler(registers_t *regs) {
   u32 syscall_num = regs->eax;
   // kprintf("Called syscall %d!\n", syscall_num);
   switch (syscall_num) {
-    case EXIT:
+    case SYS_EXIT:
       sys_exit(regs->ebx);
       break;
-    case PRINTF:
+    case SYS_PRINTF:
       sys_printf(regs->ebx);
       break;
-    case SLEEPMS:
+    case SYS_SLEEPMS:
       sys_sleepms(regs->ebx);
       break;
-    case WAIT4ALL:
+    case SYS_WAIT4ALL:
       sys_wait4all();
       break;
-    case WAIT4:
+    case SYS_WAIT4:
       sys_wait4(regs->ebx);
       break;
-    case RANDOM:
+    case SYS_RANDOM:
       regs->eax = sys_random(regs->ebx);
+      break;
+    case SYS_WRITE:
+      regs->eax = sys_write(regs->ebx, regs->ecx, regs->edx);
+      break;
+    case SYS_GETPID:
+      regs->eax = sys_getpid();
       break;
     default:
       break;

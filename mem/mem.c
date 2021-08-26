@@ -30,8 +30,8 @@ void print_mem_desc(MemDesc *m) {
   VMArea *area;
   list_for_each(l, &m->vm_areas) {
     area = list_entry(l, VMArea, head);
-    kprintf("S: 0x%x, E: 0x%x, S: 0x%x, PS: 0x%x\n", area->start, area->end,
-            area->size, area->phys_start);
+    kprintf("S: 0x%x, E: 0x%x, S: 0x%x, PS: 0x%x F: 0x%d\n", area->start, area->end,
+            area->size, area->phys_start, area->flags);
   }
 }
 

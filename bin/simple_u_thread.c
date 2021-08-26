@@ -2,9 +2,9 @@
 
 void u_child_proc() {
   _setreg(EBX, 2000);
-  _syscall(SLEEPMS);
+  _syscall(SYS_SLEEPMS);
   _setreg(EBX, 0);
-  _syscall(EXIT);
+  _syscall(SYS_EXIT);
 }
 
 void u_simple_proc() {
@@ -22,10 +22,10 @@ void u_simple_proc() {
     // enable_int();
     // sleep_ms(rand() % 1000);
     _setreg(EBX, 1000);
-    _syscall(RANDOM);
+    _syscall(SYS_RANDOM);
     u32 r = getRegisterValue(EAX);
     _setreg(EBX, r);
-    _syscall(SLEEPMS);
+    _syscall(SYS_SLEEPMS);
     // kprintf("Creating new uthread!\n");
     /* Thread *t = create_user_thread(u_simple_proc, NULL, "cuser");
     t->nice = 9;
@@ -43,13 +43,13 @@ void u_simple_proc() {
       t->nice = 9;
       wake_up_thread(t);
 
-      _syscall(WAIT4ALL);
+      _syscall(SYS_WAIT4ALL);
       kprintf("%d -> Children %d exited! Quitting...\n", current_thread->pid,
               t->pid);
       _setreg(EBX, 1000);
-      _syscall(SLEEPMS);
+      _syscall(SYS_SLEEPMS);
       _setreg(EBX, 0);
-      _syscall(EXIT);
+      _syscall(SYS_EXIT);
     }
   }
 }

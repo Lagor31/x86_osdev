@@ -1,13 +1,16 @@
 #include "libc.h"
 
-int x;
+char* s = "Hello from usermode!\n";
 void _start() {
   int i = 0;
   while (i++ < 200) {
     unsigned r = random(6000);
-    x++;
     sleepms(r);
-    printf();
+    // printf();
+    // char t = s[0];
+
+    //write(1, s, 8);
+    unsigned pid = getpid();
   }
   exit(0);
 }
