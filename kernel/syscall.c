@@ -34,12 +34,13 @@ void sys_printf(u32 number) {
 u32 sys_write(u32 fd, byte *buf, size_t len) {
   UNUSED(fd);
   UNUSED(len);
-  // int i = 0;
+  u32 i = 0;
   // char c = buf[0];
-  kprintf((const char *)buf);
-  /* while (i++ < len) {
+  // kprintf((const char *)buf);
+  while (i < len) {
     write_byte_stream(stdout, buf[i]);
-  } */
+    ++i;
+  }
 
   return 0;
 }
@@ -78,7 +79,8 @@ void syscall_handler(registers_t *regs) {
       regs->eax = sys_getpid();
       break;
     case SYS_CLONE:
-      regs->eax = sys_clone(regs->eip + 2, regs->esp, regs->ebx);
+      regs->eax =
+          sys_clone((void *)regs->eip + 2, (void *)regs->esp, regs->ebx);
       break;
     default:
       break;

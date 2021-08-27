@@ -26,7 +26,7 @@ extern unsigned int _system_call3(unsigned int num, unsigned int p1,
 
 void exit(int exit_code);
 void sleepms(unsigned ms);
-void printf();
+void printf(char *);
 unsigned int random(unsigned int max);
 unsigned write(unsigned fd, char* buf, unsigned len);
 unsigned getpid();

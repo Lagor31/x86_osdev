@@ -46,10 +46,11 @@ u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags) {
                                   PF_X | PF_W | PF_R, VMA_STACK);
   memcopy(current_thread->tcb.user_stack_bot, t->tcb.user_stack_bot, PAGE_SIZE);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
-  //print_mem_desc(thread_mem);
+  // print_mem_desc(thread_mem);
   set_user_esp(t->tcb.user_stack_bot + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32)),
-               entry, stack_ptr);
-  t->tcb.esp = t->tcb.user_stack_bot + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
+               (u32)entry, (u32)stack_ptr);
+  t->tcb.esp =
+      (u32)t->tcb.user_stack_bot + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
   t->tcb.ret_value = 0;
   wake_up_thread(t);
   return t->pid;
