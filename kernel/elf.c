@@ -4,7 +4,7 @@
 #include "../mem/paging.h"
 
 Thread *load_elf(Elf32_Ehdr *elf) {
-  MemDesc *thread_mem = normal_page_alloc(0);
+  MemDesc *thread_mem = kernel_page_alloc(0);
   LIST_INIT(&thread_mem->vm_areas);
   thread_mem->page_directory = (u32)kernel_page_alloc(0);
   init_user_paging((u32 *)thread_mem->page_directory);
@@ -17,7 +17,7 @@ Thread *load_elf(Elf32_Ehdr *elf) {
     if (ph[i].p_type == 1) {
       if (ph[i].p_filesz == 0) {
         // Assuming it's a .bss 0-initialized section
-        byte *bss = (byte *)normal_page_alloc(0);
+        byte *bss = (byte *)kernel_page_alloc(0);
         memset(bss, 0, PAGE_SIZE);
         phys_addr = PA((u32)bss);
       } else

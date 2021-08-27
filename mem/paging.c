@@ -167,7 +167,7 @@ Pte *make_user_pte(uint32_t pdRow) {
 }
 
 void init_user_paging(u32 *user_pd) {
-  kprintf("Setting up user paging...\n");
+  //skprintf("Setting up user paging...\n");
   u16 i = 0;
   // int num_entries = (total_kernel_pages >> 10);
 

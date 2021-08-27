@@ -40,7 +40,7 @@ void work_queue_thread() {
        stdin.available++;
        unlock(stdin.read_lock); */
       write_byte_stream(stdin, do_me->c);
-      kfree_normal(do_me);
+      kfree(do_me);
     } else {
       // Free lock means there's bytes to be read
       // unlock(stdin.read_lock);

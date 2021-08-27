@@ -40,7 +40,7 @@ Thread *get_thread(u32 pid) {
 }
 
 void sleep_ms(u32 ms) {
-  Timer *t = normal_page_alloc(0);
+  Timer *t = kernel_page_alloc(0);
   t->expiration = millis_to_ticks(ms) + tick_count;
   t->thread = current_thread;
   list_add_head(&kernel_timers, &t->q);
@@ -145,8 +145,6 @@ redo:
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
   // Do separetly
-  /*   kfree_normal((void *)p->command);
-   */  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   // Do separetly
 
   kfree(p->tcb.user_stack_bot);

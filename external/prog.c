@@ -24,7 +24,7 @@ void _start() {
   } else {
     // Father
     sleepms(3000);
-    wait4pid(pid);
+    wait4(pid);
     write(1, parbye, 8);
     exit(0);
   }

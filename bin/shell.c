@@ -11,14 +11,12 @@ void shell() {
   setBackgroundColor(BLACK);
   kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
   resetScreenColors();
-  char *my_buf = normal_page_alloc(0);
+  char *my_buf = kernel_page_alloc(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
     char read = read_stdin();
     if (read == '\n') {
       user_input(my_buf);
-      /*  kfree_normal(command);
-       kfree_normal(temp); */
       setTextColor(LIGHTGREEN);
       setBackgroundColor(BLACK);
       kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
@@ -38,8 +36,8 @@ void shell() {
 
 void user_input(char *command) {
   kprintf("\n");
-  char *input = normal_page_alloc(0);
-  char *args = normal_page_alloc(0);
+  char *input = kernel_page_alloc(0);
+  char *args = kernel_page_alloc(0);
   u32 i = 0;
   if (strtokn((const char *)command, (byte *)args, ' ', i) == 0) {
     memcopy((byte *)command, (byte *)input, strlen(command) + 1);
@@ -111,7 +109,7 @@ void user_input(char *command) {
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      MemDesc *thread_mem = normal_page_alloc(0);
+      MemDesc *thread_mem = kernel_page_alloc(0);
       LIST_INIT(&thread_mem->vm_areas);
       thread_mem->page_directory = (u32)kernel_page_alloc(0);
       init_user_paging((u32 *)thread_mem->page_directory);
