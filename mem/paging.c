@@ -22,7 +22,6 @@
 #include "../kernel/scheduler.h"
 
 u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
-// u32 user_page_directory[1024] __attribute__((aligned(4096)));
 u32 pdPhysical = 0;
 
 void gpFaultHandler(registers_t *regs) {
@@ -124,6 +123,7 @@ void pageFaultHandler(registers_t *regs) {
   }
 
   return;
+
 bad_area:
   setBackgroundColor(RED);
   setTextColor(WHITE);

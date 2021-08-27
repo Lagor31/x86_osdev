@@ -6,11 +6,7 @@ void _start() {
   while (i++ < 200) {
     unsigned r = random(6000);
     sleepms(r);
-    // printf();
-    // char t = s[0];
-
-    //write(1, s, 8);
-    unsigned pid = getpid();
+    write(1, s, 8);
   }
   exit(0);
 }

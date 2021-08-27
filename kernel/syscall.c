@@ -31,12 +31,15 @@ void sys_printf(u32 number) {
 
 u32 sys_write(u32 fd, byte *buf, size_t len) {
   UNUSED(fd);
-  int i = 0;
+  UNUSED(len);
+  // int i = 0;
   // char c = buf[0];
-  kprintf(buf);
+  kprintf((const char *)buf);
   /* while (i++ < len) {
     write_byte_stream(stdout, buf[i]);
   } */
+
+  return 0;
 }
 
 u32 sys_getpid() { return (u32)current_thread->pid; }
@@ -67,7 +70,7 @@ void syscall_handler(registers_t *regs) {
       regs->eax = sys_random(regs->ebx);
       break;
     case SYS_WRITE:
-      regs->eax = sys_write(regs->ebx, regs->ecx, regs->edx);
+      regs->eax = sys_write(regs->ebx, (byte *)regs->ecx, regs->edx);
       break;
     case SYS_GETPID:
       regs->eax = sys_getpid();
