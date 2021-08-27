@@ -13,9 +13,8 @@ void _start() {
   unsigned r = random(2000);
   sleepms(r);
   write(1, par, 8);
-  // 2 = Clone VM
-  unsigned pid = clone(2);
-  // write(1, par, 8);
+  unsigned pid = clone(CLONE_VM);
+
   // Child
   if (pid == 0) {
     write(1, child, 8);
