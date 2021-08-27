@@ -12,8 +12,10 @@ void sys_exit(u32 ret_code) {
 }
 
 void sys_wait4(u32 pid) {
-  Thread *p = current_thread;
-  p->wait4 = pid;
+  Thread *p = get_thread(pid);
+  if (p == NULL) return;
+  Thread *t = current_thread;
+  t->wait4 = pid;
   sleep_thread(current_thread);
   reschedule();
 }
@@ -74,6 +76,9 @@ void syscall_handler(registers_t *regs) {
       break;
     case SYS_GETPID:
       regs->eax = sys_getpid();
+      break;
+    case SYS_CLONE:
+      regs->eax = sys_clone(regs->eip + 2, regs->esp, regs->ebx);
       break;
     default:
       break;

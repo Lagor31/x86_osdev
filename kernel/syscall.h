@@ -4,6 +4,7 @@
 #include "../cpu/types.h"
 #include "../kernel/scheduler.h"
 #include "../lib/utils.h"
+#include "../proc/thread.h"
 
 #define SYS_EXIT 1
 #define SYS_PRINTF 2
@@ -13,6 +14,7 @@
 #define SYS_RANDOM 6
 #define SYS_WRITE 7
 #define SYS_GETPID 8
+#define SYS_CLONE 9
 
 extern u32 _syscall(u32 num);
 

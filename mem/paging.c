@@ -25,14 +25,16 @@ u32 kernel_page_directory[1024] __attribute__((aligned(4096)));
 u32 pdPhysical = 0;
 
 void gpFaultHandler(registers_t *regs) {
-  setBackgroundColor(BLUE);
-  setTextColor(RED);
+  setBackgroundColor(RED);
+  setTextColor(WHITE);
   if (current_thread != NULL) printProcSimple(current_thread);
 
   kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs,
           regs->eip, regs->err_code, regs->ebx);
   resetScreenColors();
-  hlt();
+
+  kill_process(current_thread);
+  reschedule();
 }
 
 u32 calc_pfn(u32 addr, MemDesc *mem_desc) {
@@ -72,40 +74,40 @@ void pageFaultHandler(registers_t *regs) {
 
   /* Handling user mode pagefault */
   if (usermode) {
-    setBackgroundColor(RED);
+    /* setBackgroundColor(RED);
     setTextColor(WHITE);
     kprintf("Page fault CS:EIP 0x%x:0x%x Code: %d\n", regs->cs, regs->eip,
             regs->err_code);
     kprintf("CR2 Value: 0x%x\n", getRegisterValue(CR2));
-    resetScreenColors();
+    resetScreenColors(); */
 
     if (!is_valid_va(fault_address, current_thread)) {
-      setBackgroundColor(RED);
+     /*  setBackgroundColor(RED);
       setTextColor(WHITE);
-      kprintf("0x%x - Not a thread address!\n", fault_address);
+      kprintf("0x%x - Not a thread address!\n", fault_address); */
       goto bad_area;
     }
     pfn = calc_pfn(fault_address, current_thread->mem);
   }
 
   if (isPresent(&thread_pgdir[pd_pos])) {
-    kprintf(
+   /*  kprintf(
         "The 4Mb Page containing the address has already been allocated, "
-        "checking PTE...\n");
+        "checking PTE...\n"); */
     Pte *pte = (Pte *)VA(thread_pgdir[pd_pos] & 0xFFFFF000);
     if (!isPresent(&pte[pte_pos])) {
-      kprintf(
+    /*   kprintf(
           "4KB page containing the address is not mapped.\nNeeds to be set "
           "to "
           "pfn %d\n",
-          pfn);
+          pfn); */
       setPfn(&pte[pte_pos], pfn);
       setPresent(&pte[pte_pos]);
       setReadWrite(&pte[pte_pos]);
       if (usermode) setUsermode(&pte[pte_pos]);
     }
   } else {
-    kprintf("The 4MB page was NOT allocated!\n");
+    /* kprintf("The 4MB page was NOT allocated!\n"); */
 
     Pte *newPte = (Pte *)kernel_page_alloc(0);
     memset((byte *)newPte, 0, PAGE_SIZE);

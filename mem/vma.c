@@ -15,19 +15,20 @@ void init_kernel_vma() {
   LIST_INIT(&kernel_mem->vm_areas);
   VMArea *kernel_vm_area =
       create_vmregion(KERNEL_VIRTUAL_ADDRESS_BASE, 0xFFFFFFFF,
-                      PA(KERNEL_VIRTUAL_ADDRESS_BASE), 0);
+                      PA(KERNEL_VIRTUAL_ADDRESS_BASE), 0, VMA_REG);
   list_add_tail(&kernel_mem->vm_areas, &kernel_vm_area->head);
   kernel_mem->usage_counter = 1;
 }
 
 VMArea *create_vmregion(u32 base_address, u32 end_address, u32 phys_start,
-                        u32 flags) {
+                        u32 flags, u32 type) {
   VMArea *out_region = kernel_page_alloc(0);
   out_region->start = base_address;
   out_region->end = end_address;
   out_region->phys_start = phys_start;
   out_region->size = end_address - base_address;
   out_region->flags = flags;
+  out_region->type = type;
   LIST_INIT(&out_region->head);
   return out_region;
 }

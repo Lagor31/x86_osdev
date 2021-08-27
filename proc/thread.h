@@ -8,6 +8,9 @@
 #define MIN_QUANTUM_MS 1
 #define P_PENALTY 5
 
+#define CLONE_FILES 1
+#define CLONE_VM 2
+
 #include "../kernel/files.h"
 #include "../lock/lock.h"
 #include "../mem/paging.h"
@@ -16,12 +19,15 @@
 #include "../lib/constants.h"
 #include "../users/user.h"
 #include "../mem/mem_desc.h"
+#include "../kernel/elf.h"
 
 #define TASK_RUNNABLE 0
 #define TASK_UNINSTERRUPTIBLE 1
 #define TASK_INTERRUPTIBLE 2
 #define TASK_ZOMBIE 3
 #define TASK_STOPPED 4
+
+#define NO_RET_VAL 0xFFFFFFFF
 
 /*
   Thread control block
@@ -30,6 +36,7 @@ typedef struct thread_cb {
   u32 esp;
   u32 tss;
   u32 page_dir;
+  u32 ret_value;
 
   void *user_stack_bot;
   void *kernel_stack_bot;
@@ -46,7 +53,7 @@ struct Thread {
   u16 pid;
   u16 tgid;
   bool ring0;
-  //VMRegion *vm;
+  // VMRegion *vm;
   MemDesc *mem;
   u8 nice;
   unsigned long long runtime;
@@ -88,12 +95,17 @@ extern void _switch_to_thread(Thread *);
 
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...);
-Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data, char *args, ...);
+Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
+                           void *stack, char *args, ...);
 
 void printProc(Thread *);
 void printTop();
 void work_queue_thread();
 void init_work_queue();
+
+Thread *get_thread(u32 pid);
+u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags);
+void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack);
 
 void printProcSimple(Thread *);
 void init_kernel_proc();

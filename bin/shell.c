@@ -116,11 +116,11 @@ void user_input(char *command) {
       thread_mem->page_directory = (u32)kernel_page_alloc(0);
       init_user_paging((u32 *)thread_mem->page_directory);
 
-      p = create_user_thread(&u_simple_proc, thread_mem, NULL, "u-extra");
+      p = create_user_thread(&u_simple_proc, thread_mem, NULL, NULL, "u-extra");
       p->nice = 10;
       VMArea *stack =
           create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
-                          PA((u32)p->tcb.user_stack_bot), 0);
+                          PA((u32)p->tcb.user_stack_bot), 0, VMA_STACK);
       list_add_tail(&thread_mem->vm_areas, &stack->head);
     }
     wake_up_thread(p);

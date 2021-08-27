@@ -1,12 +1,34 @@
 #include "libc.h"
 
-char* s = "Hello from usermode!\n";
+char* par = "Hello from parent!\n";
+char* child = "Hello from child!\n";
+char* childbye = "Bye from child!\n";
+char* parbye = "Bye from parent!\n";
+
+char* mess = "Child cloned!\n";
+char* m = "Print!\n";
+
 void _start() {
   int i = 0;
-  while (i++ < 200) {
-    unsigned r = random(6000);
-    sleepms(r);
-    write(1, s, 8);
+  unsigned r = random(2000);
+  sleepms(r);
+  write(1, par, 8);
+  // 2 = Clone VM
+  unsigned pid = clone(2);
+  // write(1, par, 8);
+  // Child
+  if (pid == 0) {
+    write(1, child, 8);
+    sleepms(1000);
+    write(1, childbye, 8);
+    exit(0);
+  } else {
+    // Father
+    sleepms(3000);
+    wait4pid(pid);
+    write(1, parbye, 8);
+    exit(0);
   }
+
   exit(0);
 }

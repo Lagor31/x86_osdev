@@ -24,17 +24,18 @@ Thread *load_elf(Elf32_Ehdr *elf) {
         phys_addr = PA((u32)elf + ph[i].p_offset);
 
       vm = create_vmregion(ph[i].p_vaddr, ph[i].p_vaddr + ph[i].p_memsz,
-                           phys_addr, ph[i].p_flags);
+                           phys_addr, ph[i].p_flags, VMA_REG);
       list_add_tail(&thread_mem->vm_areas, &vm->head);
     }
   }
 
   Thread *t =
-      create_user_thread((void *)(elf->e_entry), thread_mem, NULL, "elf");
+      create_user_thread((void *)(elf->e_entry), thread_mem, NULL, NULL, "elf");
   t->nice = MIN_PRIORITY;
 
   VMArea *stack = create_vmregion(USER_STACK_TOP - PAGE_SIZE, USER_STACK_TOP,
-                                  PA((u32)t->tcb.user_stack_bot), PF_X | PF_W | PF_R);
+                                  PA((u32)t->tcb.user_stack_bot),
+                                  PF_X | PF_W | PF_R, VMA_STACK);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
 
   print_mem_desc(thread_mem);

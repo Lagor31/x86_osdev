@@ -28,6 +28,17 @@ Thread *init_thread;
 
 u32 pid = IDLE_PID;
 
+Thread *get_thread(u32 pid) {
+  List *l;
+  Thread *t;
+
+  list_for_each(l, &k_threads) {
+    t = list_entry(l, Thread, k_proc_list);
+    if (t->pid == pid) return t;
+  }
+  return NULL;
+}
+
 void sleep_ms(u32 ms) {
   Timer *t = normal_page_alloc(0);
   t->expiration = millis_to_ticks(ms) + tick_count;
@@ -138,10 +149,10 @@ redo:
    */  /*   kprintf("      Freeing stack pointer(0x%x)\n", (u32)p->stack); */
   // Do separetly
 
-  kfree_normal(p->tcb.user_stack_bot);
-  kfree_normal(p->tcb.kernel_stack_bot);
+  kfree(p->tcb.user_stack_bot);
+  kfree(p->tcb.kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfree_normal((void *)p);
+  kfree((void *)p);
   // current_proc = NULL;
 }
 
@@ -193,9 +204,9 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
 }
 
 Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
-                           char *args, ...) {
+                           void *stack, char *args, ...) {
   // TODO: cache! chache! cache!
-  Thread *user_thread = normal_page_alloc(1);
+  Thread *user_thread = kernel_page_alloc(1);
 
   user_thread->ring0 = FALSE;
   user_thread->father = current_thread;
@@ -205,18 +216,19 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   user_thread->tcb.page_dir = PA(mem->page_directory);
   user_thread->mem = mem;
   user_thread->wait4child = FALSE;
-  void *user_stack = normal_page_alloc(0);
+  void *user_stack = kernel_page_alloc(0);
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
-
-  set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point, USER_STACK_TOP);
+  user_thread->tcb.ret_value = NO_RET_VAL;
+  set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
+               stack != NULL ? stack : USER_STACK_TOP);
   user_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack = normal_page_alloc(0);
+  void *kernel_stack = kernel_page_alloc(0);
   user_thread->tcb.kernel_stack_bot = kernel_stack;
   user_thread->tcb.tss = (u32)kernel_stack + PAGE_SIZE;
 
-  char *proc_name = normal_page_alloc(0);
+  char *proc_name = kernel_page_alloc(0);
   u32 name_length = strlen(args);
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
@@ -260,7 +272,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
   // TODO: cache! chache! cache!
-  Thread *kernel_thread = normal_page_alloc(1);
+  Thread *kernel_thread = kernel_page_alloc(1);
 
   kernel_thread->ring0 = TRUE;
   kernel_thread->father = current_thread;
@@ -270,8 +282,9 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->tcb.page_dir = PA((u32)kernel_page_directory);
   kernel_thread->mem = kernel_mem;
   kernel_thread->wait4child = FALSE;
+  kernel_thread->tcb.ret_value = NO_RET_VAL;
 
-  void *user_stack = normal_page_alloc(0);
+  void *user_stack = kernel_page_alloc(0);
 
   kernel_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (K_ESP_SIZE * sizeof(u32));
@@ -279,11 +292,11 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   set_kernel_esp((u32 *)kernel_thread->tcb.esp, (u32)entry_point);
   kernel_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack = normal_page_alloc(0);
+  void *kernel_stack = kernel_page_alloc(0);
   kernel_thread->tcb.kernel_stack_bot = kernel_stack;
   kernel_thread->tcb.tss = (u32)user_stack + PAGE_SIZE;
 
-  char *proc_name = normal_page_alloc(0);
+  char *proc_name = kernel_page_alloc(0);
   u32 name_length = strlen(args);
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';

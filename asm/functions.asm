@@ -100,9 +100,11 @@ extern current_thread
 extern tss
 
 THREAD_ESP equ 0
+RET_VAL equ 12
 PAGE_DIR equ 8
 THREAD_TSS equ 4
 KERNEL_CS equ 0x10
+NO_RET equ 0xFFFFFFFF
 
 _switch_to_thread:
     ;Save previous task's state
@@ -144,10 +146,17 @@ _switch_to_thread:
     mov ecx,cr3                   ;ecx = previous task's virtual address space
  
     cmp eax,ecx                   ;Does the virtual address space need to being changed?
-    je .done_paging                   ; no, virtual address space is the same, so don't reload it and cause TLB flushes
+    je .done_paging               ; no, virtual address space is the same, so don't reload it and cause TLB flushes
     mov cr3,eax                   ; yes, load the next task's virtual address space
 
 .done_paging:
+
+    cmp DWORD [esi + RET_VAL], NO_RET
+    je run_thread
+    mov eax, DWORD [esi + RET_VAL]
+    mov DWORD [esi + RET_VAL], NO_RET
+
+run_thread:    
 
     pop  ebx
     mov ds, bx
@@ -159,7 +168,9 @@ _switch_to_thread:
     pop edi
     pop esi
     pop ebx 
+
     
+
 iret
 
 

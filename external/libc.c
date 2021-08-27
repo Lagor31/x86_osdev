@@ -13,3 +13,7 @@ unsigned write(unsigned fd, char* buf, unsigned len) {
 }
 
 unsigned getpid() { return _system_call0(SYS_GETPID); }
+
+unsigned clone(unsigned flags) { return _system_call1(SYS_CLONE, flags); }
+
+void wait4pid(unsigned pid) { _system_call1(SYS_WAIT4, pid); }

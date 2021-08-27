@@ -9,7 +9,7 @@
 #define SYS_RANDOM 6
 #define SYS_WRITE 7
 #define SYS_GETPID 8
-
+#define SYS_CLONE 9
 
 extern unsigned int _system_call0(unsigned int num);
 
@@ -27,4 +27,6 @@ void printf();
 unsigned int random(unsigned int max);
 unsigned write(unsigned fd, char* buf, unsigned len);
 unsigned getpid();
+unsigned clone(unsigned flags);
+void wait4pid(unsigned pid);
 #endif
