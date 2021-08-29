@@ -17,8 +17,11 @@ void _start() {
 
   // Child
   if (pid == 0) {
-    printf(child);
-    sleepms(1000);
+    int i = 0;
+    while (i++ < 10) {
+      printf(child);
+      sleepms(1000);
+    }
     printf(childbye);
     exit(0);
   } else {
@@ -26,6 +29,7 @@ void _start() {
     sleepms(3000);
     wait4(pid);
     // write(1, parbye, 8);
+    printf(parbye);
     exit(0);
   }
 

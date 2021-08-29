@@ -47,10 +47,13 @@ u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags) {
   memcopy(current_thread->tcb.user_stack_bot, t->tcb.user_stack_bot, PAGE_SIZE);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
   // print_mem_desc(thread_mem);
-  set_user_esp(t->tcb.user_stack_bot + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32)),
+  u32 user_stack_offset = USER_STACK_TOP - (u32)stack_ptr;
+
+  set_user_esp(t->tcb.user_stack_bot + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32)) -
+                   user_stack_offset,
                (u32)entry, (u32)stack_ptr);
-  t->tcb.esp =
-      (u32)t->tcb.user_stack_bot + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
+  t->tcb.esp = (u32)t->tcb.user_stack_bot + PAGE_SIZE -
+               (U_ESP_SIZE * sizeof(u32)) - user_stack_offset;
   t->tcb.ret_value = 0;
   wake_up_thread(t);
   return t->pid;
