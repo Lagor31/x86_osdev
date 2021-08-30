@@ -24,7 +24,7 @@ unsigned strlen(char s[]) {
   return i;
 }
 
-void printf(const char *format, ...) {
+void printfLib(const char *format, ...) {
   char **arg = (char **)&format;
   int c;
   char buf[40];
@@ -128,3 +128,5 @@ void printf1(char *s) {
     ++i;
   }
 }
+
+void printf(char *s) { _system_call1(SYS_PRINTF, s); }

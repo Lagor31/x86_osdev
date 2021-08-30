@@ -7,10 +7,14 @@ brk & sbrk syscalls
 Kernel memory cache (SLAB)
 Proper locking on kernel structures
 Error checking (ERRNO, correct return values)
-VFS
+VFS & Mountpoints
+Reference counters and memory freeing (Generic kobjects embedded in data?)
+Correct access to and from userspace
 Disk driver
 Filesystem driver
 Runtime and tick-count normalization
+2 phase thread killing (stop -> resched -> async kill)
+Signals
 
 
 - ELF Memory Layout Usermode

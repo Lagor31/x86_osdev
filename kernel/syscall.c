@@ -26,9 +26,9 @@ void sys_wait4all() {
   reschedule();
 }
 
-void sys_printf(u32 number) {
-  kprintf("PID: %d\n", current_thread->pid);
-  UNUSED(number);
+void sys_printf(char *s) {
+  kprintf(s);
+  //kprintf("PID: %d\n", current_thread->pid);
 }
 
 u32 sys_write(u32 fd, byte *buf, size_t len) {

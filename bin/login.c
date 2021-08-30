@@ -3,6 +3,7 @@
 void login() {
   while (TRUE) {
     clearScreen();
+    resetScreenColors();
     kprintf("\nlogin root: ");
     char prev_read = '\0';
     char *my_buf = kalloc(0);
@@ -53,6 +54,8 @@ void login() {
           backspace(my_buf);
           deleteLastChar();
         }
+      } else if (read == CTRL) {
+        continue;
       } else {
         append(my_buf, read);
         kprintf("*");

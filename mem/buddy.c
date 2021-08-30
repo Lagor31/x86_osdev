@@ -169,7 +169,7 @@ bool is_buddy_block_free(BuddyBlock *b, bool kernel_alloc) {
 }
 
 void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
-  setColor(LIGHTGREEN);
+  //setColor(LIGHTGREEN);
   for (int i = b->order; i <= MAX_ORDER; ++i) {
     if (is_buddy_free_at_order(b, i, kernel_alloc)) {
       setBackgroundColor(RED);
@@ -184,8 +184,6 @@ void free_buddy_block(BuddyBlock *b, u8 kernel_alloc) {
   BuddyBlock *my_buddy = find_buddy(b, kernel_alloc);
   u8 need_to_merge =
       is_buddy_block_free(my_buddy, kernel_alloc) && (b->order != MAX_ORDER);
-
-  resetScreenColors();
 
   if (need_to_merge) {
     // I set myself and my buddy as used

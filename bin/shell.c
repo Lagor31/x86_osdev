@@ -10,6 +10,7 @@ void print_prompt() {
   setTextColor(LIGHTGREEN);
   setBackgroundColor(BLACK);
   kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
+  resetScreenColors();
 }
 void shell() {
   char prev_read = '\0';
@@ -33,7 +34,6 @@ void shell() {
     if (read == '\n') {
       user_input(my_buf);
       print_prompt();
-      resetScreenColors();
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
       if (strlen(my_buf) > 0) {
