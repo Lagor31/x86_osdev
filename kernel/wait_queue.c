@@ -2,7 +2,7 @@
 #include "../mem/mem.h"
 
 WaitQ* create_wait_queue() {
-  WaitQ* out = kernel_page_alloc(0);
+  WaitQ* out = kalloc(0);
   LIST_INIT(&out->threads_waiting);
 
   return out;

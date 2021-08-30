@@ -97,7 +97,7 @@ void free_normal_pages(Page *p) {
   free_buddy_block(b, NORMAL_ALLOC);
 }
 
-void *kernel_page_alloc(uint32_t order) {
+void *kalloc(uint32_t order) {
   Page *p = alloc_kernel_pages(order);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
@@ -150,7 +150,7 @@ void memory_alloc_init() {
 
   kprintf("You've used the first %d pages, allocating now %d 4Mb pages...\n",
           firstNUsedPages, ++four_megs_pages);
-  for (i = 0; i < four_megs_pages; ++i) kernel_page_alloc(10);
+  for (i = 0; i < four_megs_pages; ++i) kalloc(10);
   kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
   init_kernel_vma();
   // After this, you can no longer use boot_alloc

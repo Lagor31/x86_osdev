@@ -59,7 +59,7 @@ static void keyboard_callback(registers_t *regs) {
   else
     c = sc_ascii[(int)scancode];
 
-  Work *w = kernel_page_alloc(0);
+  Work *w = kalloc(0);
   w->c = c;
   list_add_head(&kwork_queue, &w->work_queue);
   // if (work_queue_lock->state == LOCK_LOCKED) unlock(work_queue_lock);

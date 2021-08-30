@@ -35,10 +35,11 @@ u32 sys_write(u32 fd, byte *buf, size_t len) {
   UNUSED(fd);
   UNUSED(len);
   u32 i = 0;
+
   // char c = buf[0];
   // kprintf((const char *)buf);
   while (i < len) {
-    write_byte_stream(stdout, buf[i]);
+    write_byte_block(stdout, buf[i]);
     ++i;
   }
 

@@ -6,20 +6,33 @@
 #include "../kernel/kernel.h"
 #include "../kernel/elf.h"
 
-void shell() {
+void print_prompt() {
   setTextColor(LIGHTGREEN);
   setBackgroundColor(BLACK);
   kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
+}
+void shell() {
+  char prev_read = '\0';
+
   resetScreenColors();
-  char *my_buf = kernel_page_alloc(0);
+
+  print_prompt();
+  char *my_buf = kalloc(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
     char read = read_stdin();
+
+    if (read == 'l' && prev_read == CTRL) {
+      clearScreen();
+      print_prompt();
+      continue;
+    }
+
+    prev_read = read;
+
     if (read == '\n') {
       user_input(my_buf);
-      setTextColor(LIGHTGREEN);
-      setBackgroundColor(BLACK);
-      kprintf("%s@%s # ", current_thread->owner->username, HOSTNAME);
+      print_prompt();
       resetScreenColors();
       memset((byte *)my_buf, '\0', PAGE_SIZE);
     } else if (read == BACKSPACE) {
@@ -36,8 +49,8 @@ void shell() {
 
 void user_input(char *command) {
   kprintf("\n");
-  char *input = kernel_page_alloc(0);
-  char *args = kernel_page_alloc(0);
+  char *input = kalloc(0);
+  char *args = kalloc(0);
   u32 i = 0;
   if (strtokn((const char *)command, (byte *)args, ' ', i) == 0) {
     memcopy((byte *)command, (byte *)input, strlen(command) + 1);
@@ -62,12 +75,13 @@ void user_input(char *command) {
     clearScreen();
     sys_exit(0);
   } else if (!strcmp(input, "files")) {
-    kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start, &files_end);
+    //kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start, &files_end);
     Elf32_Ehdr *b = (Elf32_Ehdr *)&files_start;
-    print_elf(b);
+    //print_elf(b);
     Thread *run_me = load_elf(b);
     wake_up_thread(run_me);
-    _switch_to_thread(run_me);
+    //sys_wait4(run_me->pid);
+    //_switch_to_thread(run_me);
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");
     itaFlag();
@@ -109,9 +123,9 @@ void user_input(char *command) {
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      MemDesc *thread_mem = kernel_page_alloc(0);
+      MemDesc *thread_mem = kalloc(0);
       LIST_INIT(&thread_mem->vm_areas);
-      thread_mem->page_directory = (u32)kernel_page_alloc(0);
+      thread_mem->page_directory = (u32)kalloc(0);
       init_user_paging((u32 *)thread_mem->page_directory);
 
       p = create_user_thread(&u_simple_proc, thread_mem, NULL, NULL, "u-extra");

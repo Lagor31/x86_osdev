@@ -30,7 +30,7 @@ void *boot_alloc(size_t size, uint8_t align);
 void memset(byte *dest, u8 val, size_t len);
 u8 parse_multiboot_info(KMultiBoot2Info *info);
 void memory_alloc_init();
-void *kernel_page_alloc(u32 order);
+void *kalloc(u32 order);
 void *normal_page_alloc(u32 order);
 void kfree_normal(void *ptr);
 void kfree(void *ptr);

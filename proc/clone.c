@@ -9,10 +9,10 @@ u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags) {
 
   // Memory Descriptor and areas are the same,
   // a new Page Directory pointing to newly allocated areas is created
-  MemDesc *thread_mem = kernel_page_alloc(0);
+  MemDesc *thread_mem = kalloc(0);
   LIST_INIT(&thread_mem->vm_areas);
 
-  thread_mem->page_directory = (u32)kernel_page_alloc(0);
+  thread_mem->page_directory = (u32)kalloc(0);
   init_user_paging((u32 *)thread_mem->page_directory);
 
   List *l;
@@ -28,7 +28,7 @@ u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags) {
     } else {
       u32 area_order_size = area->size / PAGE_SIZE;
       if (area_order_size % PAGE_SIZE > 0) area_order_size++;
-      void *phys_area = kernel_page_alloc(area_order_size);
+      void *phys_area = kalloc(area_order_size);
       vma = create_vmregion(area->start, area->end, PA((u32)phys_area),
                             area->flags, area->type);
     }

@@ -1,12 +1,11 @@
 #include "binaries.h"
 #include "../kernel/files.h"
 void login() {
-
-  
   while (TRUE) {
-    kprintf("\n\n\nlogin root: ");
+    clearScreen();
+    kprintf("\nlogin root: ");
     char prev_read = '\0';
-    char *my_buf = kernel_page_alloc(0);
+    char *my_buf = kalloc(0);
     memset((byte *)my_buf, '\0', PAGE_SIZE);
     while (TRUE) {
       int child_num = 0;
@@ -20,6 +19,7 @@ void login() {
         child_fd = c->std_files[0];
         if (read == CTRL) {
           prev_read = read;
+          write_byte_stream(child_fd, read);
           break;
         } else {
           write_byte_stream(child_fd, read);
@@ -29,6 +29,7 @@ void login() {
       if (read == 'n' && prev_read == CTRL) {
         kprintf("Special code received\n");
       }
+
       if (child_num > 0) {
         prev_read = read;
         continue;

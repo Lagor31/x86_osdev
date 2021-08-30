@@ -1,0 +1,32 @@
+IO bound vs CPU bound tasks
+current_thread ptr at bottom of kernel stack?
+RB-tree ordered by runtime tu run the one with the lowest runtime
+
+
+-----------------   FFFFFFFF
+
+     KERNEL
+
+-----------------   C0000000    (3Gb)
+      STACK
+-----------------   BFFFF000   --
+                                |
+                                | 
+                                |
+                                |
+                                |   (~3Gb)
+                                |
+                                |
+                                |
+                                |
+                                |
+-----------------   0804D000   --
+                                
+       ELF
+
+-----------------   08048000   --  
+                                |             
+                                | (128 Mb)
+                                |
+                                |
+-----------------   00000000   --

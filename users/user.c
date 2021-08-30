@@ -7,9 +7,9 @@ u32 uid = 0;
 User *root;
 
 User *create_user(char *name) {
-  User *u = (User *)kernel_page_alloc(0);
+  User *u = (User *)kalloc(0);
 
-  char *new_name = kernel_page_alloc(0);
+  char *new_name = kalloc(0);
   u32 name_length = strlen(name);
   memcopy((byte *)name, (byte *)new_name, name_length);
   new_name[name_length] = '\0';

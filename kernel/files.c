@@ -1,3 +1,5 @@
+#include "../mem/mem.h"
+
 #include "files.h"
 #include "../lib/strings.h"
 #include "../kernel/scheduler.h"
@@ -24,7 +26,7 @@ u32 set_pos_block(FD *file, u32 pos) {
 
 u32 write_byte_block(FD *file, byte b) {
   get_lock(file->lock);
-  file->buffer[file->pos] = b;
+  file->buffer[file->pos++] = b;
   unlock(file->lock);
   return 1;
 }
@@ -109,16 +111,16 @@ void copy_fd(FD *s, FD *d) {
 }
 
 FD *create_device(char *name, u8 page_size, u8 type) {
-  FD *f = kernel_page_alloc(0);
+  FD *f = kalloc(0);
 
-  char *new_name = kernel_page_alloc(0);
+  char *new_name = kalloc(0);
   u32 name_length = strlen(name);
   memcopy((byte *)name, (byte *)new_name, name_length);
   new_name[name_length] = '\0';
 
   f->name = new_name;
   f->fd = fd++;
-  f->buffer = (byte *)kernel_page_alloc(page_size);
+  f->buffer = (byte *)kalloc(page_size);
   memset((byte *)f->buffer, 0, PAGE_SIZE << page_size);
 
   if (type == DEV_STREAM)

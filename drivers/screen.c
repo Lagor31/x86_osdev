@@ -211,7 +211,11 @@ int getCursorOffset() {
   return offset * 2; /* Position * size of character cell */
 }
 
-void setCursorPos(int row, int col) { setCursorOffset(getOffset(row, col)); }
+void setCursorPos(int row, int col) {
+  u32 offset = getOffset(row, col);
+  stdout->pos = offset;
+  setCursorOffset(offset);
+}
 
 void setCursorOffset(int offset) {
   /* Similar to get_cursor_offset, but instead of reading we write data */
@@ -241,8 +245,16 @@ void clearRow(int row) {
 void clearCharAt(int row, int col) {
   char *video_memory = (char *)(VA(VGA_ADDRESS));
   int pos = (row * 80 + col) * 2;
-  video_memory[pos] = ' ';
-  video_memory[pos + 1] = textColor;
+
+  if (kernel_init_ok == TRUE) {
+    set_pos_block(stdout, pos);
+    write_byte_block(stdout, ' ');
+    set_pos_block(stdout, pos + 1);
+    write_byte_block(stdout, textColor);
+  } else {
+    video_memory[pos] = ' ';
+    video_memory[pos + 1] = textColor;
+  }
 }
 
 void kPrintOKMessage(const char *message) {

@@ -109,7 +109,7 @@ void pageFaultHandler(registers_t *regs) {
   } else {
     /* kprintf("The 4MB page was NOT allocated!\n"); */
 
-    Pte *newPte = (Pte *)kernel_page_alloc(0);
+    Pte *newPte = (Pte *)kalloc(0);
     memset((byte *)newPte, 0, PAGE_SIZE);
     setPfn(&newPte[pte_pos], pfn);
     setPresent(&newPte[pte_pos]);
@@ -141,7 +141,7 @@ bad_area:
 
 Pte *make_kernel_pte(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
-  Pte *pte = kernel_page_alloc(0);
+  Pte *pte = kalloc(0);
   memset((byte *)pte, 0, PAGE_SIZE);
   for (u32 i = 0; i < PT_SIZE; ++i) {
     // pte[i] = curFrameNumber;
@@ -154,7 +154,7 @@ Pte *make_kernel_pte(uint32_t pdRow) {
 
 Pte *make_user_pte(uint32_t pdRow) {
   uint32_t baseFrameNumber = pdRow * 1024;
-  Pte *pte = kernel_page_alloc(0);
+  Pte *pte = kalloc(0);
   memset((byte *)pte, 0, PAGE_SIZE);
   for (u32 i = 0; i < PT_SIZE; ++i) {
     // pte[i] = curFrameNumber;

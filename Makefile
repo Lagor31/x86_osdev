@@ -3,14 +3,14 @@
 # $^ = all dependencies
 
 
-QEMU-MEM = 128M
+QEMU-MEM = 2G
 GDB = gdb
 CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 		 -Wall -Wextra  -ffreestanding
 #-Werror
 
 CC = gcc
-C_SOURCES = $(wildcard kernel/*.c users/*.c drivers/*.c  lib/*.c cpu/*.c mem/*.c proc/*.c lock/*.c bin/*.c)
+C_SOURCES = $(wildcard kernel/*.c mem/*.c users/*.c drivers/*.c  lib/*.c cpu/*.c proc/*.c lock/*.c bin/*.c)
 HEADERS = $(wildcard kernel/*.h drivers/*.h users/*.h lib/*h cpu/*.h mem/*.h proc/*.h lock/*.h bin/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o asm/functions.o}

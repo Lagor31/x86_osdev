@@ -26,10 +26,12 @@ extern unsigned int _system_call3(unsigned int num, unsigned int p1,
 
 void exit(int exit_code);
 void sleepms(unsigned ms);
-void printf(char *);
+void printf(const char *, ...);
 unsigned int random(unsigned int max);
-unsigned write(unsigned fd, char* buf, unsigned len);
+unsigned write(unsigned fd, char *buf, unsigned len);
 unsigned getpid();
 unsigned clone(unsigned flags);
 void wait4(unsigned pid);
+void printChar(char c, char attr);
+void itoa(char *buf, int base, int d);
 #endif

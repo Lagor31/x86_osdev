@@ -1,25 +1,25 @@
 #include "libc.h"
 
-char* par = "Hello from parent!";
-char* child = "Hello from child!";
+char* par = "Hello from parent! %d";
+char* child = "Hello from child! %d";
 char* childbye = "Bye from child!";
 char* parbye = "Bye from parent!";
 
-char* mess = "Child cloned!\n";
-char* m = "Print!\n";
+char* mess = "Child cloned!";
+char* m = "Print!";
 
 void _start() {
   unsigned r = random(2000);
   sleepms(r);
   // write(1, par, 8);
-  printf(par);
+  printf(par, getpid());
   unsigned pid = clone(CLONE_VM);
 
   // Child
   if (pid == 0) {
     int i = 0;
     while (i++ < 10) {
-      printf(child);
+      printf(child, getpid());
       sleepms(1000);
     }
     printf(childbye);
