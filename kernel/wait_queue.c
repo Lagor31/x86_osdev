@@ -8,4 +8,7 @@ WaitQ* create_wait_queue() {
   return out;
 }
 
-void destroy_wait_queue(WaitQ* wq) { kfree(wq); }
+void destroy_wait_queue(WaitQ* wq) {
+  list_remove(&wq->threads_waiting);
+  kfree(wq);
+}

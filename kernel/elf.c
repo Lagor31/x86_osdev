@@ -6,7 +6,7 @@
 #include "../mem/paging.h"
 
 Thread *load_elf(Elf32_Ehdr *elf) {
-  MemDesc *thread_mem = (MemDesc *) kalloc(0);
+  MemDesc *thread_mem = (MemDesc *)kalloc(0);
   LIST_INIT(&thread_mem->vm_areas);
   thread_mem->page_directory = (u32)kalloc(0);
   init_user_paging((u32 *)thread_mem->page_directory);
@@ -40,7 +40,7 @@ Thread *load_elf(Elf32_Ehdr *elf) {
                                   PF_X | PF_W | PF_R, VMA_STACK);
   list_add_tail(&thread_mem->vm_areas, &stack->head);
 
-  //print_mem_desc(thread_mem);
+  // print_mem_desc(thread_mem);
   return t;
 }
 

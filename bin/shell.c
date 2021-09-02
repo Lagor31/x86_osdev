@@ -26,6 +26,7 @@ void shell() {
     if (read == 'l' && prev_read == CTRL) {
       clearScreen();
       print_prompt();
+      prev_read = read;
       continue;
     }
 
@@ -40,6 +41,8 @@ void shell() {
         backspace(my_buf);
         deleteLastChar();
       }
+    } else if (read == CTRL) {
+      continue;
     } else {
       append(my_buf, read);
       kprintf("%c", read);
@@ -75,12 +78,13 @@ void user_input(char *command) {
     clearScreen();
     sys_exit(0);
   } else if (!strcmp(input, "files")) {
-    //kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start, &files_end);
+    // kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start,
+    // &files_end);
     Elf32_Ehdr *b = (Elf32_Ehdr *)&files_start;
-    //print_elf(b);
+    // print_elf(b);
     Thread *run_me = load_elf(b);
     wake_up_thread(run_me);
-    //sys_wait4(run_me->pid);
+    // sys_wait4(run_me->pid);
     //_switch_to_thread(run_me);
   } else if (!strcmp(input, "flag")) {
     asm volatile("cli");

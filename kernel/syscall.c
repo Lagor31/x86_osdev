@@ -28,7 +28,7 @@ void sys_wait4all() {
 
 void sys_printf(char *s) {
   kprintf(s);
-  //kprintf("PID: %d\n", current_thread->pid);
+  // kprintf("PID: %d\n", current_thread->pid);
 }
 
 u32 sys_write(u32 fd, byte *buf, size_t len) {
@@ -59,7 +59,7 @@ void syscall_handler(registers_t *regs) {
       sys_exit(regs->ebx);
       break;
     case SYS_PRINTF:
-      sys_printf(regs->ebx);
+      sys_printf((char *)regs->ebx);
       break;
     case SYS_SLEEPMS:
       sys_sleepms(regs->ebx);

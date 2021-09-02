@@ -129,4 +129,4 @@ void printf1(char *s) {
   }
 }
 
-void printf(char *s) { _system_call1(SYS_PRINTF, s); }
+void printf(char *s) { _system_call1(SYS_PRINTF, (unsigned)s); }

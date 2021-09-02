@@ -16,6 +16,7 @@ Runtime and tick-count normalization
 2 phase thread killing (stop -> resched -> async kill)
 Signals
 Add delete safe lists
+Bug with CTRL+L leaves an *
 
 
 - ELF Memory Layout Usermode

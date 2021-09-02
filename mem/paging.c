@@ -87,7 +87,6 @@ void pageFaultHandler(registers_t *regs) {
       kprintf("0x%x - Not a thread address!\n", fault_address); */
       goto bad_area;
     }
-    pfn = calc_pfn(fault_address, current_thread->mem);
   }
 
   if (isPresent(&thread_pgdir[pd_pos])) {
