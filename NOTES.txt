@@ -15,6 +15,7 @@ Filesystem driver
 Runtime and tick-count normalization
 2 phase thread killing (stop -> resched -> async kill)
 Signals
+Add delete safe lists
 
 
 - ELF Memory Layout Usermode
