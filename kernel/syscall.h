@@ -15,6 +15,7 @@
 #define SYS_WRITE 7
 #define SYS_GETPID 8
 #define SYS_CLONE 9
+#define SYS_KILL 10
 
 extern u32 _syscall(u32 num);
 

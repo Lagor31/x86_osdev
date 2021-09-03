@@ -18,6 +18,10 @@ unsigned clone(unsigned flags) { return _system_call1(SYS_CLONE, flags); }
 
 void wait4(unsigned pid) { _system_call1(SYS_WAIT4, pid); }
 
+unsigned kill(unsigned pid, unsigned sig) {
+  return _system_call2(SYS_KILL, pid, sig);
+}
+
 unsigned strlen(char s[]) {
   int i = 0;
   while (s[i] != '\0') ++i;

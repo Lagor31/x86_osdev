@@ -20,6 +20,7 @@
 #include "../users/user.h"
 #include "../mem/mem_desc.h"
 #include "../kernel/elf.h"
+#include "../kernel/signals.h"
 
 #define TASK_RUNNABLE 0
 #define TASK_UNINSTERRUPTIBLE 1
@@ -53,8 +54,8 @@ struct Thread {
   u16 pid;
   u16 tgid;
   bool ring0;
-  // VMRegion *vm;
   MemDesc *mem;
+  Signals signals;
   u8 nice;
   unsigned long long runtime;
   unsigned long long last_activation;
@@ -117,7 +118,7 @@ void sleep_thread(Thread *p);
 void stop_thread(Thread *);
 void yield();
 void sleep_on_lock(Thread *t, Lock *l);
-
+Thread *get_thread(u32 pid);
 void sleep_ms(u32 ms);
 
 #endif

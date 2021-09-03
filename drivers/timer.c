@@ -36,7 +36,6 @@ void scheduler_handler(registers_t *regs) {
   ++tick_count;
 
   Thread *next_thread;
-
   // Wake up all processes that no longer need to sleep on timers
   wake_up_timers();
 
@@ -44,6 +43,7 @@ void scheduler_handler(registers_t *regs) {
 
   // reschedule
   next_thread = (Thread *)pick_next_thread();
+
   if (current_thread == next_thread) goto no_resched;
 
   if (next_thread != NULL) {
@@ -75,6 +75,8 @@ no_resched:
   /*
     Need to reset the register C otherwise no more RTC interrutps will be sent
   */
+  handle_signals(current_thread);
+
   outb(0x70, 0x0C);  // select register C
   inb(0x71);         // just throw away contents
 }

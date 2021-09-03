@@ -10,9 +10,13 @@
 #define SYS_WRITE 7
 #define SYS_GETPID 8
 #define SYS_CLONE 9
+#define SYS_KILL 10
 
 #define CLONE_FILES 1
 #define CLONE_VM 2
+
+
+#define SIGKILL 1 << 9
 
 extern unsigned int _system_call0(unsigned int num);
 
@@ -34,4 +38,5 @@ unsigned clone(unsigned flags);
 void wait4(unsigned pid);
 void printChar(char c, char attr);
 void itoa(char *buf, int base, int d);
+unsigned kill(unsigned pid, unsigned sig);
 #endif

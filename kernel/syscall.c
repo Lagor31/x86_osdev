@@ -2,6 +2,7 @@
 #include "../drivers/screen.h"
 #include "../proc/thread.h"
 #include "../lib/utils.h"
+#include "signals.h"
 
 void sys_exit(u32 ret_code) {
   Thread *p = current_thread;
@@ -82,6 +83,9 @@ void syscall_handler(registers_t *regs) {
     case SYS_CLONE:
       regs->eax =
           sys_clone((void *)regs->eip + 2, (void *)regs->esp, regs->ebx);
+      break;
+    case SYS_KILL:
+      regs->eax = sys_kill(regs->ebx, regs->ecx);
       break;
     default:
       break;

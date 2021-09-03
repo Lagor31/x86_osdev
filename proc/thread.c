@@ -15,6 +15,7 @@
 #include "../kernel/timer.h"
 #include "../mem/mem_desc.h"
 #include "../kernel/elf.h"
+#include "../kernel/signals.h"
 
 List sleep_queue;
 List running_queue;
@@ -142,7 +143,7 @@ redo:
   list_remove(&p->children);
   list_remove(&p->siblings);
 
-  // kprintf("\nKilling PID %d\n", p->pid);
+  //kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
   // Do separetly
   // Do separetly
@@ -231,6 +232,8 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
 
+  init_signals(&user_thread->signals);
+
   user_thread->command = proc_name;
   user_thread->timeslice = 0;
   user_thread->runtime = 0;
@@ -298,6 +301,8 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   u32 name_length = strlen(args);
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
+
+  init_signals(&kernel_thread->signals);
 
   kernel_thread->command = proc_name;
   kernel_thread->timeslice = 0;
