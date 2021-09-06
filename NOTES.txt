@@ -14,9 +14,8 @@ Disk driver
 Filesystem driver
 Runtime and tick-count normalization
 2 phase thread killing (stop -> resched -> async kill)
-Signals
+Extended signals w/ usermode handlers
 Add delete safe lists
-Bug with CTRL+L leaves an *
 
 
 - ELF Memory Layout Usermode
