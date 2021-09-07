@@ -8,5 +8,5 @@ typedef struct wait_q_t {
 } WaitQ;
 
 WaitQ* create_wait_queue();
-
+WaitQ* create_wait_queue_nosleep();
 #endif

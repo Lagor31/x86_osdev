@@ -19,8 +19,12 @@ void enable_int() { __asm__ __volatile__("sti"); }
 
 void init_kernel_locks() {
   LIST_INIT(&kernel_locks);
+  /*
+    We would sleep on the mem alloc for this lock
+  */
+  mem_lock = make_lock_nosleep();
+
   screen_lock = make_lock();
-  mem_lock = make_lock();
   sched_lock = make_lock();
   work_queue_lock = make_lock();
   work_queue_lock->state = LOCK_LOCKED;
@@ -33,6 +37,15 @@ Lock *make_lock() {
   outSpin->state = LOCK_FREE;
   list_add_head(&kernel_locks, &outSpin->head);
   outSpin->wait_q = create_wait_queue();
+  return outSpin;
+}
+
+Lock *make_lock_nosleep() {
+  Lock *outSpin = (Lock *)kalloc_nosleep(0);
+  outSpin->id = locks_id++;
+  outSpin->state = LOCK_FREE;
+  list_add_head(&kernel_locks, &outSpin->head);
+  outSpin->wait_q = create_wait_queue_nosleep();
   return outSpin;
 }
 
@@ -70,5 +83,5 @@ wake_up_sleeping_threads:
     if (waiting_thread->wait_flags == 1) break;
     goto wake_up_sleeping_threads;
   }
-  //LIST_INIT(&l->wait_q->threads_waiting);
+  // LIST_INIT(&l->wait_q->threads_waiting);
 }

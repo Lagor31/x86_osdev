@@ -30,8 +30,8 @@ void print_mem_desc(MemDesc *m) {
   VMArea *area;
   list_for_each(l, &m->vm_areas) {
     area = list_entry(l, VMArea, head);
-    kprintf("S: 0x%x, E: 0x%x, S: 0x%x, PS: 0x%x F: 0x%d\n", area->start, area->end,
-            area->size, area->phys_start, area->flags);
+    kprintf("S: 0x%x, E: 0x%x, S: 0x%x, PS: 0x%x F: 0x%d\n", area->start,
+            area->end, area->size, area->phys_start, area->flags);
   }
 }
 
@@ -60,6 +60,19 @@ void init_memory_ptrs() {
   free memory
 */
 Page *alloc_kernel_pages(int order) {
+  get_lock(mem_lock);
+  BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
+  // printBuddy(b, KERNEL_ALLOC);
+  if (b == NULL) return NULL;
+  u32 allocated = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
+  total_used_memory += allocated;
+  total_kused_memory += allocated;
+  unlock(mem_lock);
+
+  return b->head;
+}
+
+Page *alloc_kernel_pages_nosleep(int order) {
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
   // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) return NULL;
@@ -97,13 +110,19 @@ void free_normal_pages(Page *p) {
   free_buddy_block(b, NORMAL_ALLOC);
 }
 
-void *kalloc(uint32_t order) {
+void *kalloc(u32 order) {
   Page *p = alloc_kernel_pages(order);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
 
-void *normal_page_alloc(uint32_t order) {
+void *kalloc_nosleep(u32 order) {
+  Page *p = alloc_kernel_pages_nosleep(order);
+  if (p == NULL) return NULL;
+  return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
+}
+
+void *normal_page_alloc(u32 order) {
   Page *p = alloc_normal_pages(order);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, NORMAL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
@@ -150,9 +169,8 @@ void memory_alloc_init() {
 
   kprintf("You've used the first %d pages, allocating now %d 4Mb pages...\n",
           firstNUsedPages, ++four_megs_pages);
-  for (i = 0; i < four_megs_pages; ++i) kalloc(10);
+  for (i = 0; i < four_megs_pages; ++i) kalloc_nosleep(10);
   kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
-  init_kernel_vma();
   // After this, you can no longer use boot_alloc
 }
 

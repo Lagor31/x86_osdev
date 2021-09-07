@@ -48,6 +48,8 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Init Buddy...\n");
   memory_alloc_init();
   kPrintOKMessage("Buddy initialized!\n");
+  init_kernel_locks();
+  init_kernel_vma();
 
   kPrintOKMessage("Enabling kernel paging...");
   init_kernel_paging();
@@ -58,7 +60,6 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Enabling chaching...");
   kMemCacheInit();
   kPrintOKMessage("Kernel caching enabled!");
-  init_kernel_locks();
 
   init_files();
 
