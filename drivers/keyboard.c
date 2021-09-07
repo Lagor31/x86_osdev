@@ -19,6 +19,10 @@
 
 #define SC_MAX 57
 
+char keyboard_buffer[1024] = {0};
+u32 key_buf_avail = 0;
+u32 key_buf_last = 0;
+
 const char *sc_name[] = {
     "ERROR",     "Esc",     "1", "2", "3", "4",      "5",
     "6",         "7",       "8", "9", "0", "-",      "=",
@@ -48,21 +52,10 @@ static void keyboard_callback(registers_t *regs) {
   /* The PIC leaves us the scancode in port 0x60 */
   u8 scancode = inb(0x60);
   if (scancode > SC_MAX) return;
-  char c = '\0';
-  // kprintf("scancode: %d", scancode);
-  if (scancode == BACKSPACE)
-    c = (char)BACKSPACE;
-  else if (scancode == CTRL)
-    c = (char)CTRL;
-  else if (scancode == ENTER)
-    c = '\n';
-  else
-    c = sc_ascii[(int)scancode];
 
-  Work *w = kalloc(0);
-  w->c = c;
-  list_add_head(&kwork_queue, &w->work_queue);
-  // if (work_queue_lock->state == LOCK_LOCKED) unlock(work_queue_lock);
+  append(keyboard_buffer, scancode);
+  key_buf_avail++;
+
   wake_up_thread(kwork_thread);
   UNUSED(regs);
 }

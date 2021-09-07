@@ -16,6 +16,7 @@ Runtime and tick-count normalization
 2 phase thread killing (stop -> resched -> async kill)
 Extended signals w/ usermode handlers
 Add delete safe lists
+Use regular numbers for signals in usermode
 
 
 - ELF Memory Layout Usermode

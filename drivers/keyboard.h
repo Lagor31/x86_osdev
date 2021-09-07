@@ -12,4 +12,9 @@
 void init_keyboard();
 char read_stdin();
 
+extern char keyboard_buffer[1024];
+extern u32 key_buf_avail;
+extern u32 key_buf_last;
+extern const char sc_ascii[];
+
 #endif
