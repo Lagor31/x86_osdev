@@ -17,7 +17,7 @@ Runtime and tick-count normalization
 Extended signals w/ usermode handlers
 Add delete safe lists
 Use regular numbers for signals in usermode
-
+Implement GFP_ATOMIC for memo alloc that cannot sleep
 
 - ELF Memory Layout Usermode
 
