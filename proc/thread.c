@@ -70,6 +70,7 @@ void sleep_thread(Thread *p) {
 
 void wake_up_thread(Thread *p) {
   p->state = TASK_RUNNABLE;
+  
   list_remove(&p->head);
   list_add_tail(&running_queue, &p->head);
 }

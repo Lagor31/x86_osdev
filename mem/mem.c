@@ -63,7 +63,10 @@ Page *alloc_kernel_pages(int order) {
   get_lock(mem_lock);
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
   // printBuddy(b, KERNEL_ALLOC);
-  if (b == NULL) return NULL;
+  if (b == NULL) {
+    unlock(mem_lock);
+    return NULL;
+  }
   u32 allocated = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_used_memory += allocated;
   total_kused_memory += allocated;

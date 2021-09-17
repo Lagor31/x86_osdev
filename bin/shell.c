@@ -5,6 +5,7 @@
 #include "../drivers/pci.h"
 #include "../kernel/kernel.h"
 #include "../kernel/elf.h"
+#include "../mem/slab.h"
 
 void print_prompt() {
   setTextColor(LIGHTGREEN);
@@ -74,6 +75,54 @@ void user_input(char *command) {
     printHelp();
   else if (!strcmp(input, "clear")) {
     clearScreen();
+  } else if (!strcmp(input, "slab")) {
+    //kprintf("Buf %d Slab %d\n", sizeof(Buf), sizeof(Slab));
+    u32 *num[4];
+    for (size_t i = 0; i < 4; i++) {
+      num[i] = (u32 *)salloc(sizeof(u32));
+      *num[i] = 31 + i;
+    }
+
+    for (size_t i = 0; i < 4; i++) {
+      kprintf("0x%x = %d \n", num[i], *num[i]);
+    }
+      kprintf("\n");
+     for (size_t i = 0; i < 4; i++) {
+       sfree(num[i]);
+     } 
+
+    /*  void *b = salloc(256);
+     kprintf("256 - 0x%x\n", b);
+     sfree(b);
+     salloc(256);
+     kprintf("256 - 0x%x\n", b);
+     sfree(b);
+     salloc(256);
+     kprintf("256 - 0x%x\n", b);
+     sfree(b);
+     salloc(256);
+     kprintf("256 - 0x%x\n", b);
+     sfree(b); */
+
+  } else if (!strcmp(input, "slabinfo")) {
+    List *p;
+    kprintf("Free:\n");
+    list_for_each(p, &kMemCache.free) {
+      Slab *s = list_entry(p, Slab, head);
+      kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
+    }
+    kprintf("Used:\n");
+    list_for_each(p, &kMemCache.used) {
+      Slab *s = list_entry(p, Slab, head);
+      kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
+    }
+
+    kprintf("Empty:\n");
+    list_for_each(p, &kMemCache.empty) {
+      Slab *s = list_entry(p, Slab, head);
+      kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
+    }
+
   } else if (!strcmp(input, "exit")) {
     clearScreen();
     sys_exit(0);

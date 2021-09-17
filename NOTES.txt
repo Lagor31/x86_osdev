@@ -18,6 +18,7 @@ Extended signals w/ usermode handlers
 Add delete safe lists
 Use regular numbers for signals in usermode
 Implement GFP_ATOMIC for memo alloc that cannot sleep
+Disable interrupt when handling runqueues in process context
 
 - ELF Memory Layout Usermode
 

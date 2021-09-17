@@ -1,24 +1,33 @@
 #ifndef SLAB_H
 #define SLAB_H
 #include "../lib/list.h"
+typedef struct Buf Buf;
 
 // Must always be contained in a order 0 buddy block
 typedef struct slab {
-  u8 size;
+  u16 size;
   List head;
-  u8 first_free;
-  u8 *free_blocks;
+  u32 tot;
+  u32 alloc;
+  List free_blocks;
 } Slab;
 
+typedef struct Buf {
+  Slab *slab;
+  List q;
+  void *buf;
+} Buf;
 
 typedef struct mem_cache {
-  Slab *free;
-  Slab *used;
-  Slab *empty;
+  List free;
+  List used;
+  List empty;
 } MemCache;
 
 extern MemCache kMemCache;
-Slab* createSlab(u8 size); 
+Slab *createSlab(u16 size);
 void kMemCacheInit();
+void *salloc(u32 size);
+void sfree(void *p);
 
 #endif
