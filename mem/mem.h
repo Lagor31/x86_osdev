@@ -36,6 +36,7 @@ void *kalloc_nosleep(u32 order);
 void *normal_page_alloc(u32 order);
 void kfree_normal(void *ptr);
 void kfree_page(void *ptr);
+void kfree(void *b);
 void printFree();
 void print_mem_desc(MemDesc *m);
 #endif

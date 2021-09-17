@@ -23,5 +23,5 @@ User *create_user(char *name) {
 
 void init_users() {
   LIST_INIT(&users);
-  root = create_user("root");
+  root = create_user("root1");
 }

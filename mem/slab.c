@@ -40,9 +40,13 @@ Slab* find_slab(u32 size) {
 void sfree(void* b) {
   Buf* buf = (Buf*)((u32)b - sizeof(Buf) + sizeof(void*));
   Slab* s = buf->slab;
-  if (s->fingerprint != SLAB_FINGERPRINT) return;
-
-  if (s->alloc <= 0) return;
+  if (s->fingerprint != SLAB_FINGERPRINT || s->alloc <= 0) {
+    setBackgroundColor(RED);
+    setTextColor(WHITE);
+    kprintf("Error freeing cached obj 0x%x\n", b);
+    resetScreenColors();
+    return;
+  }
 
   s->alloc--;
   list_add_head(&s->free_blocks, &buf->q);
