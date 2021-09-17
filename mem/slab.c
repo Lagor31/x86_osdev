@@ -12,14 +12,29 @@ void kMemCacheInit() {
   LIST_INIT(&kMemCache.used);
   createSlab(4);
   createSlab(8);
-  createSlab(8);
   createSlab(16);
   createSlab(32);
   createSlab(64);
   createSlab(128);
+  createSlab(sizeof(Thread));
   createSlab(256);
   createSlab(512);
-  createSlab(sizeof(Thread));
+}
+
+Slab* find_slab(u32 size) {
+  List* p;
+  list_for_each(p, &kMemCache.used) {
+    Slab* s = list_entry(p, Slab, head);
+    if (size == s->size) return s;
+  }
+
+  list_for_each(p, &kMemCache.free) {
+    Slab* s = list_entry(p, Slab, head);
+    // kprintf("- Cache: %d\n", s->size);
+    if (size == s->size) return s;
+  }
+
+  return NULL;
 }
 
 void sfree(void* b) {
@@ -75,7 +90,7 @@ void* salloc(u32 size) {
   return NULL;
 }
 
-Slab* createSlab(u16 size) {
+Slab* createSlab(u32 size) {
   Slab* slab = (Slab*)kalloc(0);
   slab->size = size;
   slab->alloc = 0;

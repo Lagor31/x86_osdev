@@ -1,6 +1,9 @@
 #ifndef SLAB_H
 #define SLAB_H
 #include "../lib/list.h"
+
+#define MAX_SLAB_SIZE 512
+
 typedef struct Buf Buf;
 
 // Must always be contained in a order 0 buddy block
@@ -25,7 +28,9 @@ typedef struct mem_cache {
 } MemCache;
 
 extern MemCache kMemCache;
-Slab *createSlab(u16 size);
+Slab *createSlab(u32 size);
+Slab* find_slab(u32 size);
+
 void kMemCacheInit();
 void *salloc(u32 size);
 void sfree(void *p);

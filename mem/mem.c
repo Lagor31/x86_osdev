@@ -6,8 +6,9 @@
 #include "../lib/list.h"
 #include "../lib/utils.h"
 #include "../boot/multiboot.h"
-#include "../mem/page.h"
-#include "../mem/buddy.h"
+#include "page.h"
+#include "buddy.h"
+#include "slab.h"
 #include "vma.h"
 #include "mem.h"
 
@@ -111,6 +112,31 @@ void free_normal_pages(Page *p) {
   total_used_memory -= released;
   // kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
   free_buddy_block(b, NORMAL_ALLOC);
+}
+
+void *kmalloc(u32 size) {
+  if (size <= MAX_SLAB_SIZE) {
+    // Search in cache or create one ad hoc
+    if (size < 4) size = 4;
+
+    void *out = salloc(size);
+    if (out != NULL) return out;
+
+    createSlab(size);
+    return salloc(size);
+  } else {
+    u32 order = 0;
+    u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
+
+    while (order <= MAX_ORDER) {
+      if (pages <= PAGES_PER_BLOCK(order)) {
+        // kprintf("Size %d -> Order: %d\n", size, order);
+        return kalloc(order);
+      }
+      order++;
+    }
+    return NULL;
+  }
 }
 
 void *kalloc(u32 order) {

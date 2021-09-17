@@ -76,20 +76,25 @@ void user_input(char *command) {
   else if (!strcmp(input, "clear")) {
     clearScreen();
   } else if (!strcmp(input, "slab")) {
-    //kprintf("Buf %d Slab %d\n", sizeof(Buf), sizeof(Slab));
-    u32 *num[4];
-    for (size_t i = 0; i < 4; i++) {
-      num[i] = (u32 *)salloc(sizeof(u32));
-      *num[i] = 31 + i;
+    for (size_t i = 0; i < 10; i++) {
+      u32 s = rand() % 20 + 1;
+      void *p = kmalloc(s);
+      kprintf("Pointer: 0x%x S: %d\n", p, s);
     }
+    // kprintf("Buf %d Slab %d\n", sizeof(Buf), sizeof(Slab));
+    /*   u32 *num[4];
+      for (size_t i = 0; i < 4; i++) {
+        num[i] = (u32 *)salloc(sizeof(u32));
+        *num[i] = 31 + i;
+      }
 
-    for (size_t i = 0; i < 4; i++) {
-      kprintf("0x%x = %d \n", num[i], *num[i]);
-    }
+      for (size_t i = 0; i < 4; i++) {
+        kprintf("0x%x = %d \n", num[i], *num[i]);
+      }
       kprintf("\n");
-     for (size_t i = 0; i < 4; i++) {
-       sfree(num[i]);
-     } 
+      for (size_t i = 0; i < 4; i++) {
+        sfree(num[i]);
+      } */
 
     /*  void *b = salloc(256);
      kprintf("256 - 0x%x\n", b);
