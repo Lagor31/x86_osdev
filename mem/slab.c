@@ -40,9 +40,9 @@ Slab* find_slab(u32 size) {
 void sfree(void* b) {
   Buf* buf = (Buf*)((u32)b - sizeof(Buf) + sizeof(void*));
   Slab* s = buf->slab;
-  if (s->alloc <= 0) {
-    return;
-  }
+  if (s->fingerprint != SLAB_FINGERPRINT) return;
+
+  if (s->alloc <= 0) return;
 
   s->alloc--;
   list_add_head(&s->free_blocks, &buf->q);
@@ -91,10 +91,12 @@ void* salloc(u32 size) {
 }
 
 Slab* createSlab(u32 size) {
-  Slab* slab = (Slab*)kalloc(0);
+  Slab* slab = (Slab*)kalloc_page(0);
   slab->size = size;
   slab->alloc = 0;
   slab->tot = (PAGE_SIZE - sizeof(Slab)) / (size + sizeof(Buf));
+  slab->fingerprint = SLAB_FINGERPRINT;
+
   LIST_INIT(&slab->free_blocks);
 
   for (size_t i = 0; i < slab->tot; i++) {

@@ -19,7 +19,7 @@ void shell() {
   resetScreenColors();
 
   print_prompt();
-  char *my_buf = kalloc(0);
+  char *my_buf = kalloc_page(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
     char read = read_stdin();
@@ -53,8 +53,8 @@ void shell() {
 
 void user_input(char *command) {
   kprintf("\n");
-  char *input = kalloc(0);
-  char *args = kalloc(0);
+  char *input = kalloc_page(0);
+  char *args = kalloc_page(0);
   u32 i = 0;
   if (strtokn((const char *)command, (byte *)args, ' ', i) == 0) {
     memcopy((byte *)command, (byte *)input, strlen(command) + 1);
@@ -82,21 +82,21 @@ void user_input(char *command) {
       kprintf("Pointer: 0x%x S: %d\n", p, s);
     }
     // kprintf("Buf %d Slab %d\n", sizeof(Buf), sizeof(Slab));
-    /*   u32 *num[4];
-      for (size_t i = 0; i < 4; i++) {
-        num[i] = (u32 *)salloc(sizeof(u32));
-        *num[i] = 31 + i;
-      }
+    u32 *num[4];
+    for (size_t i = 0; i < 4; i++) {
+      num[i] = (u32 *)salloc(sizeof(u32));
+      *num[i] = 31 + i;
+    }
 
-      for (size_t i = 0; i < 4; i++) {
-        kprintf("0x%x = %d \n", num[i], *num[i]);
-      }
-      kprintf("\n");
-      for (size_t i = 0; i < 4; i++) {
-        sfree(num[i]);
-      } */
+    for (size_t i = 0; i < 4; i++) {
+      kprintf("0x%x = %d \n", num[i], *num[i]);
+    }
+    kprintf("\n");
+    for (size_t i = 0; i < 4; i++) {
+      sfree(num[i]);
+    }
 
-    /*  void *b = salloc(256);
+    void *b = salloc(256);
      kprintf("256 - 0x%x\n", b);
      sfree(b);
      salloc(256);
@@ -107,7 +107,7 @@ void user_input(char *command) {
      sfree(b);
      salloc(256);
      kprintf("256 - 0x%x\n", b);
-     sfree(b); */
+     sfree(b); 
 
   } else if (!strcmp(input, "slabinfo")) {
     List *p;
@@ -181,9 +181,9 @@ void user_input(char *command) {
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      MemDesc *thread_mem = kalloc(0);
+      MemDesc *thread_mem = kalloc_page(0);
       LIST_INIT(&thread_mem->vm_areas);
-      thread_mem->page_directory = (u32)kalloc(0);
+      thread_mem->page_directory = (u32)kalloc_page(0);
       init_user_paging((u32 *)thread_mem->page_directory);
 
       p = create_user_thread(&u_simple_proc, thread_mem, NULL, NULL, "u-extra");

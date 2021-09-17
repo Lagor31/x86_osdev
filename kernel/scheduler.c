@@ -50,7 +50,7 @@ do_timers:
       if (tick_count >= activeT->expiration) {
         list_remove(&activeT->q);
         wake_up_thread(activeT->thread);
-        kfree(activeT);
+        kfree_page(activeT);
         c++;
         goto do_timers;
       }

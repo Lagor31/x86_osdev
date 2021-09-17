@@ -32,7 +32,7 @@ void init_kernel_locks() {
 }
 
 Lock *make_lock() {
-  Lock *outSpin = (Lock *)kalloc(0);
+  Lock *outSpin = (Lock *)kalloc_page(0);
   outSpin->id = locks_id++;
   outSpin->state = LOCK_FREE;
   list_add_head(&kernel_locks, &outSpin->head);

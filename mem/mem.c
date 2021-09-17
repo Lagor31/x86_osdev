@@ -129,9 +129,9 @@ void *kmalloc(u32 size) {
     u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
 
     while (order <= MAX_ORDER) {
-      if (pages <= PAGES_PER_BLOCK(order)) {
+      if (pages <= (u32)PAGES_PER_BLOCK(order)) {
         // kprintf("Size %d -> Order: %d\n", size, order);
-        return kalloc(order);
+        return kalloc_page(order);
       }
       order++;
     }
@@ -139,7 +139,28 @@ void *kmalloc(u32 size) {
   }
 }
 
-void *kalloc(u32 order) {
+void kfree(void *buf) {
+  List *p;
+  list_for_each(p, &kMemCache.used) {
+    Slab *s = list_entry(p, Slab, head);
+    if ((u32) buf > (u32)s && (u32)buf < (u32)s + PAGE_SIZE) {
+      sfree(buf);
+      return;
+    }
+  }
+
+  list_for_each(p, &kMemCache.empty) {
+    Slab *s = list_entry(p, Slab, head);
+    if ((u32)buf > (u32)s && (u32)buf < (u32)s + PAGE_SIZE) {
+      sfree(buf);
+      return;
+    }
+  }
+
+  kfree_page(buf);
+}
+
+void *kalloc_page(u32 order) {
   Page *p = alloc_kernel_pages(order);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
@@ -157,7 +178,7 @@ void *normal_page_alloc(u32 order) {
   return get_page_phys_address(p, NORMAL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
 
-void kfree(void *ptr) {
+void kfree_page(void *ptr) {
   if (ptr == NULL) return;
   // kprintf("Free ptr %x ", ptr);
   free_kernel_pages(get_page_from_address(ptr, KERNEL_ALLOC));

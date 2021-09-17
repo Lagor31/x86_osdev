@@ -111,16 +111,16 @@ void copy_fd(FD *s, FD *d) {
 }
 
 FD *create_device(char *name, u8 page_size, u8 type) {
-  FD *f = kalloc(0);
+  FD *f = kalloc_page(0);
 
-  char *new_name = kalloc(0);
+  char *new_name = kalloc_page(0);
   u32 name_length = strlen(name);
   memcopy((byte *)name, (byte *)new_name, name_length);
   new_name[name_length] = '\0';
 
   f->name = new_name;
   f->fd = fd++;
-  f->buffer = (byte *)kalloc(page_size);
+  f->buffer = (byte *)kalloc_page(page_size);
   memset((byte *)f->buffer, 0, PAGE_SIZE << page_size);
 
   if (type == DEV_STREAM)
