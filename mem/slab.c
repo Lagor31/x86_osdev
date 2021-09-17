@@ -6,19 +6,22 @@
 
 MemCache kMemCache;
 
-void kMemCacheInit() {
+void init_slab_cache() {
+  // Since we don't have locks yet, we cannot sleep on memalloc
   LIST_INIT(&kMemCache.free);
   LIST_INIT(&kMemCache.empty);
   LIST_INIT(&kMemCache.used);
-  createSlab(4);
-  createSlab(8);
-  createSlab(16);
-  createSlab(32);
-  createSlab(64);
-  createSlab(128);
-  createSlab(sizeof(Thread));
-  createSlab(256);
-  createSlab(512);
+  createSlab(4, TRUE);
+  createSlab(8, TRUE);
+  createSlab(16, TRUE);
+  createSlab(32, TRUE);
+  createSlab(64, TRUE);
+  createSlab(128, TRUE);
+  createSlab(sizeof(Thread), TRUE);
+  createSlab(sizeof(Lock), TRUE);
+  createSlab(sizeof(WaitQ), TRUE);
+  createSlab(256, TRUE);
+  createSlab(512, TRUE);
 }
 
 Slab* find_slab(u32 size) {
@@ -94,8 +97,12 @@ void* salloc(u32 size) {
   return NULL;
 }
 
-Slab* createSlab(u32 size) {
-  Slab* slab = (Slab*)kalloc_page(0);
+Slab* createSlab(u32 size, bool no_sleep) {
+  Slab* slab;
+  if (no_sleep)
+    slab = (Slab*)kalloc_nosleep(0);
+  else
+    slab = (Slab*)kalloc_page(0);
   slab->size = size;
   slab->alloc = 0;
   slab->tot = (PAGE_SIZE - sizeof(Slab)) / (size + sizeof(Buf));

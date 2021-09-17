@@ -21,7 +21,7 @@ void shell() {
   resetScreenColors();
 
   print_prompt();
-  char *my_buf = kalloc_page(0);
+  char *my_buf = kmalloc(PAGE_SIZE);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
     char read = read_stdin();
@@ -55,8 +55,8 @@ void shell() {
 
 void user_input(char *command) {
   kprintf("\n");
-  char *input = kalloc_page(0);
-  char *args = kalloc_page(0);
+  char *input = kmalloc(PAGE_SIZE);
+  char *args = kmalloc(PAGE_SIZE);
   u32 i = 0;
   if (strtokn((const char *)command, (byte *)args, ' ', i) == 0) {
     memcopy((byte *)command, (byte *)input, strlen(command) + 1);
@@ -224,6 +224,9 @@ void user_input(char *command) {
   } else {
     kprintf("Command '%s' not found!\n", input);
   }
+
+  kfree(input);
+  kfree(args);
 }
 
 void itaFlag() {

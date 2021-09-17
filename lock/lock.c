@@ -32,12 +32,18 @@ void init_kernel_locks() {
 }
 
 Lock *make_lock() {
-  Lock *outSpin = (Lock *)kalloc_page(0);
+  Lock *outSpin = (Lock *)kmalloc(sizeof(Lock));
   outSpin->id = locks_id++;
   outSpin->state = LOCK_FREE;
   list_add_head(&kernel_locks, &outSpin->head);
   outSpin->wait_q = create_wait_queue();
   return outSpin;
+}
+
+void destroy_lock(Lock *l){
+  list_remove(&l->head);
+  destroy_wait_queue(l->wait_q);
+  kfree(l);
 }
 
 Lock *make_lock_nosleep() {

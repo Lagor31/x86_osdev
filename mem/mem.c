@@ -122,7 +122,7 @@ void *kmalloc(u32 size) {
     void *out = salloc(size);
     if (out != NULL) return out;
 
-    createSlab(size);
+    createSlab(size, FALSE);
     return salloc(size);
   } else {
     u32 order = 0;
@@ -198,7 +198,7 @@ BuddyBlock *get_buddy_from_page(Page *p, u8 kernel_alloc) {
     return (BuddyBlock *)(normal_buddies + get_pfn_from_page(p, kernel_alloc));
 }
 
-void memory_alloc_init() {
+void init_memory_alloc() {
   total_kernel_pages = (boot_mmap.total_pages / KERNEL_RATIO);
   total_normal_pages = boot_mmap.total_pages - total_kernel_pages;
   kprintf("Total kernel pages %d\nTotal normal pages %d\n", total_kernel_pages,

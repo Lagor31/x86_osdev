@@ -29,7 +29,7 @@ void memcopy(byte *source, byte *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);
 void memset(byte *dest, u8 val, size_t len);
 u8 parse_multiboot_info(KMultiBoot2Info *info);
-void memory_alloc_init();
+void init_memory_alloc();
 void *kalloc_page(u32 order);
 void *kmalloc(u32 size);
 void *kalloc_nosleep(u32 order);

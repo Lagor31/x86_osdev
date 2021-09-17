@@ -6,7 +6,7 @@ void login() {
     resetScreenColors();
     kprintf("\nlogin root: ");
     char prev_read = '\0';
-    char *my_buf = kalloc_page(0);
+    char *my_buf = kmalloc(PAGE_SIZE);
     memset((byte *)my_buf, '\0', PAGE_SIZE);
     while (TRUE) {
       int child_num = 0;

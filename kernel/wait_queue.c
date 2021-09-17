@@ -2,7 +2,7 @@
 #include "../mem/mem.h"
 
 WaitQ* create_wait_queue() {
-  WaitQ* out = kalloc_page(0);
+  WaitQ* out = kmalloc(sizeof(WaitQ));
   LIST_INIT(&out->threads_waiting);
 
   return out;
@@ -16,5 +16,5 @@ WaitQ* create_wait_queue_nosleep() {
 }
 void destroy_wait_queue(WaitQ* wq) {
   list_remove(&wq->threads_waiting);
-  kfree_page(wq);
+  kfree(wq);
 }

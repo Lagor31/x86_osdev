@@ -30,10 +30,10 @@ typedef struct mem_cache {
 } MemCache;
 
 extern MemCache kMemCache;
-Slab *createSlab(u32 size);
+Slab *createSlab(u32 size, bool nosleep);
 Slab* find_slab(u32 size);
 
-void kMemCacheInit();
+void init_slab_cache();
 void *salloc(u32 size);
 void sfree(void *p);
 

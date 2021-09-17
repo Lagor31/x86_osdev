@@ -9,4 +9,5 @@ typedef struct wait_q_t {
 
 WaitQ* create_wait_queue();
 WaitQ* create_wait_queue_nosleep();
+void destroy_wait_queue(WaitQ* wq);
 #endif

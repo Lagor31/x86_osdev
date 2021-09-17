@@ -46,7 +46,9 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("IRQs/ISRs installed!\n");
 
   kPrintOKMessage("Init Buddy...\n");
-  memory_alloc_init();
+  init_memory_alloc();
+  init_slab_cache();
+
   kPrintOKMessage("Buddy initialized!\n");
   init_kernel_locks();
   init_kernel_vma();
@@ -56,10 +58,6 @@ void kernel_main(u32 magic, u32 addr) {
   //init_user_paging();
 
   kPrintOKMessage("Kernel paging enabled!");
-
-  kPrintOKMessage("Enabling chaching...");
-  kMemCacheInit();
-  kPrintOKMessage("Kernel caching enabled!");
 
   init_files();
 
