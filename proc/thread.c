@@ -145,7 +145,7 @@ redo:
   kfree_page(p->tcb.user_stack_bot);
   kfree_page(p->tcb.kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfree_page((void *)p);
+  kfree((void *)p);
   // current_proc = NULL;
 }
 
@@ -199,7 +199,7 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
 Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
                            void *stack, char *args, ...) {
   // TODO: cache! chache! cache!
-  Thread *user_thread = kalloc_page(1);
+  Thread *user_thread = kmalloc(sizeof(Thread));
 
   user_thread->ring0 = FALSE;
   user_thread->father = current_thread;
@@ -263,7 +263,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
   // TODO: cache! chache! cache!
-  Thread *kernel_thread = kalloc_page(1);
+  Thread *kernel_thread = kmalloc(sizeof(Thread));
 
   kernel_thread->ring0 = TRUE;
   kernel_thread->father = current_thread;

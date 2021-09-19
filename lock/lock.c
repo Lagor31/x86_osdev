@@ -12,7 +12,6 @@ Lock *screen_lock;
 Lock *mem_lock;
 Lock *sched_lock;
 Lock *work_queue_lock;
-
 void disable_int() { __asm__ __volatile__("cli"); }
 
 void enable_int() { __asm__ __volatile__("sti"); }
@@ -24,9 +23,9 @@ void init_kernel_locks() {
   */
   mem_lock = make_lock_nosleep();
 
-  screen_lock = make_lock();
-  sched_lock = make_lock();
-  work_queue_lock = make_lock();
+  screen_lock = make_lock_nosleep();
+  sched_lock = make_lock_nosleep();
+  work_queue_lock = make_lock_nosleep();
   work_queue_lock->state = LOCK_LOCKED;
   work_queue_lock->owner = NULL;
 }
@@ -40,7 +39,7 @@ Lock *make_lock() {
   return outSpin;
 }
 
-void destroy_lock(Lock *l){
+void destroy_lock(Lock *l) {
   list_remove(&l->head);
   destroy_wait_queue(l->wait_q);
   kfree(l);

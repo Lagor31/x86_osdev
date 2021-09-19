@@ -122,8 +122,11 @@ void *kmalloc(u32 size) {
     void *out = salloc(size);
     if (out != NULL) return out;
 
+    // kprintf("Not found  in cache %d,  creating...\n", size);
     createSlab(size, FALSE);
-    return salloc(size);
+    out = salloc(size);
+    if (out == NULL) kprintf("NULL after cache creation\n");
+    return out;
   } else {
     u32 order = 0;
     u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
@@ -140,24 +143,23 @@ void *kmalloc(u32 size) {
 }
 
 void kfree(void *buf) {
-  List *p;
-  list_for_each(p, &kMemCache.used) {
-    Slab *s = list_entry(p, Slab, head);
-    if ((u32) buf > (u32)s && (u32)buf < (u32)s + PAGE_SIZE) {
-      sfree(buf);
-      return;
+  /*   List *p;
+    list_for_each(p, &kMemCache.used) {
+      Slab *s = list_entry(p, Slab, head);
+      if ((u32) buf > (u32)s && (u32)buf < (u32)s + PAGE_SIZE) {
+        sfree(buf);
+        return;
+      }
     }
-  }
 
-  list_for_each(p, &kMemCache.empty) {
-    Slab *s = list_entry(p, Slab, head);
-    if ((u32)buf > (u32)s && (u32)buf < (u32)s + PAGE_SIZE) {
-      sfree(buf);
-      return;
-    }
-  }
-
-  kfree_page(buf);
+    list_for_each(p, &kMemCache.empty) {
+      Slab *s = list_entry(p, Slab, head);
+      if ((u32)buf > (u32)s && (u32)buf < (u32)s + PAGE_SIZE) {
+        sfree(buf);
+        return;
+      }
+    } */
+  if (!sfree(buf)) kfree_page(buf);
 }
 
 void *kalloc_page(u32 order) {

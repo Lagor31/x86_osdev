@@ -119,6 +119,7 @@ void user_input(char *command) {
 
   } else if (!strcmp(input, "si")) {
     List *p;
+    disable_int();
     kprintf("Free:\n");
     list_for_each(p, &kMemCache.free) {
       Slab *s = list_entry(p, Slab, head);
@@ -135,17 +136,21 @@ void user_input(char *command) {
       Slab *s = list_entry(p, Slab, head);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
     }
-
+    enable_int();
   } else if (!strcmp(input, "exit")) {
     clearScreen();
     sys_exit(0);
-  } else if (!strcmp(input, "files")) {
+  } else if (!strcmp(input, "f")) {
     // kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start,
     // &files_end);
     Elf32_Ehdr *b = (Elf32_Ehdr *)&files_start;
     // print_elf(b);
-    Thread *run_me = load_elf(b);
-    wake_up_thread(run_me);
+
+    for (size_t i = 0; i < ALLOC_NUM; i++) {
+      Thread *run_me = load_elf(b);
+      wake_up_thread(run_me);
+    }
+
     // sys_wait4(run_me->pid);
     //_switch_to_thread(run_me);
   } else if (!strcmp(input, "flag")) {
@@ -178,7 +183,7 @@ void user_input(char *command) {
     p->nice = 0;
     wake_up_thread(p);
     sys_wait4(p->pid);
-  } else if (!strcmp(input, "ckp")) {
+  } else if (!strcmp(input, "k")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       p = create_kernel_thread(&k_simple_proc, NULL, "k-extra");

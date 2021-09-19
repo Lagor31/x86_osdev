@@ -47,10 +47,11 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Init Buddy...\n");
   init_memory_alloc();
+  init_kernel_locks();
+
   init_slab_cache();
 
   kPrintOKMessage("Buddy initialized!\n");
-  init_kernel_locks();
   init_kernel_vma();
 
   kPrintOKMessage("Enabling kernel paging...");
