@@ -7,6 +7,9 @@
 
 #define STACK_SIZE 0x1000
 // 1048576
+#define KERNEL_ALLOC 1
+#define NORMAL_ALLOC 0
+#define FAST_ALLOC 2
 
 typedef struct boot_mmap {
   u32 highest_mem_addess;
@@ -15,6 +18,7 @@ typedef struct boot_mmap {
 
 extern Page *kernel_pages;
 extern Page *normal_pages;
+extern Page *fast_pages;
 
 extern BootMmap boot_mmap;
 
@@ -32,6 +36,9 @@ u8 parse_multiboot_info(KMultiBoot2Info *info);
 void init_memory_alloc();
 void *kalloc_page(u32 order);
 void *kmalloc(u32 size);
+void *nmalloc(u32 size);
+void *fmalloc(u32 size);
+void ffree(void *);
 void *kalloc_nosleep(u32 order);
 void *normal_page_alloc(u32 order);
 void kfree_normal(void *ptr);

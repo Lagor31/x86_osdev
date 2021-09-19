@@ -15,7 +15,8 @@ typedef struct spin_lock_t {
 } Lock;
 
 extern Lock *screen_lock;
-extern Lock *mem_lock;
+extern Lock *kmem_lock;
+extern Lock *nmem_lock;
 extern Lock *sched_lock;
 extern Lock *work_queue_lock;
 

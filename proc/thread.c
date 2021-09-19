@@ -142,8 +142,8 @@ redo:
   // Do separetly
   // Do separetly
 
-  kfree_page(p->tcb.user_stack_bot);
-  kfree_page(p->tcb.kernel_stack_bot);
+  kfree(p->tcb.user_stack_bot);
+  kfree(p->tcb.kernel_stack_bot);
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
   kfree((void *)p);
   // current_proc = NULL;
@@ -209,7 +209,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   user_thread->tcb.page_dir = PA(mem->page_directory);
   user_thread->mem = mem;
   user_thread->wait4child = FALSE;
-  void *user_stack = kalloc_page(0);
+  void *user_stack = kmalloc(PAGE_SIZE);
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
   user_thread->tcb.ret_value = NO_RET_VAL;
@@ -217,7 +217,7 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
                stack != NULL ? (u32)stack : USER_STACK_TOP);
   user_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack = kalloc_page(0);
+  void *kernel_stack = kmalloc(PAGE_SIZE);
   user_thread->tcb.kernel_stack_bot = kernel_stack;
   user_thread->tcb.tss = (u32)kernel_stack + PAGE_SIZE;
 
@@ -275,7 +275,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->wait4child = FALSE;
   kernel_thread->tcb.ret_value = NO_RET_VAL;
 
-  void *user_stack = kalloc_page(0);
+  void *user_stack =kmalloc(PAGE_SIZE);
 
   kernel_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (K_ESP_SIZE * sizeof(u32));
@@ -283,7 +283,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   set_kernel_esp((u32 *)kernel_thread->tcb.esp, (u32)entry_point);
   kernel_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack = kalloc_page(0);
+  void *kernel_stack =kmalloc(PAGE_SIZE);
   kernel_thread->tcb.kernel_stack_bot = kernel_stack;
   kernel_thread->tcb.tss = (u32)user_stack + PAGE_SIZE;
 

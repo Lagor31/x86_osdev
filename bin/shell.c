@@ -6,9 +6,11 @@
 #include "../kernel/kernel.h"
 #include "../kernel/elf.h"
 #include "../kernel/timer.h"
-
+#include "../mem/mem.h"
 #include "../mem/slab.h"
+void *fm;
 
+void *nor;
 void print_prompt() {
   setTextColor(LIGHTGREEN);
   setBackgroundColor(BLACK);
@@ -123,18 +125,24 @@ void user_input(char *command) {
     kprintf("Free:\n");
     list_for_each(p, &kMemCache.free) {
       Slab *s = list_entry(p, Slab, head);
+      if (s->pinned) setTextColor(RED);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
+      resetScreenColors();
     }
     kprintf("Used:\n");
     list_for_each(p, &kMemCache.used) {
       Slab *s = list_entry(p, Slab, head);
+      if (s->pinned) setTextColor(RED);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
+      resetScreenColors();
     }
 
     kprintf("Empty:\n");
     list_for_each(p, &kMemCache.empty) {
       Slab *s = list_entry(p, Slab, head);
+      if (s->pinned) setTextColor(RED);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
+      resetScreenColors();
     }
     enable_int();
   } else if (!strcmp(input, "exit")) {
@@ -159,6 +167,15 @@ void user_input(char *command) {
     asm volatile("sti");
   } else if (!strcmp(input, "free")) {
     printFree();
+  } else if (!strcmp(input, "fast")) {
+    fm = fmalloc(2 * 1024 * 1024);
+    nor = nmalloc(4 * 1024 * 1024);
+    kprintf("F: 0x%x\n", fm);
+    kprintf("N: 0x%x\n", nor);
+  } else if (!strcmp(input, "ffree")) {
+    kprintf("Buf: 0x%x\n", fm);
+    kfree_normal(nor);
+    ffree(fm);
   } else if (!strcmp(input, "pci")) {
     checkAllBuses();
   } else if (!strcmp(input, "date")) {

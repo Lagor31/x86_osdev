@@ -9,7 +9,9 @@ List kernel_locks;
 u32 locks_id = 0;
 
 Lock *screen_lock;
-Lock *mem_lock;
+Lock *kmem_lock;
+Lock *nmem_lock;
+
 Lock *sched_lock;
 Lock *work_queue_lock;
 void disable_int() { __asm__ __volatile__("cli"); }
@@ -21,8 +23,8 @@ void init_kernel_locks() {
   /*
     We would sleep on the mem alloc for this lock
   */
-  mem_lock = make_lock_nosleep();
-
+  kmem_lock = make_lock_nosleep();
+  nmem_lock = make_lock_nosleep();
   screen_lock = make_lock_nosleep();
   sched_lock = make_lock_nosleep();
   work_queue_lock = make_lock_nosleep();
