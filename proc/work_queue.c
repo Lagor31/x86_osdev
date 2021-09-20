@@ -15,7 +15,6 @@ void init_work_queue() { LIST_INIT(&kwork_queue); }
 
 void work_queue_thread() {
   while (TRUE) {
-    
     while (key_buf_avail > 0) {
       char scancode = keyboard_buffer[key_buf_last++ % 1024];
       char c = '\0';
@@ -35,6 +34,7 @@ void work_queue_thread() {
       }
     }
 
+    
     sleep_thread(current_thread);
     reschedule();
   }

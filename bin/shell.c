@@ -211,9 +211,9 @@ void user_input(char *command) {
   } else if (!strcmp(input, "cup")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
-      MemDesc *thread_mem = kalloc_page(0);
+      MemDesc *thread_mem = kmalloc(sizeof(MemDesc));
       LIST_INIT(&thread_mem->vm_areas);
-      thread_mem->page_directory = (u32)kalloc_page(0);
+      thread_mem->page_directory = (u32)kmalloc(PAGE_SIZE);
       init_user_paging((u32 *)thread_mem->page_directory);
 
       p = create_user_thread(&u_simple_proc, thread_mem, NULL, NULL, "u-extra");

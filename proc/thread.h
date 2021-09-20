@@ -77,7 +77,8 @@ struct Thread {
 };
 
 typedef struct work_task {
-  char c;
+  u8 type;
+  Thread *t;
   List work_queue;
 } Work;
 
@@ -120,5 +121,6 @@ void yield();
 void sleep_on_lock(Thread *t, Lock *l);
 Thread *get_thread(u32 pid);
 void sleep_ms(u32 ms);
+void exterminate(Thread *p);
 
 #endif

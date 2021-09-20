@@ -10,7 +10,7 @@
 MemDesc *kernel_mem;
 
 void init_kernel_vma() {
-  kernel_mem = (MemDesc *)kalloc_page(0);
+  kernel_mem = (MemDesc *)kmalloc(sizeof(MemDesc));
   kernel_mem->areas_count = 1;
   LIST_INIT(&kernel_mem->vm_areas);
   VMArea *kernel_vm_area =
@@ -22,7 +22,7 @@ void init_kernel_vma() {
 
 VMArea *create_vmregion(u32 base_address, u32 end_address, u32 phys_start,
                         u32 flags, u32 type) {
-  VMArea *out_region = kalloc_page(0);
+  VMArea *out_region = kmalloc(sizeof(VMArea));
   out_region->start = base_address;
   out_region->end = end_address;
   out_region->phys_start = phys_start;

@@ -35,15 +35,19 @@ void memset(byte *dest, u8 val, size_t len);
 u8 parse_multiboot_info(KMultiBoot2Info *info);
 void init_memory_alloc();
 void *kalloc_page(u32 order);
+
 void *kmalloc(u32 size);
+void kfree(void *b);
+
 void *nmalloc(u32 size);
+void kfree_normal(void *ptr);
+
 void *fmalloc(u32 size);
 void ffree(void *);
+
 void *kalloc_nosleep(u32 order);
 void *normal_page_alloc(u32 order);
-void kfree_normal(void *ptr);
 void kfree_page(void *ptr);
-void kfree(void *b);
 void printFree();
 void print_mem_desc(MemDesc *m);
 #endif

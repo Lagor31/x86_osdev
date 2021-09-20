@@ -16,6 +16,7 @@
 #include "../mem/mem_desc.h"
 #include "../kernel/elf.h"
 #include "../kernel/signals.h"
+#include "../lib/list.h"
 
 List sleep_queue;
 List running_queue;
@@ -52,8 +53,10 @@ void sleep_ms(u32 ms) {
 void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   p->state = TASK_STOPPED;
+  get_lock(sched_lock);
   list_remove(&p->head);
   list_add_head(&stopped_queue, &p->head);
+  unlock(sched_lock);
 }
 
 void sleep_on_lock(Thread *t, Lock *l) {
@@ -64,22 +67,27 @@ void sleep_on_lock(Thread *t, Lock *l) {
 void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   p->state = TASK_INTERRUPTIBLE;
+  get_lock(sched_lock);
+
   list_remove(&p->head);
   list_add_head(&sleep_queue, &p->head);
+  unlock(sched_lock);
 }
 
 void wake_up_thread(Thread *p) {
   p->state = TASK_RUNNABLE;
-  
+  get_lock(sched_lock);
+
   list_remove(&p->head);
   list_add_tail(&running_queue, &p->head);
+  unlock(sched_lock);
 }
 
 void kill_process(Thread *p) {
   if (p->pid == IDLE_PID) return;
 
-  list_remove(&p->head);
-  list_remove(&p->k_proc_list);
+  stop_thread(p);
+  //  list_remove(&p->k_proc_list);
   p->state = TASK_ZOMBIE;
 
   List *l;
@@ -137,16 +145,42 @@ redo:
   list_remove(&p->children);
   list_remove(&p->siblings);
 
+  Work *w = kmalloc(sizeof(Work));
+  w->type = 9;
+  w->t= p;
+  LIST_INIT(&w->work_queue);
+  list_add_tail(&kwork_queue, &w->work_queue);
   // kprintf("\nKilling PID %d\n", p->pid);
   /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
   // Do separetly
   // Do separetly
 
-  kfree(p->tcb.user_stack_bot);
+  /*  kfree(p->tcb.user_stack_bot);
+   kfree(p->tcb.kernel_stack_bot);
+   kfree(p->command); */
+}
+
+void exterminate(Thread *p) {
+  get_lock(sched_lock);
+  list_remove(&p->k_proc_list);
+  list_remove(&p->head);
+  unlock(sched_lock);
+
+ /*  kfree(p->tcb.user_stack_bot);
   kfree(p->tcb.kernel_stack_bot);
+  kfree(p->command); */
+
+  if (!p->ring0) {
+    // kfree(p->mem);
+    /*  VMArea *vma;
+     List *l;
+     list_for_each(l, &p->mem->vm_areas) {
+       vma = list_entry(l, VMArea, head);
+       kfree(vma);
+     } */
+  }
   /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
-  kfree((void *)p);
-  // current_proc = NULL;
+ // kfree((void *)p);
 }
 
 void init_kernel_proc() {
@@ -220,9 +254,9 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   void *kernel_stack = kmalloc(PAGE_SIZE);
   user_thread->tcb.kernel_stack_bot = kernel_stack;
   user_thread->tcb.tss = (u32)kernel_stack + PAGE_SIZE;
-
-  char *proc_name = kalloc_page(0);
   u32 name_length = strlen(args);
+
+  char *proc_name = kmalloc(name_length + 1);
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
 
@@ -275,7 +309,7 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->wait4child = FALSE;
   kernel_thread->tcb.ret_value = NO_RET_VAL;
 
-  void *user_stack =kmalloc(PAGE_SIZE);
+  void *user_stack = kmalloc(PAGE_SIZE);
 
   kernel_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (K_ESP_SIZE * sizeof(u32));
@@ -283,12 +317,12 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   set_kernel_esp((u32 *)kernel_thread->tcb.esp, (u32)entry_point);
   kernel_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack =kmalloc(PAGE_SIZE);
+  void *kernel_stack = kmalloc(PAGE_SIZE);
   kernel_thread->tcb.kernel_stack_bot = kernel_stack;
   kernel_thread->tcb.tss = (u32)user_stack + PAGE_SIZE;
 
-  char *proc_name = kalloc_page(0);
   u32 name_length = strlen(args);
+  char *proc_name = kmalloc(name_length + 1);
   memcopy((byte *)args, (byte *)proc_name, name_length);
   proc_name[name_length] = '\0';
 

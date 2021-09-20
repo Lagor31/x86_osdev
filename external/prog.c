@@ -27,7 +27,7 @@ void _start() {
   } else {
     // Father
     sleepms(3000);
-    kill(pid, SIGKILL);
+    //kill(pid, SIGKILL);
     wait4(pid);
     // write(1, parbye, 8);
     printf(parbye);

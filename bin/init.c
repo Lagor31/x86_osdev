@@ -14,6 +14,9 @@ void init() {
   kwork_thread = create_kernel_thread(work_queue_thread, NULL, "kworker");
   wake_up_thread(kwork_thread);
 
+  p = create_kernel_thread(kswap, NULL, "kswapd");
+  wake_up_thread(p);
+
   p = create_kernel_thread(&gui, NULL, "gui");
   p->nice = 0;
   wake_up_thread(p);
