@@ -154,9 +154,12 @@ void draw_thread() {
 
   while (TRUE) {
     // get_lock(screen_lock);
+    clearScreen();
     setCursorPos(1, 0);
     // printTop();
+    bool pi = disable_int();
     print_tree();
+    enable_int(pi);
     // unlock(screen_lock);
     sleep_ms(1000);
   }

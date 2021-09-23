@@ -54,7 +54,8 @@ Page *get_page_from_address(void *ptr, u8 alloc_type) {
                     (PA((u32)ptr) / PAGE_SIZE) * sizeof(Page));
   else if (alloc_type == FAST_ALLOC) {
     return (Page *)((u32)fast_pages +
-                    ((u32)(PA((u32)ptr) - phys_fast_offset) / PAGE_SIZE) * sizeof(Page));
+                    ((u32)(PA((u32)ptr) - phys_fast_offset) / PAGE_SIZE) *
+                        sizeof(Page));
   } else
     return (Page *)((u32)normal_pages +
                     ((u32)(ptr - phys_normal_offset) / PAGE_SIZE) *
@@ -353,10 +354,10 @@ BuddyBlock *search_free_block(int order, u8 alloc_type) {
     u32 i = 0;
     for (i = 0; i < fast_buddy[order].bitmap_length; ++i) {
       if (fast_buddy[order].bitmap[i] == FREE) {
-        return get_buddy_from_pos(order, i, alloc_type);
+        BuddyBlock *out_b = get_buddy_from_pos(order, i, alloc_type);
+        return out_b;
       }
     }
   }
-
   return NULL;
 }

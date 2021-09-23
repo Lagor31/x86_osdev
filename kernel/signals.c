@@ -29,7 +29,7 @@ bool handle_signals(Thread *t) {
   i32 i = 1;
   for (i = 1; i <= SIG_NUM; i++) {
     if ((sigs->pending & sigs->active) & 1 << i) {
-      kprintf("Received sig %s pid %d\n", get_sig_name(1 << i), t->pid);
+      //kprintf("Received sig %s pid %d\n", get_sig_name(1 << i), t->pid);
       sigs->pending &= ~(1 << i);
       // Kill thread
       if (1 << i == SIGKILL) {

@@ -34,7 +34,7 @@ void work_queue_thread() {
       }
     }
 
-    
+
     sleep_thread(current_thread);
     reschedule();
   }

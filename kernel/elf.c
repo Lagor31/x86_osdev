@@ -8,7 +8,7 @@
 Thread *load_elf(Elf32_Ehdr *elf) {
   MemDesc *thread_mem = (MemDesc *)kmalloc(sizeof(MemDesc));
   LIST_INIT(&thread_mem->vm_areas);
-  thread_mem->page_directory = (u32)kmalloc(PAGE_SIZE);
+  thread_mem->page_directory = (u32)kalloc_page(0);
   init_user_paging((u32 *)thread_mem->page_directory);
   int i = 0;
   Elf32_Phdr *ph = (Elf32_Phdr *)((u32)elf + (u32)elf->e_phoff);
@@ -19,7 +19,7 @@ Thread *load_elf(Elf32_Ehdr *elf) {
     if (ph[i].p_type == 1) {
       if (ph[i].p_filesz == 0) {
         // Assuming it's a .bss 0-initialized section
-        byte *bss = (byte *)kmalloc(PAGE_SIZE);
+        byte *bss = (byte *)kalloc_page(0);
         memset(bss, 0, PAGE_SIZE);
         phys_addr = PA((u32)bss);
       } else

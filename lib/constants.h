@@ -1,14 +1,13 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-
 #define EAX 0
 #define EBX 1
 
 #define ESP 3
-#define CR2 4
-
-
+#define CR2 4 
+#define EIP 5
+#define EFLAGS 6
 
 #define KERNEL_CS 8
 #define KERNEL_DS 16

@@ -5,6 +5,7 @@
 #include "../proc/thread.h"
 #include "../lock/lock.h"
 #include "../kernel/scheduler.h"
+#include "../lock/lock.h"
 
 MemCache kMemCache;
 
@@ -52,45 +53,59 @@ Slab* find_slab(u32 size) {
 }
 
 bool sfree(void* b) {
+  get_lock(slab_lock);
+  bool ret_val = FALSE;
   Buf* buf = (Buf*)((u32)b - sizeof(Buf));
+  if (!is_kernel_addr((u32)buf)) {
+    ret_val = FALSE;
+    goto done;
+  }
   Slab* s = buf->slab;
-  if (s->fingerprint != SLAB_FINGERPRINT || s->alloc <= 0) {
+
+  if (!is_kernel_addr((u32)s) || s->fingerprint != SLAB_FINGERPRINT ||
+      s->alloc <= 0) {
     /*  setBackgroundColor(RED);
      setTextColor(WHITE);
      kprintf("Error freeing cached obj 0x%x\n", b);
      resetScreenColors(); */
-    return FALSE;
+    ret_val = FALSE;
+    goto done;
   }
+  //
 
   s->alloc--;
   buf->next_free = s->first_free;
   s->first_free = buf;
+  s->last_used = tick_count;
+  list_remove(&s->head);
+  //  unlock(s->slock);
 
   if (s->alloc == 0) {
-    list_remove(&s->head);
-    get_lock(kMemCache.free_lock);
-    s->last_used = tick_count;
+    // get_lock(kMemCache.free_lock);
     list_add_tail(&kMemCache.free, &s->head);
-    unlock(kMemCache.free_lock);
+    // unlock(kMemCache.free_lock);
   } else {
-    list_remove(&s->head);
-    get_lock(kMemCache.used_lock);
+    //  get_lock(kMemCache.used_lock);
     list_add_tail(&kMemCache.used, &s->head);
-    unlock(kMemCache.used_lock);
+    // unlock(kMemCache.used_lock);
   }
-  return TRUE;
+  ret_val = TRUE;
+done:
+  unlock(slab_lock);
+  return ret_val;
 }
 
 void* salloc(u32 size) {
   List* p;
-
-  get_lock(kMemCache.used_lock);
+  void* outP = NULL;
+  get_lock(slab_lock);
+  // get_lock(kMemCache.used_lock);
   list_for_each(p, &kMemCache.used) {
     Slab* s = list_entry(p, Slab, head);
     if (size == s->size) {
       Buf* out = s->first_free;
       if (out == NULL) return NULL;
-
+      // get_lock(s->slock);
       s->alloc++;
       s->first_free = out->next_free;
       out->next_free = NULL;
@@ -98,41 +113,46 @@ void* salloc(u32 size) {
         s->alloc = s->tot;
         list_remove(&s->head);
         // I dont want to sleep holding the used lock
-        get_lock(kMemCache.empty_lock);
+        // get_lock(kMemCache.empty_lock);
         list_add_tail(&kMemCache.empty, &s->head);
-        unlock(kMemCache.empty_lock);
+        // unlock(kMemCache.empty_lock);
       }
-      unlock(kMemCache.used_lock);
+      // unlock(s->slock);
+      // unlock(kMemCache.used_lock);
 
-      return (void*)((u32)out + sizeof(Buf));
+      outP = (void*)((u32)out + sizeof(Buf));
+      goto done;
     }
   }
-  unlock(kMemCache.used_lock);
+  // unlock(kMemCache.used_lock);
 
-  get_lock(kMemCache.free_lock);
+  // get_lock(kMemCache.free_lock);
   list_for_each(p, &kMemCache.free) {
     Slab* s = list_entry(p, Slab, head);
     if (size == s->size) {
       Buf* out = s->first_free;
       if (out == NULL) return NULL;
+      // get_lock(s->slock);
 
       s->alloc++;
       s->first_free = out->next_free;
       out->next_free = NULL;
 
       list_remove(&s->head);
-      unlock(kMemCache.free_lock);
+      // unlock(s->slock);
 
-      // I dont want to sleep holding the free lock
-      get_lock(kMemCache.used_lock);
+      //  unlock(kMemCache.free_lock);
+      //  get_lock(kMemCache.used_lock);
       list_add_tail(&kMemCache.used, &s->head);
-      unlock(kMemCache.used_lock);
-
-      return (void*)((u32)out + sizeof(Buf));
+      //  unlock(kMemCache.used_lock);
+      outP = (void*)((u32)out + sizeof(Buf));
+      goto done;
     }
   }
-  unlock(kMemCache.free_lock);
-  return NULL;
+//  unlock(kMemCache.free_lock);
+done:
+  unlock(slab_lock);
+  return outP;
 }
 
 Slab* createSlab(u32 size, bool no_sleep) {
@@ -147,8 +167,8 @@ Slab* createSlab(u32 size, bool no_sleep) {
   slab->fingerprint = SLAB_FINGERPRINT;
   slab->pinned = FALSE;
   slab->last_used = 0;
-
-  //TODO: Tidy up math
+  // slab->slock = make_lock_nosleep();
+  // TODO: Tidy up math
 
   u32 b = (u32)slab;
   u32 offset = sizeof(Slab);
@@ -165,8 +185,8 @@ Slab* createSlab(u32 size, bool no_sleep) {
     fb = next;
   }
   LIST_INIT(&slab->head);
-  get_lock(kMemCache.free_lock);
+  get_lock(slab_lock);
   list_add_tail(&kMemCache.free, &slab->head);
-  unlock(kMemCache.free_lock);
+  unlock(slab_lock);
   return slab;
 }

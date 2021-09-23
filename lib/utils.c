@@ -2,7 +2,6 @@
 #include "../boot/multiboot.h"
 #include "utils.h"
 
-
 #include "list.h"
 
 #include "../mem/mem.h"
@@ -13,7 +12,6 @@
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
 #include "constants.h"
-
 
 static uint64_t next = 1;
 #define RAND_MAX 0xFFFFFF
@@ -36,7 +34,6 @@ void save_multiboot2_info(uint32_t addr, uint32_t magic) {
   memcopy((uint8_t *)addr, kMultiBootInfo.info, size);
   kMultiBootInfo.magic = magic;
 }
-
 
 /*
   Only loading first module is supported by now
@@ -71,6 +68,14 @@ inline uint32_t getRegisterValue(uint8_t reg) {
     case ESP:
       __asm__("mov %%esp, %0" : "=m"(regValue));
       break;
+    case EIP:
+      uint32_t eip;
+      asm volatile("1: lea 1b, %0;" : "=a"(eip));
+      regValue = eip;
+      break;
+    case EFLAGS:
+      regValue = native_save_fl();
+      break;
     case CR2:
       __asm__(
           "mov %%cr2, %%eax;"
@@ -83,7 +88,11 @@ inline uint32_t getRegisterValue(uint8_t reg) {
   }
   return regValue;
 }
-
+bool ints_enabled() {
+  u32 f = getRegisterValue(EFLAGS);
+  bool ints = (f & (u32)0x0200) != 0;
+  return ints;
+}
 void printMultibootInfo(KMultiBoot2Info *info, uint8_t onlyMem) {
   struct multiboot_tag *tag;
   unsigned size;
@@ -324,7 +333,6 @@ void printGdt() {
     gdtEntry++;
   }
 }
-
 
 void getStandardDate(uint32_t millis, stdDate_t *date) {
   date->seconds = millis / MILLIS_IN_A_SECOND;

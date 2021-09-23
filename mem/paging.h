@@ -43,5 +43,6 @@ Pte *make_kernel_pte(uint32_t pdRow);
 uint32_t *createPageTableUser(uint32_t pdRow);
 
 void init_user_paging(u32 *pd);
+bool is_kernel_addr(u32 addr);
 
 #endif

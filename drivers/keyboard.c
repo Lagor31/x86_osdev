@@ -55,8 +55,12 @@ static void keyboard_callback(registers_t *regs) {
 
   append(keyboard_buffer, scancode);
   key_buf_avail++;
-
   wake_up_thread(kwork_thread);
+
+  // kprintf("keyb ints? %d\n", ints_enabled());
+
+  // kprintf("K!\n");
+  // wake_up_thread(kwork_thread);
   UNUSED(regs);
 }
 

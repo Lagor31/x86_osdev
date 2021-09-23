@@ -22,5 +22,6 @@ static inline void setPfn(Pte *x, uint32_t pfn) {
 static inline void setPresent(Pte *x) { *x |= (1L << 0); }
 static inline void setUsermode(Pte *x) { *x |= (1L << 2); }
 static inline uint8_t isPresent(Pte *x) { return *x & 1; }
+static inline bool isUsermode(Pte *x) { return *x & 4; }
 
 #endif

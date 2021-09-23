@@ -32,20 +32,27 @@ u32 pid = IDLE_PID;
 
 Thread *get_thread(u32 pid) {
   List *l;
+  List *temp;
   Thread *t;
-
-  list_for_each(l, &k_threads) {
+  bool pi = disable_int();
+  list_for_each_safe(l, temp, &k_threads) {
     t = list_entry(l, Thread, k_proc_list);
-    if (t->pid == pid) return t;
+    if (t->pid == pid) {
+      enable_int(pi);
+      return t;
+    }
   }
+  enable_int(pi);
   return NULL;
 }
 
 void sleep_ms(u32 ms) {
-  Timer *t = kmalloc(sizeof(Timer));
+  Timer *t = fmalloc(sizeof(Timer));
   t->expiration = millis_to_ticks(ms) + tick_count;
   t->thread = current_thread;
+  bool pi = disable_int();
   list_add_head(&kernel_timers, &t->q);
+  enable_int(pi);
   sleep_thread(current_thread);
   reschedule();
 }
@@ -53,10 +60,10 @@ void sleep_ms(u32 ms) {
 void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   p->state = TASK_STOPPED;
-  get_lock(sched_lock);
+  bool pi = disable_int();
   list_remove(&p->head);
   list_add_head(&stopped_queue, &p->head);
-  unlock(sched_lock);
+  enable_int(pi);
 }
 
 void sleep_on_lock(Thread *t, Lock *l) {
@@ -67,20 +74,18 @@ void sleep_on_lock(Thread *t, Lock *l) {
 void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
   p->state = TASK_INTERRUPTIBLE;
-  get_lock(sched_lock);
-
+  bool pi = disable_int();
   list_remove(&p->head);
   list_add_head(&sleep_queue, &p->head);
-  unlock(sched_lock);
+  enable_int(pi);
 }
 
 void wake_up_thread(Thread *p) {
   p->state = TASK_RUNNABLE;
-  get_lock(sched_lock);
-
+  bool pi = disable_int();
   list_remove(&p->head);
   list_add_tail(&running_queue, &p->head);
-  unlock(sched_lock);
+  enable_int(pi);
 }
 
 void kill_process(Thread *p) {
@@ -96,15 +101,18 @@ void kill_process(Thread *p) {
       p->father->wait4child = FALSE;
     } */
   bool wake_up_parent = TRUE;
+  List *temp;
+  bool pi = disable_int();
 
-  list_for_each(l, &kernel_timers) {
+  list_for_each_safe(l, temp, &kernel_timers) {
     Timer *activeT = list_entry(l, Timer, q);
     if (activeT->thread->pid == p->pid) {
       list_remove(&activeT->q);
-      kfree(activeT);
+      ffree(activeT);
       break;
     }
   }
+  enable_int(pi);
 
   if (p->father->wait4child) {
     list_for_each(l, &p->father->children) {
@@ -144,43 +152,12 @@ redo:
 
   list_remove(&p->children);
   list_remove(&p->siblings);
-
-  Work *w = kmalloc(sizeof(Work));
-  w->type = 9;
-  w->t= p;
-  LIST_INIT(&w->work_queue);
-  list_add_tail(&kwork_queue, &w->work_queue);
-  // kprintf("\nKilling PID %d\n", p->pid);
-  /*  kprintf("      Freeing name pointer(0x%x)\n", (u32)(p->name)); */
-  // Do separetly
-  // Do separetly
-
-  /*  kfree(p->tcb.user_stack_bot);
-   kfree(p->tcb.kernel_stack_bot);
-   kfree(p->command); */
-}
-
-void exterminate(Thread *p) {
-  get_lock(sched_lock);
-  list_remove(&p->k_proc_list);
-  list_remove(&p->head);
-  unlock(sched_lock);
-
- /*  kfree(p->tcb.user_stack_bot);
-  kfree(p->tcb.kernel_stack_bot);
-  kfree(p->command); */
-
-  if (!p->ring0) {
-    // kfree(p->mem);
-    /*  VMArea *vma;
-     List *l;
-     list_for_each(l, &p->mem->vm_areas) {
-       vma = list_entry(l, VMArea, head);
-       kfree(vma);
-     } */
-  }
-  /*  kprintf("      Freeing proc(0x%x)\n", (u32)p); */
- // kfree((void *)p);
+  /*
+    Work *w = kmalloc(sizeof(Work));
+    w->type = 9;
+    w->t = p;
+    LIST_INIT(&w->work_queue);
+    list_add_tail(&kwork_queue, &w->work_queue); */
 }
 
 void init_kernel_proc() {
@@ -232,7 +209,6 @@ void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack) {
 
 Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
                            void *stack, char *args, ...) {
-  // TODO: cache! chache! cache!
   Thread *user_thread = kmalloc(sizeof(Thread));
 
   user_thread->ring0 = FALSE;
@@ -243,15 +219,23 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
   user_thread->tcb.page_dir = PA(mem->page_directory);
   user_thread->mem = mem;
   user_thread->wait4child = FALSE;
-  void *user_stack = kmalloc(PAGE_SIZE);
+  void *user_stack = kalloc_page(0);
+  memset((byte *)user_stack, 0, PAGE_SIZE);
+  user_thread->tcb.user_stack_bot = user_stack;
   user_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (U_ESP_SIZE * sizeof(u32));
   user_thread->tcb.ret_value = NO_RET_VAL;
+
+  // TODO: is it correct to ignore passed param stack?
   set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
                stack != NULL ? (u32)stack : USER_STACK_TOP);
-  user_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack = kmalloc(PAGE_SIZE);
+  // set_user_esp((u32 *)user_thread->tcb.esp, (u32)entry_point,
+  // USER_STACK_TOP);
+
+  void *kernel_stack = kalloc_page(0);
+  memset((byte *)kernel_stack, 0, PAGE_SIZE);
+
   user_thread->tcb.kernel_stack_bot = kernel_stack;
   user_thread->tcb.tss = (u32)kernel_stack + PAGE_SIZE;
   u32 name_length = strlen(args);
@@ -284,7 +268,11 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
     user_thread->std_files[1] = stdout;
     user_thread->std_files[2] = stderr;
   }
+
+  bool pi = disable_int();
   list_add_head(&k_threads, &user_thread->k_proc_list);
+  enable_int(pi);
+
   if (current_thread != NULL) {
     user_thread->owner = current_thread->owner;
     list_add_head(&current_thread->children, &user_thread->siblings);
@@ -296,7 +284,6 @@ Thread *create_user_thread(void (*entry_point)(), MemDesc *mem, void *data,
 
 Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
                              ...) {
-  // TODO: cache! chache! cache!
   Thread *kernel_thread = kmalloc(sizeof(Thread));
 
   kernel_thread->ring0 = TRUE;
@@ -309,7 +296,8 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   kernel_thread->wait4child = FALSE;
   kernel_thread->tcb.ret_value = NO_RET_VAL;
 
-  void *user_stack = kmalloc(PAGE_SIZE);
+  void *user_stack = kalloc_page(0);
+  memset((byte *)user_stack, 0, PAGE_SIZE);
 
   kernel_thread->tcb.esp =
       (u32)user_stack + PAGE_SIZE - (K_ESP_SIZE * sizeof(u32));
@@ -317,7 +305,9 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
   set_kernel_esp((u32 *)kernel_thread->tcb.esp, (u32)entry_point);
   kernel_thread->tcb.user_stack_bot = user_stack;
 
-  void *kernel_stack = kmalloc(PAGE_SIZE);
+  void *kernel_stack = kalloc_page(0);
+  memset((byte *)kernel_stack, 0, PAGE_SIZE);
+
   kernel_thread->tcb.kernel_stack_bot = kernel_stack;
   kernel_thread->tcb.tss = (u32)user_stack + PAGE_SIZE;
 
@@ -350,8 +340,10 @@ Thread *create_kernel_thread(void (*entry_point)(), void *data, char *args,
     kernel_thread->std_files[1] = stdout;
     kernel_thread->std_files[2] = stderr;
   }
-
+  bool pi = disable_int();
   list_add_head(&k_threads, &kernel_thread->k_proc_list);
+  enable_int(pi);
+
   if (current_thread != NULL) {
     kernel_thread->owner = current_thread->owner;
     list_add_head(&current_thread->children, &kernel_thread->siblings);

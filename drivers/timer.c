@@ -34,7 +34,6 @@ inline u32 ticks_to_millis(u64 tickCount) {
 
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
-
   Thread *next_thread;
   // Wake up all processes that no longer need to sleep on timers
   wake_up_timers();

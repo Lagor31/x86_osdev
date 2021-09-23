@@ -23,7 +23,7 @@ void shell() {
   resetScreenColors();
 
   print_prompt();
-  char *my_buf = kmalloc(PAGE_SIZE);
+  char *my_buf = kalloc_page(0);
   memset((byte *)my_buf, '\0', PAGE_SIZE);
   while (TRUE) {
     char read = read_stdin();
@@ -57,8 +57,8 @@ void shell() {
 
 void user_input(char *command) {
   kprintf("\n");
-  char *input = kmalloc(PAGE_SIZE);
-  char *args = kmalloc(PAGE_SIZE);
+  char *input = kalloc_page(0);
+  char *args = kalloc_page(0);
   u32 i = 0;
   if (strtokn((const char *)command, (byte *)args, ' ', i) == 0) {
     memcopy((byte *)command, (byte *)input, strlen(command) + 1);
@@ -121,16 +121,17 @@ void user_input(char *command) {
 
   } else if (!strcmp(input, "si")) {
     List *p;
-    disable_int();
     kprintf("Free:\n");
-    list_for_each(p, &kMemCache.free) {
+    // get_lock(slab_lock);
+    List *tem;
+    list_for_each_safe(p, tem, &kMemCache.free) {
       Slab *s = list_entry(p, Slab, head);
       if (s->pinned) setTextColor(RED);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
       resetScreenColors();
     }
     kprintf("Used:\n");
-    list_for_each(p, &kMemCache.used) {
+    list_for_each_safe(p, tem, &kMemCache.used) {
       Slab *s = list_entry(p, Slab, head);
       if (s->pinned) setTextColor(RED);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
@@ -138,13 +139,13 @@ void user_input(char *command) {
     }
 
     kprintf("Empty:\n");
-    list_for_each(p, &kMemCache.empty) {
+    list_for_each_safe(p, tem, &kMemCache.empty) {
       Slab *s = list_entry(p, Slab, head);
       if (s->pinned) setTextColor(RED);
       kprintf("- Cache: %d %d/%d\n", s->size, s->alloc, s->tot);
       resetScreenColors();
     }
-    enable_int();
+    // unlock(slab_lock);
   } else if (!strcmp(input, "exit")) {
     clearScreen();
     sys_exit(0);
@@ -202,18 +203,18 @@ void user_input(char *command) {
     sys_wait4(p->pid);
   } else if (!strcmp(input, "k")) {
     Thread *p;
-    for (int i = 0; i < ALLOC_NUM; ++i) {
-      p = create_kernel_thread(&k_simple_proc, NULL, "k-extra");
-      p->nice = 10;
-      wake_up_thread(p);
-    }
+    // for (int i = 0; i < ALLOC_NUM; ++i) {
+    p = create_kernel_thread(&k_simple_proc, NULL, "k-extra");
+    p->nice = 10;
+    wake_up_thread(p);
+    //}
     // sys_wait4all();
-  } else if (!strcmp(input, "cup")) {
+  } else if (!strcmp(input, "u")) {
     Thread *p;
     for (int i = 0; i < ALLOC_NUM; ++i) {
       MemDesc *thread_mem = kmalloc(sizeof(MemDesc));
       LIST_INIT(&thread_mem->vm_areas);
-      thread_mem->page_directory = (u32)kmalloc(PAGE_SIZE);
+      thread_mem->page_directory = (u32)kalloc_page(0);
       init_user_paging((u32 *)thread_mem->page_directory);
 
       p = create_user_thread(&u_simple_proc, thread_mem, NULL, NULL, "u-extra");
@@ -247,8 +248,8 @@ void user_input(char *command) {
     kprintf("Command '%s' not found!\n", input);
   }
 
-  kfree(input);
-  kfree(args);
+  kfree_page(input);
+  kfree_page(args);
 }
 
 void itaFlag() {

@@ -12,7 +12,7 @@ u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags) {
   MemDesc *thread_mem = kmalloc(sizeof(MemDesc));
   LIST_INIT(&thread_mem->vm_areas);
 
-  thread_mem->page_directory = (u32)kmalloc(PAGE_SIZE);
+  thread_mem->page_directory = (u32)kalloc_page(0);
   init_user_paging((u32 *)thread_mem->page_directory);
 
   List *l;

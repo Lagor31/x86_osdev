@@ -31,6 +31,24 @@ void fakeSysLoadingBar(uint32_t loadingTime);
 // RAND_MAX assumed to be 32767
 u32 rand(void);
 void srand(u32 seed);
+bool ints_enabled();
 
+static inline u32 native_save_fl(void) {
+  u32 flags;
+
+  /*
+   * "=rm" is safe here, because "pop" adjusts the stack before
+   * it evaluates its effective address -- this is part of the
+   * documented behavior of the "pop" instruction.
+   */
+  asm volatile(
+      "# __raw_save_flags\n\t"
+      "pushf ; pop %0"
+      : "=rm"(flags)
+      : /* no input */
+      : "memory");
+
+  return flags;
+}
 
 #endif

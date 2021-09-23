@@ -9,7 +9,7 @@ Thread *pick_next_thread() {
   Thread *next = NULL;
 
   unsigned long long min_runtime = 0;
-  // disable_int();
+  bool pi = disable_int();
   list_for_each(l, &running_queue) {
     Thread *p = (Thread *)list_entry(l, Thread, head);
     if (proc_num == 0) {
@@ -23,7 +23,6 @@ Thread *pick_next_thread() {
     ++proc_num;
   }
 
-  // enable_int();
   pAvg = pTot / (proc_num);
 
   int q = MAX_QUANTUM_MS / proc_num;
@@ -34,6 +33,8 @@ Thread *pick_next_thread() {
     next->timeslice = millis_to_ticks(MIN_QUANTUM_MS);
   else
     next->timeslice = millis_to_ticks((u32)q);
+  enable_int(pi);
+
   return next;
 }
 
@@ -43,19 +44,24 @@ Only executed in interrupt context with no int enabled
 u32 wake_up_timers() {
   int c = 0;
   List *tlist;
-do_timers:
-  if (list_length(&kernel_timers) > 0) {
-    list_for_each(tlist, &kernel_timers) {
-      Timer *activeT = list_entry(tlist, Timer, q);
-      if (tick_count >= activeT->expiration) {
-        list_remove(&activeT->q);
-        wake_up_thread(activeT->thread);
-        kfree(activeT);
-        c++;
-        goto do_timers;
-      }
+  List *temp;
+  bool pi = disable_int();
+
+  list_for_each_safe(tlist, temp, &kernel_timers) {
+    Timer *activeT = list_entry(tlist, Timer, q);
+    if (tick_count >= activeT->expiration) {
+      list_remove(&activeT->q);
+      // wake_up_thread(activeT->thread);
+      activeT->thread->state = TASK_RUNNABLE;
+      list_remove(&activeT->thread->head);
+      list_add_tail(&running_queue, &activeT->thread->head);
+      // unlock(sched_lock);
+      ffree(activeT);
+      c++;
     }
   }
+  enable_int(pi);
+
   return c;
 }
 

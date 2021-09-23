@@ -9,28 +9,28 @@ char* mess = "Child cloned!";
 char* m = "Print!";
 
 void _start() {
-  unsigned r = random(2000);
-  sleepms(r);
+  // unsigned r = random(2000);
+  sleepms(3000);
   // write(1, par, 8);
-  printf(par);
+  // printf(par);
   unsigned pid = clone(CLONE_VM);
 
   // Child
   if (pid == 0) {
     int i = 0;
     while (i++ < 10) {
-      printf(child);
+      // printf(child);
       sleepms(1000);
     }
-    printf(childbye);
+    // printf(childbye);
     exit(0);
   } else {
     // Father
     sleepms(3000);
-    //kill(pid, SIGKILL);
+    // kill(pid, SIGKILL);
     wait4(pid);
     // write(1, parbye, 8);
-    printf(parbye);
+    // printf(parbye);
     exit(0);
   }
 

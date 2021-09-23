@@ -105,7 +105,6 @@ void printTop();
 void work_queue_thread();
 void init_work_queue();
 
-Thread *get_thread(u32 pid);
 u32 sys_clone(void (*entry)(), void *stack_ptr, u32 flags);
 void set_user_esp(u32 *uesp, u32 entry_point, u32 user_stack);
 
@@ -121,6 +120,5 @@ void yield();
 void sleep_on_lock(Thread *t, Lock *l);
 Thread *get_thread(u32 pid);
 void sleep_ms(u32 ms);
-void exterminate(Thread *p);
 
 #endif

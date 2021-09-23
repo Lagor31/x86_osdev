@@ -11,12 +11,18 @@ u32 locks_id = 0;
 Lock *screen_lock;
 Lock *kmem_lock;
 Lock *nmem_lock;
+Lock *slab_lock;
 
-Lock *sched_lock;
 Lock *work_queue_lock;
-void disable_int() { __asm__ __volatile__("cli"); }
+bool disable_int() {
+  bool i = ints_enabled();
+  __asm__ __volatile__("cli");
+  return i;
+}
 
-void enable_int() { __asm__ __volatile__("sti"); }
+void enable_int(bool prev_state) {
+  if (prev_state == TRUE) __asm__ __volatile__("sti");
+}
 
 void init_kernel_locks() {
   LIST_INIT(&kernel_locks);
@@ -25,8 +31,8 @@ void init_kernel_locks() {
   */
   kmem_lock = make_lock_nosleep();
   nmem_lock = make_lock_nosleep();
+  slab_lock = make_lock_nosleep();
   screen_lock = make_lock_nosleep();
-  sched_lock = make_lock_nosleep();
   work_queue_lock = make_lock_nosleep();
   work_queue_lock->state = LOCK_LOCKED;
   work_queue_lock->owner = NULL;
@@ -36,7 +42,9 @@ Lock *make_lock() {
   Lock *outSpin = (Lock *)kmalloc(sizeof(Lock));
   outSpin->id = locks_id++;
   outSpin->state = LOCK_FREE;
+  bool pi = disable_int();
   list_add_head(&kernel_locks, &outSpin->head);
+  enable_int(pi);
   outSpin->wait_q = create_wait_queue();
   return outSpin;
 }

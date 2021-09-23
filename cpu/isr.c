@@ -205,9 +205,11 @@ void register_interrupt_handler(u8 n, isr_t handler) {
 }
 
 void irq_install() {
-  disable_int();  // Setup requested IRQs
+  //bool pi = disable_int();  // Setup requested IRQs
   init_keyboard();
   init_cursor();
   init_scheduler_timer();
-  enable_int();
+  enable_int(TRUE);
+
+  // hlt();
 }

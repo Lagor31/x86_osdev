@@ -63,17 +63,14 @@ void init_memory_ptrs() {
   free memory
 */
 Page *alloc_kernel_pages(int order) {
-  get_lock(kmem_lock);
   BuddyBlock *b = get_buddy_block(order, KERNEL_ALLOC);
   // printBuddy(b, KERNEL_ALLOC);
   if (b == NULL) {
-    unlock(kmem_lock);
     return NULL;
   }
   u32 allocated = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_used_memory += allocated;
   total_kused_memory += allocated;
-  unlock(kmem_lock);
 
   return b->head;
 }
@@ -105,7 +102,10 @@ Page *alloc_normal_pages(int order) {
 }
 
 Page *alloc_fast_pages(int order) {
+  bool pi = disable_int();
+
   BuddyBlock *b = get_buddy_block(order, FAST_ALLOC);
+  enable_int(pi);
   // printBuddy(b, NORMAL_ALLOC);
   if (b == NULL) {
     return NULL;
@@ -122,7 +122,9 @@ void free_kernel_pages(Page *p) {
   u32 released = PAGES_PER_BLOCK(b->order) * PAGE_SIZE;
   total_kused_memory -= released;
   total_used_memory -= released;
+  get_lock(kmem_lock);
   free_buddy_block(b, KERNEL_ALLOC);
+  unlock(kmem_lock);
 }
 
 void free_normal_pages(Page *p) {
@@ -131,7 +133,9 @@ void free_normal_pages(Page *p) {
   total_nused_memory -= released;
   total_used_memory -= released;
   // kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
+  get_lock(nmem_lock);
   free_buddy_block(b, NORMAL_ALLOC);
+  unlock(nmem_lock);
 }
 void free_fast_pages(Page *p) {
   BuddyBlock *b = get_buddy_from_page(p, FAST_ALLOC);
@@ -139,7 +143,9 @@ void free_fast_pages(Page *p) {
   total_fused_memory -= released;
   total_used_memory -= released;
   // kprintf(" Free N PN %d\n", get_pfn_from_page(p, NORMAL_ALLOC));
+  bool pi = disable_int();
   free_buddy_block(b, FAST_ALLOC);
+  enable_int(pi);
 }
 
 void *kmalloc(u32 size) {
@@ -171,7 +177,9 @@ void *kmalloc(u32 size) {
 }
 
 void kfree(void *buf) {
-  if (!sfree(buf)) kfree_page(buf);
+  if (!sfree(buf)) {
+    kprintf("Error freeing cache obj");
+  }
 }
 
 void *nmalloc(u32 size) {
@@ -189,7 +197,9 @@ void *nmalloc(u32 size) {
 }
 
 void *kalloc_page(u32 order) {
+  get_lock(kmem_lock);
   Page *p = alloc_kernel_pages(order);
+  unlock(kmem_lock);
   if (p == NULL) return NULL;
   return get_page_phys_address(p, KERNEL_ALLOC) + KERNEL_VIRTUAL_ADDRESS_BASE;
 }
@@ -216,7 +226,6 @@ void *fmalloc(u32 size) {
   }
   return NULL;
 }
-
 
 // Returns a raw phys address
 void *normal_page_alloc(u32 order) {
