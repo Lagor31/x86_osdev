@@ -59,7 +59,7 @@ void sleep_ms(u32 ms) {
 
 void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
-  p->state = TASK_STOPPED;
+  p->state = TASK_ZOMBIE;
   bool pi = disable_int();
   list_remove(&p->head);
   list_add_head(&stopped_queue, &p->head);
@@ -93,7 +93,6 @@ void kill_process(Thread *p) {
 
   stop_thread(p);
   //  list_remove(&p->k_proc_list);
-  p->state = TASK_ZOMBIE;
 
   List *l;
   /*   if (p->father->wait4child) {

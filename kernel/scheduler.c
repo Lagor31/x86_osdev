@@ -74,9 +74,11 @@ void reschedule() {
     current_thread->runtime += (now - current_thread->last_activation);
     current_thread->timeslice--;
   }
-  if (handle_signals(next))
+  if (handle_signals(next)) {
+    bool pi = disable_int();
     _switch_to_thread(next);
-  else {
+    enable_int(pi);
+  } else {
     reschedule();
   }
 }

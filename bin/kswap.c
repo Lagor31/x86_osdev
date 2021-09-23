@@ -49,7 +49,7 @@ void exterminate() {
       list_remove(&do_me->head);
       enable_int(pi);
     }
-    sleep_ms(5000);
+    sleep_ms(1000);
   }
 }
 

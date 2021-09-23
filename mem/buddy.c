@@ -112,17 +112,6 @@ void buddy_init(Page **input_pages, BuddyBlock **buddies_ext, Buddy *buddy_ext,
         bb[curr_buddy_pos].order = MAX_ORDER;
         list_add_tail(&buddy_ext[curr_order].free_list,
                       &bb[curr_buddy_pos].item);
-        // total_free_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
-        /*  if (kernel_alloc)
-           total_kfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE;
-         else
-           total_nfree_memory += PAGES_PER_BLOCK(MAX_ORDER) * PAGE_SIZE; */
-        /*  if (i <= 3) {
-           kprintf("%d : {Addr : %x, Page: %d, O: %d, Buddy: %x}\n",
-                   curr_buddy_pos, &bb[curr_buddy_pos],
-                   get_pfn_from_page(bb[curr_buddy_pos].head),
-                   bb[curr_buddy_pos].order, find_buddy(&bb[curr_buddy_pos]));
-         } */
       }
       kprintf("\n");
     } else {

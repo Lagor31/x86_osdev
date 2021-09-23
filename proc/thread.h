@@ -23,7 +23,7 @@
 #include "../kernel/signals.h"
 
 #define TASK_RUNNABLE 0
-#define TASK_UNINSTERRUPTIBLE 1
+#define TASK_UNINTERRUPTIBLE 1
 #define TASK_INTERRUPTIBLE 2
 #define TASK_ZOMBIE 3
 #define TASK_STOPPED 4

@@ -11,7 +11,7 @@ void k_child_proc() {
 
 void k_simple_proc() {
   sleep_ms(rand() % 300);
-  //u32 i = 0;
+  // u32 i = 0;
   Elf32_Ehdr *b = (Elf32_Ehdr *)&files_start;
 
   while (TRUE) {
@@ -43,7 +43,9 @@ void k_simple_proc() {
       wake_up_thread(run_me);
       // _switch_to_thread(run_me);
     }
-    sleep_ms(500);
+    sys_wait4all();
+
+    sleep_ms(2000);
     // sys_exit(0);
 
     /*    if (i++ == 5) {

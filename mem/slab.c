@@ -86,7 +86,7 @@ bool sfree(void* b) {
     // unlock(kMemCache.free_lock);
   } else {
     //  get_lock(kMemCache.used_lock);
-    list_add_tail(&kMemCache.used, &s->head);
+    list_add_head(&kMemCache.used, &s->head);
     // unlock(kMemCache.used_lock);
   }
   ret_val = TRUE;

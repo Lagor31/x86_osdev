@@ -8,11 +8,14 @@ char get_thread_state(Thread *t) {
       s = 'R';
       break;
     case TASK_STOPPED:
-      s = 'X';
+      s = 'S';
       break;
-    case TASK_UNINSTERRUPTIBLE:
+    case TASK_UNINTERRUPTIBLE:
     case TASK_INTERRUPTIBLE:
       s = 'Z';
+      break;
+    case TASK_ZOMBIE:
+      s = 'X';
       break;
     default:
       s = '?';
