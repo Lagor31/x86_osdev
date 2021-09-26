@@ -147,7 +147,7 @@ void user_input(char *command) {
     }
     // unlock(slab_lock);
   } else if (!strcmp(input, "exit")) {
-    clearScreen();
+    // clearScreen();
     sys_exit(0);
   } else if (!strcmp(input, "f")) {
     // kprintf("Files start: 0x%x, Files end: 0x%x\n", &files_start,
@@ -194,7 +194,7 @@ void user_input(char *command) {
     p->nice = 0;
     wake_up_thread(p);
     sys_wait4(p->pid);
-    clearScreen();
+    // clearScreen();
   } else if (!strcmp(input, "ps")) {
     Thread *p = NULL;
     p = create_kernel_thread(&ps, NULL, "ps");

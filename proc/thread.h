@@ -120,5 +120,6 @@ void yield();
 void sleep_on_lock(Thread *t, Lock *l);
 Thread *get_thread(u32 pid);
 void sleep_ms(u32 ms);
+void reparent(Thread *adopter, List *adoptees);
 
 #endif

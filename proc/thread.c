@@ -45,7 +45,22 @@ Thread *get_thread(u32 pid) {
   enable_int(pi);
   return NULL;
 }
+void reparent(Thread *adopter, List *adoptees) {
+  List *l;
+  List *tem;
+  adopter = init_thread;
+  list_for_each_safe(l, tem, adoptees) {
+    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+    // LIST_INIT(&p1->siblings);
+    // kprintf("%d ", p1->pid);
+    list_remove(&p1->siblings);
 
+    p1->father = adopter;
+    list_add_head(&adopter->children, &p1->siblings);
+    // goto redo;
+  }
+  // kprintf("\n");
+}
 void sleep_ms(u32 ms) {
   Timer *t = fmalloc(sizeof(Timer));
   t->expiration = millis_to_ticks(ms) + tick_count;
@@ -59,8 +74,9 @@ void sleep_ms(u32 ms) {
 
 void stop_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
-  p->state = TASK_ZOMBIE;
   bool pi = disable_int();
+  p->state = TASK_STOPPED;
+
   list_remove(&p->head);
   list_add_head(&stopped_queue, &p->head);
   enable_int(pi);
@@ -73,16 +89,18 @@ void sleep_on_lock(Thread *t, Lock *l) {
 
 void sleep_thread(Thread *p) {
   if (p->pid == IDLE_PID) return;
-  p->state = TASK_INTERRUPTIBLE;
   bool pi = disable_int();
+  p->state = TASK_INTERRUPTIBLE;
+
   list_remove(&p->head);
   list_add_head(&sleep_queue, &p->head);
   enable_int(pi);
 }
 
 void wake_up_thread(Thread *p) {
-  p->state = TASK_RUNNABLE;
   bool pi = disable_int();
+  p->state = TASK_RUNNABLE;
+
   list_remove(&p->head);
   list_add_tail(&running_queue, &p->head);
   enable_int(pi);
@@ -95,11 +113,12 @@ void kill_process(Thread *p) {
   //  list_remove(&p->k_proc_list);
 
   List *l;
+  //List *tem;
   /*   if (p->father->wait4child) {
       wake_up_thread(p->father);
       p->father->wait4child = FALSE;
     } */
-  bool wake_up_parent = TRUE;
+  //bool wake_up_parent = TRUE;
   List *temp;
   bool pi = disable_int();
 
@@ -113,10 +132,13 @@ void kill_process(Thread *p) {
   }
   enable_int(pi);
 
-  if (p->father->wait4child) {
+  child_awoken(p->father->pid);
+  // wake_up_thread(p->father);
+
+  /* if (p->father->wait4child) {
     list_for_each(l, &p->father->children) {
       Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
-      if (p1->state != TASK_ZOMBIE) wake_up_parent = FALSE;
+      if (p1->state != TASK_STOPPED) wake_up_parent = FALSE;
     }
   }
 
@@ -128,29 +150,16 @@ void kill_process(Thread *p) {
       wake_up_thread(p->father);
       p->father->wait4child = FALSE;
     }
-  }
+  } */
 
   /* list_for_each(l, &p->files) {
     // FD *close_me = list_entry(l, FD, q);
 
   } */
 
-// Reparenting
-redo:
-  list_for_each(l, &p->children) {
-    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
-    // LIST_INIT(&p1->siblings);
-    // kprintf("%d ", p1->pid);
-    list_remove(&p1->siblings);
+  // Reparenting
+  // redo:
 
-    p1->father = p->father;
-    list_add_head(&p->father->children, &p1->siblings);
-    goto redo;
-  }
-  // kprintf("\n");
-
-  list_remove(&p->children);
-  list_remove(&p->siblings);
   /*
     Work *w = kmalloc(sizeof(Work));
     w->type = 9;

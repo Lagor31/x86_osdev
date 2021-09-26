@@ -6,25 +6,49 @@
 
 void sys_exit(u32 ret_code) {
   Thread *p = current_thread;
-  stop_thread(p);
+  // stop_thread(p);
   kill_process(p);
   p->exit_value = ret_code;
   reschedule();
 }
 
-void sys_wait4(u32 pid) {
+u32 sys_wait4(u32 pid) {
   Thread *p = get_thread(pid);
-  if (p == NULL) return;
+  if (p == NULL) return -1;
+  if (p->state == TASK_STOPPED || p->state == TASK_ZOMBIE) goto done;
   Thread *t = current_thread;
   t->wait4 = pid;
   sleep_thread(current_thread);
   reschedule();
+done:
+  current_thread->wait4 = 0;
+  p->state = TASK_ZOMBIE;
+  wake_up_thread(current_thread);
+  return p->exit_value;
 }
 
 void sys_wait4all() {
-  sleep_thread(current_thread);
+  List *l;
+
+  bool all_ko = TRUE;
+  list_for_each(l, &current_thread->children) {
+    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+    if (p1->state == TASK_STOPPED || p1->state == TASK_ZOMBIE) continue;
+    all_ko = FALSE;
+    break;
+  }
+
+  if (all_ko) goto done;
   current_thread->wait4child = TRUE;
+
+  sleep_thread(current_thread);
   reschedule();
+done:
+  current_thread->wait4child = FALSE;
+  list_for_each(l, &current_thread->children) {
+    Thread *p1 = (Thread *)list_entry(l, Thread, siblings);
+    if (p1->state == TASK_STOPPED) p1->state = TASK_ZOMBIE;
+  }
 }
 
 void sys_printf(char *s) {
@@ -47,7 +71,20 @@ u32 sys_write(u32 fd, byte *buf, size_t len) {
   return 0;
 }
 
-u32 sys_getpid() { return (u32)current_thread->pid; }
+void get_pid_t() { sys_exit(current_thread->father->pid); }
+
+u32 sys_getpid() {
+  MemDesc *thread_mem;
+  thread_mem = current_thread->father->mem;
+  // thread_mem->page_directory = current_thread->father->mem->page_directory;
+  // init_user_paging((u32 *)thread_mem->page_directory);
+
+  Thread *t =
+      create_user_thread(get_pid_t, thread_mem, NULL, NULL, "sys_getpid");
+
+  sys_wait4(t->pid);
+  return (u32)t->exit_value;
+}
 
 void sys_sleepms(u32 millis) { sleep_ms(millis); }
 u32 sys_random(u32 max) { return rand() % max; }
@@ -69,7 +106,7 @@ void syscall_handler(registers_t *regs) {
       sys_wait4all();
       break;
     case SYS_WAIT4:
-      sys_wait4(regs->ebx);
+      regs->eax = sys_wait4(regs->ebx);
       break;
     case SYS_RANDOM:
       regs->eax = sys_random(regs->ebx);

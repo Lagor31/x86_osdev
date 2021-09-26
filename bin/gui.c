@@ -8,7 +8,6 @@ void gui() {
     const char *title =
         " Up: %4ds         "
         "              K:%3d/%3d                %2d/%02d/%4d - %02d:%02d:%02d ";
-    // disable_int();
     u32 prevPos = getCursorOffset();
 
     setCursorPos(0, 0);
@@ -21,7 +20,6 @@ void gui() {
 
     setCursorOffset(prevPos);
     textColor = prevTextColor;
-    // enable_int();
     sleep_ms(200);
   }
 }

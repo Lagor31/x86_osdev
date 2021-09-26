@@ -6,6 +6,7 @@ void k_child_proc() {
   // kprintf("ints? %d\n", ints_enabled());
 
   sleep_ms(r);
+  kprintf("Process %d about to die\n", current_thread->pid);
   sys_exit(0);
 }
 
@@ -24,7 +25,7 @@ void k_simple_proc() {
         setCursorOffset(prevPos); */
     // kprintf("Releasing lock 0x%x :(\n\n", &kernel_spin_lock);
 
-    sleep_ms(rand() % 5 * 5000);
+    sleep_ms(2000);
     // print_elf(b);
 
     for (size_t i = 0; i < ALLOC_NUM; i++) {
@@ -36,17 +37,25 @@ void k_simple_proc() {
 
       Thread *t = create_kernel_thread(k_child_proc, NULL, "k-child");
       t->nice = 9;
+      // kprintf("Spawned child %d\n", t->pid);
       wake_up_thread(t);
-      //_switch_to_thread(t);
 
       Thread *run_me = load_elf(b);
       wake_up_thread(run_me);
+      // sys_wait4(t->pid);
+
+      //_switch_to_thread(t);
+      // kprintf("Child %d died!\n");
+
       // _switch_to_thread(run_me);
     }
-    sys_wait4all();
 
-    sleep_ms(2000);
-    // sys_exit(0);
+    //sys_wait4all();
+    kprintf("All children ko\n");
+    sleep_ms(30000);
+    kprintf("Quitting\n");
+
+  // sys_exit(0);
 
     /*    if (i++ == 5) {
          Thread *t = create_kernel_thread(k_child_proc, NULL, "k-child");

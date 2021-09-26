@@ -14,6 +14,7 @@ Lock *nmem_lock;
 Lock *slab_lock;
 
 Lock *work_queue_lock;
+
 bool disable_int() {
   bool i = ints_enabled();
   __asm__ __volatile__("cli");

@@ -4,6 +4,8 @@ void reap(Thread *p) {
   bool pi = disable_int();
   list_remove(&p->k_proc_list);
   list_remove(&p->head);
+  list_remove(&p->siblings);
+  list_remove(&p->children);
   enable_int(pi);
   if (p->ring0 == FALSE) {
     VMArea *vma;
@@ -42,6 +44,7 @@ void exterminate() {
   while (TRUE) {
     list_for_each_safe(sq, tem, &stopped_queue) {
       do_me = list_entry(sq, Thread, head);
+      if (do_me->state != TASK_ZOMBIE) continue;
       //++i;
       // kprintf("Cleanup after %d\n", do_me->t->pid);
       reap(do_me);
@@ -49,7 +52,7 @@ void exterminate() {
       list_remove(&do_me->head);
       enable_int(pi);
     }
-    sleep_ms(1000);
+    sleep_ms(5000);
   }
 }
 

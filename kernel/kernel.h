@@ -10,7 +10,7 @@
 #define PA(X) ((X) - (KERNEL_VIRTUAL_ADDRESS_BASE))
 #define VA(X) ((X) + (KERNEL_VIRTUAL_ADDRESS_BASE))
 
-#define ALLOC_NUM 10
+#define ALLOC_NUM 20
 #define ALLOC_SIZE 0
 #define HOSTNAME "challenger"
 

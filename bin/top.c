@@ -174,7 +174,8 @@ void top() {
   while (TRUE) {
     char read = read_stdin();
     if (read == 'q') {
-      kill_process(draw);
+      sys_kill(draw->pid, SIGKILL);
+      sys_wait4(draw->pid);
       sys_exit(0);
     }
   }

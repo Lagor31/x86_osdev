@@ -22,15 +22,15 @@ void _start() {
       // printf(child);
       sleepms(1000);
     }
-    // printf(childbye);
+    printf(childbye);
     exit(0);
   } else {
     // Father
-    sleepms(3000);
+    sleepms(1000);
     // kill(pid, SIGKILL);
     wait4(pid);
     // write(1, parbye, 8);
-    // printf(parbye);
+    printf(parbye);
     exit(0);
   }
 

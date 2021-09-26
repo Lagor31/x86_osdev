@@ -260,7 +260,7 @@ KPAGE_TABLE_MASK equ 3
 PGE_ENABLE equ 0x80
 PG_ENABLE equ 0x80000000
 KERNEL_VIRTUAL_BASE equ 0xC0000000
-KSTACK_SIZE equ 0x1000 ; Number of bytes
+KSTACK_SIZE equ 0x4000 ; Number of bytes
 
 ; Space for our Paging Structures (their address needs to be aligned at 4K)
 align 0x1000 ; align to 4KB, the size of a page
