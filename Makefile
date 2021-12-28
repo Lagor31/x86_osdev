@@ -3,7 +3,7 @@
 # $^ = all dependencies
 
 
-QEMU-MEM = 4G
+QEMU-MEM = 1G
 GDB = gdb
 CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 		 -Wall -Wextra  -ffreestanding
@@ -51,7 +51,7 @@ os.iso: kernel/kernel.elf
 	grub-mkrescue -o os.iso iso
 
 run-iso: os.iso
-	qemu-system-i386 -m ${QEMU-MEM} -cdrom $<
+	qemu-system-i386 -m ${QEMU-MEM} -cdrom $< -net nic,model=rtl8139
 # Generic rules for wildcards
 # To make an object, always compile from its .c
 %.o: %.c ${HEADERS}

@@ -149,6 +149,7 @@ void free_fast_pages(Page *p) {
 }
 
 void *kmalloc(u32 size) {
+  // goto no_cache;
   if (size <= MAX_SLAB_SIZE) {
     // Search in cache or create one ad hoc
     if (size < 4) size = 4;
@@ -161,7 +162,10 @@ void *kmalloc(u32 size) {
     out = salloc(size);
     if (out == NULL) kprintf("NULL after cache creation\n");
     return out;
-  } else {
+  }
+
+  else {
+  no_cache:
     u32 order = 0;
     u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
 
@@ -177,6 +181,8 @@ void *kmalloc(u32 size) {
 }
 
 void kfree(void *buf) {
+  /* kfree_page(buf);
+  return; */
   if (!sfree(buf)) {
     kprintf("Error freeing cache obj");
   }

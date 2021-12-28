@@ -12,7 +12,7 @@ void _start() {
   // unsigned r = random(2000);
   sleepms(3000);
   // write(1, par, 8);
-  // printf(par);
+  printf(par);
   unsigned pid = clone(CLONE_VM);
 
   // Child
@@ -22,7 +22,7 @@ void _start() {
       // printf(child);
       sleepms(1000);
     }
-    printf(childbye);
+   // printf(childbye);
     exit(0);
   } else {
     // Father
@@ -30,7 +30,7 @@ void _start() {
     // kill(pid, SIGKILL);
     wait4(pid);
     // write(1, parbye, 8);
-    printf(parbye);
+    //printf(parbye);
     exit(0);
   }
 

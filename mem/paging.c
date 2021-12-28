@@ -32,7 +32,7 @@ void gpFaultHandler(registers_t *regs) {
   kprintf("GP Fault CS:EIP 0x%x:0x%x ErrNo: %d Syscall: %d\n", regs->cs,
           regs->eip, regs->err_code, regs->ebx);
   resetScreenColors();
-
+  hlt();
   kill_process(current_thread);
   reschedule();
 }
@@ -82,24 +82,24 @@ void pageFaultHandler(registers_t *regs) {
     resetScreenColors(); */
 
     if (!is_valid_va(fault_address, current_thread)) {
-     /*  setBackgroundColor(RED);
-      setTextColor(WHITE);
-      kprintf("0x%x - Not a thread address!\n", fault_address); */
+      /*  setBackgroundColor(RED);
+       setTextColor(WHITE);
+       kprintf("0x%x - Not a thread address!\n", fault_address); */
       goto bad_area;
     }
   }
 
   if (isPresent(&thread_pgdir[pd_pos])) {
-   /*  kprintf(
-        "The 4Mb Page containing the address has already been allocated, "
-        "checking PTE...\n"); */
+    /*  kprintf(
+         "The 4Mb Page containing the address has already been allocated, "
+         "checking PTE...\n"); */
     Pte *pte = (Pte *)VA(thread_pgdir[pd_pos] & 0xFFFFF000);
     if (!isPresent(&pte[pte_pos])) {
-    /*   kprintf(
-          "4KB page containing the address is not mapped.\nNeeds to be set "
-          "to "
-          "pfn %d\n",
-          pfn); */
+      /*   kprintf(
+            "4KB page containing the address is not mapped.\nNeeds to be set "
+            "to "
+            "pfn %d\n",
+            pfn); */
       setPfn(&pte[pte_pos], pfn);
       setPresent(&pte[pte_pos]);
       setReadWrite(&pte[pte_pos]);
@@ -132,6 +132,8 @@ bad_area:
           regs->err_code);
   kprintf("Addr: 0x%x, UMode: %d, PermVio: %d, W: %d\n", fault_address,
           usermode, perm_violation, write);
+  hlt();
+
   kprintf("Killing PID: %d\n", current_thread->pid);
   resetScreenColors();
   kill_process(current_thread);
@@ -151,9 +153,8 @@ Pte *make_kernel_pte(uint32_t pdRow) {
   return pte;
 }
 
-
 void init_user_paging(u32 *user_pd) {
-  //skprintf("Setting up user paging...\n");
+  // skprintf("Setting up user paging...\n");
   u16 i = 0;
   // int num_entries = (total_kernel_pages >> 10);
 

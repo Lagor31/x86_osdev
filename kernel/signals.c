@@ -47,7 +47,7 @@ bool handle_signals(Thread *t) {
   bool ret = TRUE;
   for (i = 1; i <= SIG_NUM; i++) {
     if ((sigs->pending & sigs->active) & 1 << i) {
-      kprintf("Received sig %s for pid %d\n", get_sig_name(1 << i), t->pid);
+      //kprintf("Received sig %s for pid %d\n", get_sig_name(1 << i), t->pid);
       sigs->pending &= ~(1 << i);
       // Kill thread
       if (1 << i == SIGKILL) {

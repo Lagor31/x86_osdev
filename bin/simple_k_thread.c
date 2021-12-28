@@ -6,7 +6,7 @@ void k_child_proc() {
   // kprintf("ints? %d\n", ints_enabled());
 
   sleep_ms(r);
-  kprintf("Process %d about to die\n", current_thread->pid);
+  // kprintf("Process %d about to die\n", current_thread->pid);
   sys_exit(0);
 }
 
@@ -47,15 +47,15 @@ void k_simple_proc() {
       //_switch_to_thread(t);
       // kprintf("Child %d died!\n");
 
-      // _switch_to_thread(run_me);
+      _switch_to_thread(run_me);
     }
 
-    //sys_wait4all();
-    kprintf("All children ko\n");
-    sleep_ms(30000);
-    kprintf("Quitting\n");
+    sys_wait4all();
+    // kprintf("All children ko\n");
+    sleep_ms(300);
+    // kprintf("Quitting\n");
 
-  // sys_exit(0);
+    // sys_exit(0);
 
     /*    if (i++ == 5) {
          Thread *t = create_kernel_thread(k_child_proc, NULL, "k-child");
