@@ -56,7 +56,7 @@ static void keyboard_callback(registers_t *regs) {
   append(keyboard_buffer, scancode);
   key_buf_avail++;
   wake_up_thread(kwork_thread);
-  //kprintf("K!\n");
+  // kprintf("K!\n");
   UNUSED(regs);
 }
 

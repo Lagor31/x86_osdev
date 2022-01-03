@@ -17,6 +17,8 @@
 #include "idt.h"
 #include "ports.h"
 #include "../drivers/timer.h"
+#include "../drivers/pci.h"
+#include "../net/net.h"
 
 #include "isr.h"
 
@@ -205,10 +207,11 @@ void register_interrupt_handler(u8 n, isr_t handler) {
 }
 
 void irq_install() {
-  //bool pi = disable_int();  // Setup requested IRQs
+  // bool pi = disable_int();  // Setup requested IRQs
   init_keyboard();
   init_cursor();
   init_scheduler_timer();
+  init_networking();
   enable_int(TRUE);
 
   // hlt();

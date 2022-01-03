@@ -20,6 +20,7 @@
 #include "../lib/shutdown.h"
 #include "../lib/utils.h"
 #include "../bin/binaries.h"
+#include "../drivers/pci.h"
 
 KMultiBoot2Info kMultiBootInfo;
 bool kernel_init_ok = FALSE;
@@ -56,7 +57,7 @@ void kernel_main(u32 magic, u32 addr) {
 
   kPrintOKMessage("Enabling kernel paging...");
   init_kernel_paging();
-  //init_user_paging();
+  // init_user_paging();
 
   kPrintOKMessage("Kernel paging enabled!");
 
@@ -68,8 +69,7 @@ void kernel_main(u32 magic, u32 addr) {
   kPrintOKMessage("Kernel procs enabled!");
   kPrintOKMessage("Kernel inizialized!");
   resetScreenColors();
-
+  pci_init();
   irq_install();
-
   srand(tick_count);
 }

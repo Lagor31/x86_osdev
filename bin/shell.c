@@ -7,6 +7,7 @@
 #include "../kernel/elf.h"
 #include "../kernel/timer.h"
 #include "../mem/mem.h"
+#include "../drivers/rtl8139.h"
 #include "../mem/slab.h"
 void *fm;
 
@@ -177,8 +178,41 @@ void user_input(char *command) {
     kprintf("Buf: 0x%x\n", fm);
     kfree_normal(nor);
     ffree(fm);
-  } else if (!strcmp(input, "pci")) {
-    checkAllBuses();
+  } else if (!strcmp(input, "mac")) {
+    // checkAllBuses();
+    print_mac_address();
+  } else if (!strcmp(input, "tx")) {
+    unsigned char arp[] = {// Dest
+                           0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                           // Src (Mio MACADDR)
+                           0x52, 0x54, 0x00, 0x5f, 0x03, 0x78,
+                           // Type
+                           0x08, 0x06,
+
+                           // Arp
+                           // Type: ethernet
+                           0x00, 0x01,
+                           // Prot: IP
+                           0x08, 0x00,
+                           // Addr size (mac/ IP)
+                           0x06, 0x04,
+                           // ARP Request
+                           0x00, 0x01,
+                           // Mio MACADDR
+                           0x52, 0x54, 0x00, 0x5f, 0x03, 0x78,
+                           // Mio IP
+                           0xc0, 0xa8, 0x01, 31,
+                           // Target MAC (broadcast)
+                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                           // Target IP (192.168.1.254)
+                           0xc0, 0xa8, 0x01, 254,
+
+                           // Ethernet padding
+                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                           0x00};
+
+    rtl8139_send_packet(arp, 60);
   } else if (!strcmp(input, "date")) {
     print_date();
   } else if (!strcmp(input, "lsof")) {

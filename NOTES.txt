@@ -1,3 +1,9 @@
+Networking:
+Adding bridged connection (only on cabl, not wifi)
+# ip link add name br0 type bridge
+# ip link set dev br0 up
+# ip link set dev eth0(phys int) master br0
+
 TODO:
 current_thread ptr at bottom of kernel stack?
 RB-tree ordered by runtime to run the one with the lowest runtime
