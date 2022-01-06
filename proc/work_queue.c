@@ -5,6 +5,7 @@
 #include "../lock/lock.h"
 #include "../kernel/files.h"
 #include "../kernel/scheduler.h"
+#include "../net/net.h"
 
 #include "thread.h"
 
@@ -15,6 +16,18 @@ void init_work_queue() { LIST_INIT(&kwork_queue); }
 
 void work_queue_thread() {
   while (TRUE) {
+    List *l;
+  net_work:
+    list_for_each(l, &kwork_queue) {
+      Work *p1 = (Work *)list_entry(l, Work, work_queue);
+      // if (p1->type == 0) kprintf("Received network packet\n");
+      list_remove(&p1->work_queue);
+      print_ethernet_packet(p1->data);
+      ffree(p1->data);
+      ffree(p1);
+      goto net_work;
+    }
+
     while (key_buf_avail > 0) {
       char scancode = keyboard_buffer[key_buf_last++ % 1024];
       char c = '\0';
@@ -33,7 +46,6 @@ void work_queue_thread() {
         key_buf_last = 0;
       }
     }
-
 
     sleep_thread(current_thread);
     reschedule();

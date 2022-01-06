@@ -3,11 +3,14 @@
 #include "screen.h"
 #include "../mem/mem.h"
 #include "../kernel/kernel.h"
+#include "../lib/utils.h"
+#include "../proc/thread.h"
 
 pci_dev_t pci_rtl8139_device;
 rtl8139_dev_t rtl8139_device;
 u8 TSAD_array[4] = {0x20, 0x24, 0x28, 0x2C};
 u8 TSD_array[4] = {0x10, 0x14, 0x18, 0x1C};
+u32 current_packet_ptr;
 
 u32 rtl8139_init() {
   pci_rtl8139_device = pci_get_device(RTL8139_VENDOR_ID, RTL8139_DEVICE_ID, -1);
@@ -48,8 +51,9 @@ u32 rtl8139_init() {
   // Sets the TOK and ROK bits high
   outw(rtl8139_device.io_base + 0x3C, 0x0005);
 
-  // (1 << 7) is the WRAP bit, 0xf is AB+AM+APM+AAP
-  outdw(rtl8139_device.io_base + 0x44, 0xf | (1 << 7));
+  // (1 << 7) is the WRAP bit, 0xf is AB+AM+APM+AAP, 0xe = Not promiscuous
+
+  outdw(rtl8139_device.io_base + 0x44, RTL_APM | RTL_AB | RTL_AM | (1 << 7));
 
   // Sets the RE and TE bits high
   outb(rtl8139_device.io_base + 0x37, 0x0C);
@@ -74,18 +78,20 @@ u32 rtl8139_init() {
 }
 
 void rtl8139_packet_handler(registers_t *regs) {
-  // kprintf("RTL8139 interript was fired !!!! \n");
+  // kprintf("RTL8139 interrupt was fired !!!! \n");
   uint16_t status = inw(rtl8139_device.io_base + 0x3e);
 
   if (status & TOK) {
     kprintf("Packet sent\n");
+    if (!(status & ROK)) outw(rtl8139_device.io_base + 0x3E, 0x5);
   }
   if (status & ROK) {
-    kprintf("Received packet\n");
-    //  receive_packet();
+    // kprintf("Received packet\n");
+    receive_packet();
+    outw(rtl8139_device.io_base + 0x3E, 0x5);
   }
 
-  outw(rtl8139_device.io_base + 0x3E, 0x5);
+  UNUSED(regs);
 }
 
 void rtl8139_send_packet(void *data, uint32_t len) {
@@ -99,6 +105,43 @@ void rtl8139_send_packet(void *data, uint32_t len) {
         (uint32_t)phys_addr);
   outdw(rtl8139_device.io_base + TSD_array[rtl8139_device.tx_cur++], len);
   if (rtl8139_device.tx_cur > 3) rtl8139_device.tx_cur = 0;
+}
+
+void receive_packet() {
+  do {
+    uint16_t *t = (uint16_t *)(rtl8139_device.rx_buffer + current_packet_ptr);
+    // Skip packet header, get packet length
+    uint16_t packet_length = *(t + 1);
+
+    // Skip, packet header and packet length, now t points to the packet data
+    t = t + 2;
+    // qemu_printf("Printing packet at addr 0x%x\n", (uint32_t)t);
+    // xxd(t, packet_length);
+
+    // Now, ethernet layer starts to handle the packet(be sure to make a copy of
+    // the packet, insteading of using the buffer) and probabbly this should be
+    // done in a separate thread...
+    void *packet = fmalloc(packet_length);
+    memcopy((byte *)t, packet, packet_length);
+    Work *net_work = fmalloc(sizeof(Work));
+    net_work->data = packet;
+    net_work->type = 0;
+    net_work->t = NULL;
+    net_work->size = packet_length;
+    LIST_INIT(&net_work->work_queue);
+    list_add_tail(&kwork_queue, &net_work->work_queue);
+    wake_up_thread(kwork_thread);
+    /*  ffree(packet);
+     ffree(net_work); */
+
+    current_packet_ptr =
+        (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
+
+    if (current_packet_ptr > RX_BUF_SIZE) current_packet_ptr -= RX_BUF_SIZE;
+
+    outw(rtl8139_device.io_base + CAPR, current_packet_ptr - 0x10);
+
+  } while (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE));
 }
 
 void print_mac_address() {

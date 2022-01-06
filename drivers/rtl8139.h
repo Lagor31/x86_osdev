@@ -57,6 +57,16 @@ enum RTL8139_registers {
   PARA7c = 0x7c,  // Magic transceiver parameter register
 };
 
+// RCR register bits
+#define RTL_AAP (1 << 0) /* Accept Physical Address Packets */
+#define RTL_APM (1 << 1) /* Accept Physical Match Packets */
+#define RTL_AM (1 << 2)  /* Accept Multicast Packets */
+#define RTL_AB (1 << 3)  /* Accept Broadcast Packets */
+
+#define RTL_BUFE (1 << 0) /* Receive Buffer Empty */
+
+#define RTL_ROK (1 << 0)
+
 typedef struct tx_desc {
   uint32_t phys_addr;
   uint32_t packet_size;

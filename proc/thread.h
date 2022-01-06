@@ -79,6 +79,8 @@ struct Thread {
 typedef struct work_task {
   u8 type;
   Thread *t;
+  void *data;
+  u32 size;
   List work_queue;
 } Work;
 

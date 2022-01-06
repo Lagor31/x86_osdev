@@ -7,8 +7,10 @@
 #include "../kernel/elf.h"
 #include "../kernel/timer.h"
 #include "../mem/mem.h"
-#include "../drivers/rtl8139.h"
+//#include "../drivers/rtl8139.h"
 #include "../mem/slab.h"
+#include "../net/ethernet.h"
+
 void *fm;
 
 void *nor;
@@ -182,37 +184,14 @@ void user_input(char *command) {
     // checkAllBuses();
     print_mac_address();
   } else if (!strcmp(input, "tx")) {
-    unsigned char arp[] = {// Dest
-                           0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                           // Src (Mio MACADDR)
-                           0x52, 0x54, 0x00, 0x5f, 0x03, 0x78,
-                           // Type
-                           0x08, 0x06,
+    byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    byte src[] = {0xfe, 0xfe, 0xde, 0x32, 0x12, 0x34};
+    u16 type = 0x0608;
+    byte *data = kmalloc(30);
+    memset(data, 31, 30);
+    send_ethernet_packet(dest, type, data, 10);
 
-                           // Arp
-                           // Type: ethernet
-                           0x00, 0x01,
-                           // Prot: IP
-                           0x08, 0x00,
-                           // Addr size (mac/ IP)
-                           0x06, 0x04,
-                           // ARP Request
-                           0x00, 0x01,
-                           // Mio MACADDR
-                           0x52, 0x54, 0x00, 0x5f, 0x03, 0x78,
-                           // Mio IP
-                           0xc0, 0xa8, 0x01, 31,
-                           // Target MAC (broadcast)
-                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                           // Target IP (192.168.1.254)
-                           0xc0, 0xa8, 0x01, 254,
-
-                           // Ethernet padding
-                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                           0x00};
-
-    rtl8139_send_packet(arp, 60);
+    // rtl8139_send_packet(arp, 60);
   } else if (!strcmp(input, "date")) {
     print_date();
   } else if (!strcmp(input, "lsof")) {
