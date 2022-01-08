@@ -2,7 +2,7 @@
 #include "../drivers/rtl8139.h"
 #include "../cpu/isr.h"
 #include "../drivers/screen.h"
-
+#include "../mem/mem.h"
 /*
  We only support RTL8139
 */
@@ -20,7 +20,7 @@ bool is_equal_macs(byte *mac1, byte *mac2) {
 
 void print_ethernet_packet(void *packet) {
   byte *p = (byte *)packet;
-  if (!is_equal_macs(&p[0], rtl8139_device.mac_addr)) return;
+  // if (!is_equal_macs(&p[0], rtl8139_device.mac_addr)) return;
   kprintf("Packet Address: 0x%x\n", packet);
   kprintf("MAC Address Src: %01x:%01x:%01x:%01x:%01x:%01x\n", p[6], p[7], p[8],
           p[9], p[10], p[11]);
@@ -34,5 +34,13 @@ void print_ethernet_packet(void *packet) {
     kprintf("IP Src: %d.%d.%d.%d\n", p[26], p[27], p[28], p[29]);
     kprintf("IP Dst: %d.%d.%d.%d\n", p[30], p[31], p[32], p[33]);
   }
+
   kprintf("\n");
+}
+
+u32 switch_endian16(u16 nb) { return (nb >> 8) | (nb << 8); }
+
+u32 switch_endian32(u32 nb) {
+  return ((nb >> 24) & 0xff) | ((nb << 8) & 0xff0000) | ((nb >> 8) & 0xff00) |
+         ((nb << 24) & 0xff000000);
 }

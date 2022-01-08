@@ -2,7 +2,7 @@
 # $< = first dependency
 # $^ = all dependencies
 
-
+MACADDR=fe:fe:de:32:12:34
 QEMU-MEM = 1G
 GDB = gdb
 CFLAGS = -g -m32  -fno-pie -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
@@ -31,7 +31,7 @@ kernel/kernel.o: kernel/kernel.c
 
 
 debug-iso: os.iso kernel/kernel.elf
-	qemu-system-i386 -d cpu_reset  -m ${QEMU-MEM} -s -cdrom os.iso -net nic,model=rtl8139 -net user -enable-kvm &
+	qemu-system-i386 -d cpu_reset  -m ${QEMU-MEM} -s -cdrom os.iso -nic bridge,br=br0,model=rtl8139,mac=${MACADDR}  &
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel/kernel.elf"
 
 clean:
@@ -51,7 +51,10 @@ os.iso: kernel/kernel.elf
 	grub-mkrescue -o os.iso iso
 
 run-iso: os.iso
-	qemu-system-i386 -m ${QEMU-MEM} -cdrom $< -net nic,model=rtl8139 -net user -enable-kvm
+	qemu-system-i386 -m ${QEMU-MEM} -cdrom $<  -nic bridge,br=br0,model=rtl8139,mac=${MACADDR} -enable-kvm
+	
+	
+#	-net nic,model=rtl8139 -net user -enable-kvm
 # Generic rules for wildcards
 # To make an object, always compile from its .c
 %.o: %.c ${HEADERS}

@@ -9,7 +9,7 @@
 #include "../mem/mem.h"
 //#include "../drivers/rtl8139.h"
 #include "../mem/slab.h"
-#include "../net/ethernet.h"
+#include "../net/arp.h"
 
 void *fm;
 
@@ -183,14 +183,16 @@ void user_input(char *command) {
   } else if (!strcmp(input, "mac")) {
     // checkAllBuses();
     print_mac_address();
+    print_buddy_usage();
   } else if (!strcmp(input, "tx")) {
     byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     byte src[] = {0xfe, 0xfe, 0xde, 0x32, 0x12, 0x34};
     u16 type = 0x0608;
     byte *data = kmalloc(30);
     memset(data, 31, 30);
-    send_ethernet_packet(dest, type, data, 10);
-
+    // send_ethernet_packet(dest, type, data, 10);
+    byte ip[4] = {192, 168, 1, 254};
+    send_arp_request(ip);
     // rtl8139_send_packet(arp, 60);
   } else if (!strcmp(input, "date")) {
     print_date();

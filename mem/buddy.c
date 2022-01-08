@@ -230,6 +230,9 @@ BuddyBlock *get_buddy_block(int order, u8 alloc_type) {
   } else {
     if (order == MAX_ORDER) {
       kprintf("We just ran out of buddy blocks. KernelAlloc=%d\n", alloc_type);
+      print_buddy_usage();
+      disable_int();
+      hlt();
       /* kprintf("List[%d].length = %d\n", order,
               list_length(&buddy[order].free_list)); */
 
@@ -296,6 +299,24 @@ BuddyBlock *find_buddy_order(BuddyBlock *me, int order, u8 alloc_type) {
 
 BuddyBlock *find_buddy(BuddyBlock *me, u8 kernel_alloc) {
   return find_buddy_order(me, me->order, kernel_alloc);
+}
+
+void print_buddy_usage() {
+  u32 used = 0;
+  u32 free = 0;
+
+  for (u32 o = 0; o <= MAX_ORDER; ++o) {
+    kprintf("FastMem Order %d: Tot: %d ", o, fast_buddy[o].bitmap_length);
+    for (u32 i = 0; i < fast_buddy[o].bitmap_length; ++i) {
+      if (fast_buddy[o].bitmap[i] == FREE)
+        ++free;
+      else
+        used++;
+    }
+    kprintf(" Used: %d Free: %d\n", used, free);
+    used = 0;
+    free = 0;
+  }
 }
 
 void set_block_usage(BuddyBlock *p, int order, u8 used, u8 kernel_alloc) {

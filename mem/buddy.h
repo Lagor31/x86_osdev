@@ -17,6 +17,8 @@ extern uint32_t total_fused_memory;
 extern uint32_t phys_normal_offset;
 extern uint32_t phys_fast_offset;
 
+void print_buddy_usage();
+
 typedef struct buddy_block {
   Page *head;
   uint8_t order;
@@ -35,7 +37,6 @@ extern BuddyBlock *fast_buddies;
 extern Buddy buddy[MAX_ORDER + 1];
 extern Buddy normal_buddy[MAX_ORDER + 1];
 extern Buddy fast_buddy[MAX_ORDER + 1];
-
 
 void *phys_from_pfn(uint32_t pfn, uint8_t kernel_alloc);
 uint32_t get_pfn_from_page(Page *p, uint8_t kernel_alloc);
