@@ -73,3 +73,10 @@ void kernel_main(u32 magic, u32 addr) {
   irq_install();
   srand(tick_count);
 }
+
+
+void panic(char *s){
+  kprintfColor(RED, s);
+  disable_int();
+  hlt();
+}

@@ -11,7 +11,7 @@
 #define VA(X) ((X) + (KERNEL_VIRTUAL_ADDRESS_BASE))
 
 #define ALLOC_NUM 50
-#define ALLOC_SIZE 0
+#define ALLOC_SIZE 5
 #define HOSTNAME "challenger"
 
 extern KMultiBoot2Info kMultiBootInfo;
@@ -33,5 +33,6 @@ void shutdown();
 void printInitScreen();
 void user_input(char *);
 void showHelp();
+void panic(char *);
 
 #endif

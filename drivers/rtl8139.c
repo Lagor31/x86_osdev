@@ -121,16 +121,15 @@ void receive_packet() {
     // Now, ethernet layer starts to handle the packet(be sure to make a copy of
     // the packet, insteading of using the buffer) and probabbly this should be
     // done in a separate thread...
-    void *packet = fmalloc(packet_length);
+    void *packet = fmalloc_new(packet_length);
     memcopy((byte *)t, packet, packet_length);
-    Work *net_work = fmalloc(sizeof(Work));
+    Work *net_work = fmalloc_new(sizeof(Work));
     net_work->data = packet;
     net_work->type = 0;
     net_work->t = NULL;
     net_work->size = packet_length;
     LIST_INIT(&net_work->work_queue);
     list_add_tail(&kwork_queue, &net_work->work_queue);
-    wake_up_thread(kwork_thread);
     /*  ffree(packet);
      ffree(net_work); */
 
@@ -142,6 +141,7 @@ void receive_packet() {
     outw(rtl8139_device.io_base + CAPR, current_packet_ptr - 0x10);
 
   } while (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE));
+  wake_up_thread(kwork_thread);
 }
 
 void print_mac_address() {

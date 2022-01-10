@@ -11,6 +11,7 @@
 #include "slab.h"
 #include "vma.h"
 #include "mem.h"
+#include "buddy_new.h"
 
 u8 *free_mem_addr;  // Represents the first byte that we can freely allocate
 u8 *stack_pointer;  // Top of the kernel stack
@@ -233,6 +234,44 @@ void *fmalloc(u32 size) {
   return NULL;
 }
 
+void *fmalloc_new(u32 size) {
+  //bool pi = disable_int();
+  u32 order = 0;
+  u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
+
+  while (order <= MAX_ORDER) {
+    if (pages <= (u32)PAGES_PER_BLOCK(order)) {
+      // kprintf("Size %d -> Order: %d\n", size, order);
+      // kprintf(" Order: %d\n", order);
+      //kprintf("Fmalloc size %d O:%d\n", size, order);
+      BuddyBlockNew *p = get_buddy_new(order, &fast_buddy_new);
+      //enable_int(pi);
+      if (p == NULL) return NULL;
+      return VA(calc_buddy_phys(p, &fast_buddy_new));
+    }
+    order++;
+  }
+  //enable_int(pi);
+  return NULL;
+}
+
+void ffree(void *p) {
+  if (p == NULL) return;
+  // kprintf("Free ptr %x ", ptr);
+  free_fast_pages(get_page_from_address(p, FAST_ALLOC));
+}
+
+void ffree_new(void *p) {
+  if (p == NULL) return;
+  // kprintf("Free ptr %x ", ptr);
+  u32 phys = PA(p);
+  //bool pi = disable_int();
+  BuddyBlockNew *free_me = buddy_new_from_phys(phys, &fast_buddy_new);
+  free_buddy_new(free_me, &fast_buddy_new);
+  //enable_int(pi);
+  // free_fast_pages(get_page_from_address(p, FAST_ALLOC));
+}
+
 // Returns a raw phys address
 void *normal_page_alloc(u32 order) {
   Page *p = alloc_normal_pages(order);
@@ -251,11 +290,12 @@ void kfree_normal(void *ptr) {
   // kprintf("Free ptr %x ", ptr);
   free_normal_pages(get_page_from_address(ptr, NORMAL_ALLOC));
 }
-void ffree(void *p) {
+/* void ffree(void *p) {
   if (p == NULL) return;
   // kprintf("Free ptr %x ", ptr);
   free_fast_pages(get_page_from_address(p, FAST_ALLOC));
-}
+} */
+
 BuddyBlock *get_buddy_from_page(Page *p, u8 alloc_type) {
   if (alloc_type == KERNEL_ALLOC)
     return (BuddyBlock *)(buddies + get_pfn_from_page(p, alloc_type));
@@ -280,6 +320,9 @@ void init_memory_alloc() {
   kprintf("Alloc fast buddy system\n");
   buddy_init(&fast_pages, &fast_buddies, fast_buddy, total_fast_pages);
 
+  init_buddy_new(total_fast_pages, total_kernel_pages + total_fast_pages,
+                 &fast_buddy_new);
+
   phys_normal_offset = (total_kernel_pages + total_fast_pages) * PAGE_SIZE;
   kprintf("Physical normal offset : 0x%x\n", phys_normal_offset);
   kprintf("Alloc normal buddy system\n");
@@ -295,6 +338,7 @@ void init_memory_alloc() {
           firstNUsedPages, ++four_megs_pages);
   for (i = 0; i < four_megs_pages; ++i) kalloc_nosleep(10);
   kprintf("Total free memory=%dMb\n", total_used_memory / 1024 / 1024);
+
   // After this, you can no longer use boot_alloc
 }
 

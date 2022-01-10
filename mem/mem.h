@@ -45,6 +45,9 @@ void kfree_normal(void *ptr);
 void *fmalloc(u32 size);
 void ffree(void *);
 
+void *fmalloc_new(u32 size);
+void ffree_new(void *);
+
 void *kalloc_nosleep(u32 order);
 void *normal_page_alloc(u32 order);
 void kfree_page(void *ptr);

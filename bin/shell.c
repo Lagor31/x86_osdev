@@ -10,6 +10,7 @@
 //#include "../drivers/rtl8139.h"
 #include "../mem/slab.h"
 #include "../net/arp.h"
+#include "../mem/buddy_new.h"
 
 void *fm;
 
@@ -180,6 +181,37 @@ void user_input(char *command) {
     kprintf("Buf: 0x%x\n", fm);
     kfree_normal(nor);
     ffree(fm);
+  } else if (!strcmp(input, "buddy")) {
+    /*  BuddyBlockNew *b = get_buddy_new(1);
+     print_buddy_new(b);
+     print_buddy_new(calc_buddy(b)); */
+    // for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o);
+
+    // free_buddy_new(b);
+    BuddyBlockNew *alloc_b[ALLOC_NUM];
+    for (u32 i = 0; i < ALLOC_NUM; ++i) {
+      u32 r = rand() % (MAX_ORDER);
+      // kprintf("%d) Size: %d -> ", i, r);
+      alloc_b[i] = get_buddy_new(r, &fast_buddy_new);
+      print_buddy_new(alloc_b[i]);
+    }
+    kprintfColor(GREEN, "Alloc done!\n");
+
+    // for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o,
+    // &fast_buddy_new);
+    for (u32 k = 0; k < ALLOC_NUM; k++) {
+      //    kprintf("%d) Freeing\n", k);
+      // if (k % 3 == 0) continue;
+      // print_buddy_new(alloc_b[k]);
+      free_buddy_new(alloc_b[k], &fast_buddy_new);
+    }
+
+    // free_buddy_new(b);
+  } else if (!strcmp(input, "bi")) {
+    for (u32 o = 0; o <= MAX_ORDER; ++o) {
+      print_buddy_status(o, &fast_buddy_new);
+      u32 a = 0;
+    }
   } else if (!strcmp(input, "mac")) {
     // checkAllBuses();
     print_mac_address();
