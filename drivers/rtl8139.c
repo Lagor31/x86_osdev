@@ -5,6 +5,7 @@
 #include "../kernel/kernel.h"
 #include "../lib/utils.h"
 #include "../proc/thread.h"
+#include "../mem/buddy_new.h"
 
 pci_dev_t pci_rtl8139_device;
 rtl8139_dev_t rtl8139_device;
@@ -108,6 +109,8 @@ void rtl8139_send_packet(void *data, uint32_t len) {
 }
 
 void receive_packet() {
+  u32 packets = 0;
+  u32 total_size = 0;
   do {
     uint16_t *t = (uint16_t *)(rtl8139_device.rx_buffer + current_packet_ptr);
     // Skip packet header, get packet length
@@ -122,6 +125,8 @@ void receive_packet() {
     // the packet, insteading of using the buffer) and probabbly this should be
     // done in a separate thread...
     void *packet = fmalloc_new(packet_length);
+    total_size += packet_length;
+
     memcopy((byte *)t, packet, packet_length);
     Work *net_work = fmalloc_new(sizeof(Work));
     net_work->data = packet;
@@ -130,8 +135,12 @@ void receive_packet() {
     net_work->size = packet_length;
     LIST_INIT(&net_work->work_queue);
     list_add_tail(&kwork_queue, &net_work->work_queue);
-    /*  ffree(packet);
-     ffree(net_work); */
+    ++packets;
+    /* for (u32 i = 0; i < ALLOC_NUM; ++i) {
+      u32 r = rand() % (MAX_ORDER - 8);
+      // kprintf("%d) Size: %d -> ", i, r);
+      get_buddy_new(r, &fast_buddy_new);
+    } */
 
     current_packet_ptr =
         (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
@@ -141,6 +150,10 @@ void receive_packet() {
     outw(rtl8139_device.io_base + CAPR, current_packet_ptr - 0x10);
 
   } while (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE));
+
+  if (packets >= 3 || total_size >= 200)
+    kprintf("Packets: %d Size: %d\n", packets, total_size);
+    
   wake_up_thread(kwork_thread);
 }
 

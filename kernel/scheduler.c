@@ -56,7 +56,7 @@ u32 wake_up_timers() {
       list_remove(&activeT->thread->head);
       list_add_tail(&running_queue, &activeT->thread->head);
       // unlock(sched_lock);
-      ffree(activeT);
+      ffree_new(activeT);
       c++;
     }
   }

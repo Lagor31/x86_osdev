@@ -17,14 +17,19 @@ void init_work_queue() { LIST_INIT(&kwork_queue); }
 void work_queue_thread() {
   while (TRUE) {
     List *l;
+    u32 packets_received = list_length(&kwork_queue);
+    if (packets_received > 3)
+      kprintf("%d packets in queue\n", packets_received);
   net_work:
     list_for_each(l, &kwork_queue) {
       Work *p1 = (Work *)list_entry(l, Work, work_queue);
       // if (p1->type == 0) kprintf("Received network packet\n");
       list_remove(&p1->work_queue);
-      print_ethernet_packet(p1->data);
+      //print_ethernet_packet(p1->data);
+      bool pi = disable_int();
       ffree_new(p1->data);
       ffree_new(p1);
+      enable_int(pi);
       goto net_work;
     }
 

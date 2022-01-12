@@ -211,7 +211,7 @@ void irq_install() {
   init_keyboard();
   init_cursor();
   init_scheduler_timer();
-  init_networking();
+  //init_networking();
   enable_int(TRUE);
 
   // hlt();

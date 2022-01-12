@@ -53,4 +53,6 @@ void *normal_page_alloc(u32 order);
 void kfree_page(void *ptr);
 void printFree();
 void print_mem_desc(MemDesc *m);
+u32 calc_page_order(u32 byte_size);
+
 #endif

@@ -13,6 +13,9 @@
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "cmos.h"
+#include "../mem/buddy_new.h"
+
+BuddyBlockNew *alloc_b_timer[ALLOC_NUM];
 
 unsigned long long last_timer_int = 0;
 /*
@@ -35,8 +38,28 @@ inline u32 ticks_to_millis(u64 tickCount) {
 void scheduler_handler(registers_t *regs) {
   ++tick_count;
   Thread *next_thread;
+  u32 alloc_ptr_sched[ALLOC_NUM];
+
+  for (u32 i = 0; i < ALLOC_NUM; ++i) {
+    u32 r = rand() % (8192);
+    // kprintf("%d) Size: %d -> ", i, r);
+    alloc_ptr_sched[i] = (u32)fmalloc_new(r);
+    // ffree_new((void *) alloc_ptr[i]);
+    // free_buddy_new(alloc_b[i], &fast_buddy_new);
+    // print_buddy_new(alloc_b[i]);
+  }
+
+ // kprintf("\n");
   // Wake up all processes that no longer need to sleep on timers
   wake_up_timers();
+
+  for (u32 k = 0; k < ALLOC_NUM; ++k) {
+    //    kprintf("%d) Freeing\n", k);
+    // if (k % 3 == 0) continue;
+    // print_buddy_new(alloc_b[k]);
+    ffree_new((void *)alloc_ptr_sched[k]);
+  }
+  //kprintf("\n");
 
   if (current_thread != NULL && current_thread->timeslice > 0) goto no_resched;
 

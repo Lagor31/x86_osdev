@@ -234,42 +234,44 @@ void *fmalloc(u32 size) {
   return NULL;
 }
 
-void *fmalloc_new(u32 size) {
-  //bool pi = disable_int();
+u32 calc_page_order(u32 byte_size) {
   u32 order = 0;
-  u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
+  u32 pages = byte_size / PAGE_SIZE + ((byte_size % PAGE_SIZE) > 0 ? 1 : 0);
 
   while (order <= MAX_ORDER) {
     if (pages <= (u32)PAGES_PER_BLOCK(order)) {
       // kprintf("Size %d -> Order: %d\n", size, order);
-      // kprintf(" Order: %d\n", order);
-      //kprintf("Fmalloc size %d O:%d\n", size, order);
-      BuddyBlockNew *p = get_buddy_new(order, &fast_buddy_new);
-      //enable_int(pi);
-      if (p == NULL) return NULL;
-      return VA(calc_buddy_phys(p, &fast_buddy_new));
+      return order;
     }
     order++;
   }
-  //enable_int(pi);
-  return NULL;
+  return -1;
+}
+
+void *fmalloc_new(u32 size) {
+  void *outP = NULL;
+  u32 order = calc_page_order(size);
+  BuddyBlockNew *p = get_buddy_new(order, &fast_buddy_new);
+  outP = (void *)VA((u32)calc_buddy_phys(p, &fast_buddy_new));
+  // kprintf("Alloc ptr: 0x%x Buddy: ", outP);
+  // print_buddy_new(p);
+  return outP;
+}
+
+void ffree_new(void *p) {
+  if (p == NULL) return;
+  //kprintf("Free ptr %x ", p);
+  u32 phys = PA((u32)p);
+  BuddyBlockNew *free_me = buddy_new_from_phys(phys, &fast_buddy_new);
+  // kprintf("Buddy: ");
+  // print_buddy_new(free_me);
+  free_buddy_new(free_me, &fast_buddy_new);
 }
 
 void ffree(void *p) {
   if (p == NULL) return;
   // kprintf("Free ptr %x ", ptr);
   free_fast_pages(get_page_from_address(p, FAST_ALLOC));
-}
-
-void ffree_new(void *p) {
-  if (p == NULL) return;
-  // kprintf("Free ptr %x ", ptr);
-  u32 phys = PA(p);
-  //bool pi = disable_int();
-  BuddyBlockNew *free_me = buddy_new_from_phys(phys, &fast_buddy_new);
-  free_buddy_new(free_me, &fast_buddy_new);
-  //enable_int(pi);
-  // free_fast_pages(get_page_from_address(p, FAST_ALLOC));
 }
 
 // Returns a raw phys address
@@ -318,10 +320,9 @@ void init_memory_alloc() {
   phys_fast_offset = (total_kernel_pages)*PAGE_SIZE;
   kprintf("Physical fast offset : 0x%x\n", phys_fast_offset);
   kprintf("Alloc fast buddy system\n");
-  buddy_init(&fast_pages, &fast_buddies, fast_buddy, total_fast_pages);
+  // buddy_init(&fast_pages, &fast_buddies, fast_buddy, total_fast_pages);
 
-  init_buddy_new(total_fast_pages, total_kernel_pages + total_fast_pages,
-                 &fast_buddy_new);
+  init_buddy_new(total_fast_pages, total_kernel_pages, &fast_buddy_new);
 
   phys_normal_offset = (total_kernel_pages + total_fast_pages) * PAGE_SIZE;
   kprintf("Physical normal offset : 0x%x\n", phys_normal_offset);

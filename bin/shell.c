@@ -21,6 +21,9 @@ void print_prompt() {
   kprintf("\n%s@%s # ", current_thread->owner->username, HOSTNAME);
   resetScreenColors();
 }
+
+BuddyBlockNew *alloc_b[ALLOC_NUM];
+
 void shell() {
   char prev_read = '\0';
 
@@ -85,10 +88,12 @@ void user_input(char *command) {
     clearScreen();
   } else if (!strcmp(input, "timers")) {
     List *t;
+    bool pi = disable_int();
     list_for_each(t, &kernel_timers) {
       Timer *activeT = list_entry(t, Timer, q);
       kprintf("Timer of %s\n", activeT->thread->command);
     }
+    enable_int(pi);
   } else if (!strcmp(input, "slab")) {
     /* for (size_t i = 0; i < 10; i++) {
       u32 s = rand() % 20 + 1;
@@ -181,37 +186,58 @@ void user_input(char *command) {
     kprintf("Buf: 0x%x\n", fm);
     kfree_normal(nor);
     ffree(fm);
-  } else if (!strcmp(input, "buddy")) {
-    /*  BuddyBlockNew *b = get_buddy_new(1);
-     print_buddy_new(b);
-     print_buddy_new(calc_buddy(b)); */
-    // for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o);
+  } else if (!strcmp(input, "tb")) {
+    bool pi = disable_int();
 
-    // free_buddy_new(b);
-    BuddyBlockNew *alloc_b[ALLOC_NUM];
+    void *alloc_ptr[ALLOC_NUM];
     for (u32 i = 0; i < ALLOC_NUM; ++i) {
-      u32 r = rand() % (MAX_ORDER);
+      u32 r = rand() % (8192);
+      // kprintf("%d) Size: %d -> ", i, r);
+      alloc_ptr[i] = fmalloc_new(r);
+      ffree_new(alloc_ptr[i]);
+
+      // free_buddy_new(alloc_b[i], &fast_buddy_new);
+      // print_buddy_new(alloc_b[i]);
+    }
+    //kprintfColor(GREEN, "Alloc done!\n");
+
+    for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
+   /*  for (u32 k = 0; k < ALLOC_NUM; ++k) {
+      //    kprintf("%d) Freeing\n", k);
+      // if (k % 3 == 0) continue;
+      // print_buddy_new(alloc_b[k]);
+      ffree_new(alloc_ptr[k]);
+    } */
+    kprintfColor(LIGHTBLUE, "Freeing done!\n");
+    enable_int(pi);
+
+  } else if (!strcmp(input, "buddy")) {
+    bool pi = disable_int();
+    for (u32 i = 0; i < ALLOC_NUM; ++i) {
+      u32 r = rand() % (MAX_ORDER - 7);
       // kprintf("%d) Size: %d -> ", i, r);
       alloc_b[i] = get_buddy_new(r, &fast_buddy_new);
-      print_buddy_new(alloc_b[i]);
+      // free_buddy_new(alloc_b[i], &fast_buddy_new);
+      // print_buddy_new(alloc_b[i]);
     }
     kprintfColor(GREEN, "Alloc done!\n");
 
-    // for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o,
-    // &fast_buddy_new);
-    for (u32 k = 0; k < ALLOC_NUM; k++) {
+    for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
+    for (u32 k = 0; k < ALLOC_NUM; ++k) {
       //    kprintf("%d) Freeing\n", k);
       // if (k % 3 == 0) continue;
       // print_buddy_new(alloc_b[k]);
       free_buddy_new(alloc_b[k], &fast_buddy_new);
     }
-
+    kprintfColor(BLUE, "Freeing done!\n");
+    enable_int(pi);
     // free_buddy_new(b);
   } else if (!strcmp(input, "bi")) {
+    // bool pi = disable_int();
     for (u32 o = 0; o <= MAX_ORDER; ++o) {
       print_buddy_status(o, &fast_buddy_new);
-      u32 a = 0;
     }
+    // enable_int(pi);
   } else if (!strcmp(input, "mac")) {
     // checkAllBuses();
     print_mac_address();

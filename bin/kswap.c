@@ -20,7 +20,7 @@ void reap(Thread *p) {
     for (size_t i = 0; i < PD_SIZE; i++) {
       if (isPresent(&pd[i]) && isUsermode(&pd[i])) {
         c++;
-        ffree((void *)VA(pd[i] & 0xFFFFF000));
+        ffree_new((void *)VA(pd[i] & 0xFFFFF000));
       }
     }
     c *= PAGE_SIZE / 1024;

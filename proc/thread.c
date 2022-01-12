@@ -62,10 +62,10 @@ void reparent(Thread *adopter, List *adoptees) {
   // kprintf("\n");
 }
 void sleep_ms(u32 ms) {
-  Timer *t = fmalloc(sizeof(Timer));
+  bool pi = disable_int();
+  Timer *t = fmalloc_new(sizeof(Timer));
   t->expiration = millis_to_ticks(ms) + tick_count;
   t->thread = current_thread;
-  bool pi = disable_int();
   list_add_head(&kernel_timers, &t->q);
   enable_int(pi);
   sleep_thread(current_thread);
@@ -113,12 +113,12 @@ void kill_process(Thread *p) {
   //  list_remove(&p->k_proc_list);
 
   List *l;
-  //List *tem;
+  // List *tem;
   /*   if (p->father->wait4child) {
       wake_up_thread(p->father);
       p->father->wait4child = FALSE;
     } */
-  //bool wake_up_parent = TRUE;
+  // bool wake_up_parent = TRUE;
   List *temp;
   bool pi = disable_int();
 
@@ -126,7 +126,7 @@ void kill_process(Thread *p) {
     Timer *activeT = list_entry(l, Timer, q);
     if (activeT->thread->pid == p->pid) {
       list_remove(&activeT->q);
-      ffree(activeT);
+      ffree_new(activeT);
       break;
     }
   }

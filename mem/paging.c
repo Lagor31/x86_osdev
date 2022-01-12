@@ -108,7 +108,7 @@ void pageFaultHandler(registers_t *regs) {
   } else {
     /* kprintf("The 4MB page was NOT allocated!\n"); */
 
-    Pte *newPte = (Pte *)fmalloc(PAGE_SIZE);
+    Pte *newPte = (Pte *)fmalloc_new(PAGE_SIZE);
     memset((byte *)newPte, 0, PAGE_SIZE);
     setPfn(&newPte[pte_pos], pfn);
     setPresent(&newPte[pte_pos]);
