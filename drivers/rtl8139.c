@@ -109,8 +109,8 @@ void rtl8139_send_packet(void *data, uint32_t len) {
 }
 
 void receive_packet() {
-  u32 packets = 0;
-  u32 total_size = 0;
+  /* u32 packets = 0;
+  u32 total_size = 0; */
   do {
     uint16_t *t = (uint16_t *)(rtl8139_device.rx_buffer + current_packet_ptr);
     // Skip packet header, get packet length
@@ -124,8 +124,13 @@ void receive_packet() {
     // Now, ethernet layer starts to handle the packet(be sure to make a copy of
     // the packet, insteading of using the buffer) and probabbly this should be
     // done in a separate thread...
+
+    /* for (u32 o = 0; o <= MAX_ORDER; ++o) {
+      print_buddy_status(o, &fast_buddy_new);
+    }
+    kprintf("\n"); */
     void *packet = fmalloc_new(packet_length);
-    total_size += packet_length;
+    //total_size += packet_length;
 
     memcopy((byte *)t, packet, packet_length);
     Work *net_work = fmalloc_new(sizeof(Work));
@@ -135,7 +140,7 @@ void receive_packet() {
     net_work->size = packet_length;
     LIST_INIT(&net_work->work_queue);
     list_add_tail(&kwork_queue, &net_work->work_queue);
-    ++packets;
+    //++packets;
     /* for (u32 i = 0; i < ALLOC_NUM; ++i) {
       u32 r = rand() % (MAX_ORDER - 8);
       // kprintf("%d) Size: %d -> ", i, r);
@@ -151,9 +156,9 @@ void receive_packet() {
 
   } while (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE));
 
-  if (packets >= 3 || total_size >= 200)
+  /* if (packets >= 3 || total_size >= 200)
     kprintf("Packets: %d Size: %d\n", packets, total_size);
-    
+ */
   wake_up_thread(kwork_thread);
 }
 

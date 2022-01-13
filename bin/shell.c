@@ -7,7 +7,7 @@
 #include "../kernel/elf.h"
 #include "../kernel/timer.h"
 #include "../mem/mem.h"
-//#include "../drivers/rtl8139.h"
+#include "../drivers/rtl8139.h"
 #include "../mem/slab.h"
 #include "../net/arp.h"
 #include "../mem/buddy_new.h"
@@ -177,15 +177,6 @@ void user_input(char *command) {
     asm volatile("sti");
   } else if (!strcmp(input, "free")) {
     printFree();
-  } else if (!strcmp(input, "fast")) {
-    fm = fmalloc(2 * 1024 * 1024);
-    nor = nmalloc(4 * 1024 * 1024);
-    kprintf("F: 0x%x\n", fm);
-    kprintf("N: 0x%x\n", nor);
-  } else if (!strcmp(input, "ffree")) {
-    kprintf("Buf: 0x%x\n", fm);
-    kfree_normal(nor);
-    ffree(fm);
   } else if (!strcmp(input, "tb")) {
     bool pi = disable_int();
 
@@ -194,20 +185,20 @@ void user_input(char *command) {
       u32 r = rand() % (8192);
       // kprintf("%d) Size: %d -> ", i, r);
       alloc_ptr[i] = fmalloc_new(r);
-      ffree_new(alloc_ptr[i]);
+      // ffree_new(alloc_ptr[i]);
 
       // free_buddy_new(alloc_b[i], &fast_buddy_new);
       // print_buddy_new(alloc_b[i]);
     }
-    //kprintfColor(GREEN, "Alloc done!\n");
+    // kprintfColor(GREEN, "Alloc done!\n");
 
     for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
-   /*  for (u32 k = 0; k < ALLOC_NUM; ++k) {
+    for (u32 k = 0; k < ALLOC_NUM; ++k) {
       //    kprintf("%d) Freeing\n", k);
       // if (k % 3 == 0) continue;
       // print_buddy_new(alloc_b[k]);
       ffree_new(alloc_ptr[k]);
-    } */
+    }
     kprintfColor(LIGHTBLUE, "Freeing done!\n");
     enable_int(pi);
 
@@ -233,21 +224,19 @@ void user_input(char *command) {
     enable_int(pi);
     // free_buddy_new(b);
   } else if (!strcmp(input, "bi")) {
-    // bool pi = disable_int();
+    bool pi = disable_int();
     for (u32 o = 0; o <= MAX_ORDER; ++o) {
       print_buddy_status(o, &fast_buddy_new);
     }
-    // enable_int(pi);
+    enable_int(pi);
   } else if (!strcmp(input, "mac")) {
-    // checkAllBuses();
     print_mac_address();
-    print_buddy_usage();
   } else if (!strcmp(input, "tx")) {
-    byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   /*  byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     byte src[] = {0xfe, 0xfe, 0xde, 0x32, 0x12, 0x34};
     u16 type = 0x0608;
     byte *data = kmalloc(30);
-    memset(data, 31, 30);
+    memset(data, 31, 30) */;
     // send_ethernet_packet(dest, type, data, 10);
     byte ip[4] = {192, 168, 1, 254};
     send_arp_request(ip);

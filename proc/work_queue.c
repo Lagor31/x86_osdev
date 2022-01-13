@@ -17,9 +17,9 @@ void init_work_queue() { LIST_INIT(&kwork_queue); }
 void work_queue_thread() {
   while (TRUE) {
     List *l;
-    u32 packets_received = list_length(&kwork_queue);
+    /* u32 packets_received = list_length(&kwork_queue);
     if (packets_received > 3)
-      kprintf("%d packets in queue\n", packets_received);
+      kprintf("%d packets in queue\n", packets_received); */
   net_work:
     list_for_each(l, &kwork_queue) {
       Work *p1 = (Work *)list_entry(l, Work, work_queue);

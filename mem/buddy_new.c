@@ -1,6 +1,7 @@
 #include "buddy_new.h"
 #include "../mem/mem.h"
 #include "../drivers/screen.h"
+#include "../kernel/kernel.h"
 
 BuddyMemDesc fast_buddy_new;
 
@@ -47,7 +48,6 @@ BuddyBlockNew *buddy_new_from_phys(u32 phys, BuddyMemDesc *mem_desc) {
 }
 
 void print_buddy_status(u32 order, BuddyMemDesc *mem_test) {
-  List *l;
   if (list_length(&mem_test->free_lists[order]) > 0)
     kprintf("#Free Buddies of order %d = %d\n", order,
             list_length(&mem_test->free_lists[order]));
@@ -87,8 +87,8 @@ BuddyBlockNew *get_buddy_new(u32 order, BuddyMemDesc *mem_desc) {
   // Need to break
   u32 b_pfn = found->pfn + (PAGES_PER_BLOCK((order + 1)) / 2);
   BuddyBlockNew *my_buddy = &mem_desc->all_buddies[b_pfn];
-  //list_remove(&my_buddy->free_list);
-  //list_remove(&found->free_list);
+  // list_remove(&my_buddy->free_list);
+  // list_remove(&found->free_list);
 
   my_buddy->free = TRUE;
   my_buddy->order = order;
@@ -98,7 +98,7 @@ BuddyBlockNew *get_buddy_new(u32 order, BuddyMemDesc *mem_desc) {
   return found;
 }
 
-u32 calc_my_buddy_new_pfn(BuddyBlockNew *b, u32 order, BuddyMemDesc *mem_desc) {
+u32 calc_my_buddy_new_pfn(BuddyBlockNew *b, u32 order) {
   u32 buddy_pfn;
   if ((b->pfn / PAGES_PER_BLOCK(order)) % 2 == 0)
     buddy_pfn = b->pfn + PAGES_PER_BLOCK(order);
@@ -109,8 +109,9 @@ u32 calc_my_buddy_new_pfn(BuddyBlockNew *b, u32 order, BuddyMemDesc *mem_desc) {
 
 BuddyBlockNew *calc_free_buddy(BuddyBlockNew *b, BuddyMemDesc *mem_desc) {
   if (b->order >= MAX_ORDER) return NULL;
-  u32 buddy_pfn = calc_my_buddy_new_pfn(b, b->order, mem_desc);
+  u32 buddy_pfn = calc_my_buddy_new_pfn(b, b->order);
   BuddyBlockNew *found_buddy = &mem_desc->all_buddies[buddy_pfn];
+  if (found_buddy->pfn != buddy_pfn) panic("Buddy has mismatching PFN!");
   if (found_buddy->free == TRUE && found_buddy->order == b->order)
     return found_buddy;
   else
@@ -125,11 +126,8 @@ void free_buddy_new(BuddyBlockNew *b, BuddyMemDesc *mem_desc) {
     panic("Trying to free a free buddy\n");
   }
   // bool pi = disable_int();
-
-  // BuddyBlockNew *my_buddy = calc_buddy(b, b->order, mem_desc);
-  List *l;
   BuddyBlockNew *list_my_buddy = calc_free_buddy(b, mem_desc);
-  if (list_my_buddy != NULL && b->order < MAX_ORDER) {
+  if (list_my_buddy != NULL) {
     // kprintfColor(GREEN, "Buddy free\n");
 
     // Buddy is free, we need to merge
@@ -140,14 +138,14 @@ void free_buddy_new(BuddyBlockNew *b, BuddyMemDesc *mem_desc) {
      print_buddy_new(list_my_buddy); */
     // Merge
     b->free = FALSE;
-    //list_remove(&b->free_list);
+    // list_remove(&b->free_list);
     list_my_buddy->free = FALSE;
     list_remove(&list_my_buddy->free_list);
 
     BuddyBlockNew *base_bigger_block = b;
     u32 upper_order = b->order + 1;
     if (b->pfn > list_my_buddy->pfn) base_bigger_block = list_my_buddy;
-    //list_remove(&base_bigger_block->free_list);
+    // list_remove(&base_bigger_block->free_list);
     base_bigger_block->order = upper_order;
     base_bigger_block->free = FALSE;
     /*  list_add_head(&mem_desc->free_lists[b->order + 1],
@@ -159,7 +157,7 @@ void free_buddy_new(BuddyBlockNew *b, BuddyMemDesc *mem_desc) {
     // kprintfColor(RED, "Buddy not free!\n");
     // bool pi = disable_int();
     b->free = TRUE;
-    //list_remove(&b->free_list);
+    // list_remove(&b->free_list);
     list_add_head(&mem_desc->free_lists[b->order], &b->free_list);
     // kprintfColor(BLUE, "Freed buddy O: %d\n", b->order);
   }

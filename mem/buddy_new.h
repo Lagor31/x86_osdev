@@ -30,5 +30,5 @@ BuddyBlockNew* get_buddy_new(u32 order, BuddyMemDesc* buddy_test);
 void print_buddy_new(BuddyBlockNew* b);
 void free_buddy_new(BuddyBlockNew* b, BuddyMemDesc* buddy_test);
 BuddyBlockNew* calc_free_buddy(BuddyBlockNew* b, BuddyMemDesc* buddy_test);
-u32 calc_my_buddy_new_pfn(BuddyBlockNew* b, u32 order, BuddyMemDesc* mem_desc);
+u32 calc_my_buddy_new_pfn(BuddyBlockNew* b, u32 order);
 #endif
