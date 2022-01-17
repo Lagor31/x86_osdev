@@ -13,6 +13,7 @@
 #include "../mem/buddy_new.h"
 
 void *fm;
+void *alloc_ptr[ALLOC_NUM];
 
 void *nor;
 void print_prompt() {
@@ -180,11 +181,10 @@ void user_input(char *command) {
   } else if (!strcmp(input, "tb")) {
     bool pi = disable_int();
 
-    void *alloc_ptr[ALLOC_NUM];
     for (u32 i = 0; i < ALLOC_NUM; ++i) {
       u32 r = rand() % (8192);
       // kprintf("%d) Size: %d -> ", i, r);
-      alloc_ptr[i] = fmalloc_new(r);
+      alloc_ptr[i] = fmalloc_new(100);
       // ffree_new(alloc_ptr[i]);
 
       // free_buddy_new(alloc_b[i], &fast_buddy_new);
@@ -192,7 +192,9 @@ void user_input(char *command) {
     }
     // kprintfColor(GREEN, "Alloc done!\n");
 
+
     for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
+    kprintfColor(PURPLE, "Allocs done: %d\n", allocs_done); 
     for (u32 k = 0; k < ALLOC_NUM; ++k) {
       //    kprintf("%d) Freeing\n", k);
       // if (k % 3 == 0) continue;
@@ -229,6 +231,7 @@ void user_input(char *command) {
       print_buddy_status(o, &fast_buddy_new);
     }
     enable_int(pi);
+    kprintfColor(GREEN, "Allocs done: %d TotalPackets: %d\n", allocs_done, total_packets);
   } else if (!strcmp(input, "mac")) {
     print_mac_address();
   } else if (!strcmp(input, "tx")) {

@@ -12,7 +12,7 @@ rtl8139_dev_t rtl8139_device;
 u8 TSAD_array[4] = {0x20, 0x24, 0x28, 0x2C};
 u8 TSD_array[4] = {0x10, 0x14, 0x18, 0x1C};
 u32 current_packet_ptr;
-
+u32 packets = 0;
 u32 rtl8139_init() {
   pci_rtl8139_device = pci_get_device(RTL8139_VENDOR_ID, RTL8139_DEVICE_ID, -1);
   uint32_t ret = pci_read(pci_rtl8139_device, PCI_BAR0);
@@ -84,11 +84,12 @@ void rtl8139_packet_handler(registers_t *regs) {
 
   if (status & TOK) {
     kprintf("Packet sent\n");
-    if (!(status & ROK)) outw(rtl8139_device.io_base + 0x3E, 0x5);
+    // if (!(status & ROK)) outw(rtl8139_device.io_base + 0x3E, 0x5);
   }
   if (status & ROK) {
     // kprintf("Received packet\n");
     receive_packet();
+    // outw(rtl8139_device.io_base + 0x3E, 0x5);
     outw(rtl8139_device.io_base + 0x3E, 0x5);
   }
 
@@ -111,6 +112,9 @@ void rtl8139_send_packet(void *data, uint32_t len) {
 void receive_packet() {
   /* u32 packets = 0;
   u32 total_size = 0; */
+
+  if (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE)) return;
+  
   do {
     uint16_t *t = (uint16_t *)(rtl8139_device.rx_buffer + current_packet_ptr);
     // Skip packet header, get packet length
@@ -130,7 +134,7 @@ void receive_packet() {
     }
     kprintf("\n"); */
     void *packet = fmalloc_new(packet_length);
-    //total_size += packet_length;
+    // total_size += packet_length;
 
     memcopy((byte *)t, packet, packet_length);
     Work *net_work = fmalloc_new(sizeof(Work));
@@ -140,13 +144,17 @@ void receive_packet() {
     net_work->size = packet_length;
     LIST_INIT(&net_work->work_queue);
     list_add_tail(&kwork_queue, &net_work->work_queue);
-    //++packets;
+    /* ffree_new(packet);
+    ffree_new(net_work); */
+
+    ++packets;
     /* for (u32 i = 0; i < ALLOC_NUM; ++i) {
       u32 r = rand() % (MAX_ORDER - 8);
       // kprintf("%d) Size: %d -> ", i, r);
       get_buddy_new(r, &fast_buddy_new);
     } */
-
+    if (packets > 100)
+      kprintfColor(LIGHTGREEN, "%d packets in while loop!\n", packets);
     current_packet_ptr =
         (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
 
@@ -154,11 +162,12 @@ void receive_packet() {
 
     outw(rtl8139_device.io_base + CAPR, current_packet_ptr - 0x10);
 
-  } while (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE));
+  } while ((inb(rtl8139_device.io_base + 0x37) & RTL_BUFE) == 0);
 
   /* if (packets >= 3 || total_size >= 200)
     kprintf("Packets: %d Size: %d\n", packets, total_size);
  */
+  packets = 0;
   wake_up_thread(kwork_thread);
 }
 

@@ -26,6 +26,9 @@ extern byte
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 extern byte *stack_pointer;  // Top of the kernel stack
 extern u32 total_kernel_pages;
+extern u32 allocs_done;
+extern u32 total_packets;
+extern u32 allocs_size;
 
 BuddyBlock *get_buddy_from_page(Page *p, u8 kernel_alloc);
 void init_memory_ptrs();

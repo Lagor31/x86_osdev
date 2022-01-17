@@ -2,7 +2,7 @@
 #include "../mem/mem.h"
 #include "../drivers/screen.h"
 #include "../kernel/kernel.h"
-
+#include "../lib/utils.h"
 BuddyMemDesc fast_buddy_new;
 
 void init_buddy_new(u32 num_pages, u32 pfn_offset, BuddyMemDesc *buddy_test) {
@@ -72,13 +72,15 @@ BuddyBlockNew *get_buddy_new(u32 order, BuddyMemDesc *mem_desc) {
     found = list_entry(l, BuddyBlockNew, free_list);
     found->free = FALSE;
     list_remove(&found->free_list);
-    found->order = order;
+    //found->order = order;
     // enable_int(pi);
     return found;
   }
 
   if (order == MAX_ORDER) {
     for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
+    kprintf("Allocs done: %d TotSize: %d TotPackets: %d\n", allocs_done, allocs_size, total_packets);
+    printUptime();
     panic("No more buddy blocks available\n");
   }
 

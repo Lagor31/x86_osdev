@@ -23,7 +23,8 @@ uint32_t total_fast_pages = 0;
 Page *kernel_pages;
 Page *normal_pages;
 Page *fast_pages;
-
+u32 allocs_done = 0;
+u32 allocs_size = 0;
 BootMmap boot_mmap;
 
 void print_mem_desc(MemDesc *m) {
@@ -255,17 +256,21 @@ void *fmalloc_new(u32 size) {
   outP = (void *)VA((u32)calc_buddy_phys(p, &fast_buddy_new));
   // kprintf("Alloc ptr: 0x%x Buddy: ", outP);
   // print_buddy_new(p);
+  allocs_done++;
+  allocs_size += (PAGES_PER_BLOCK(p->order) * PAGE_SIZE);
   return outP;
 }
 
 void ffree_new(void *p) {
   if (p == NULL) return;
-  //kprintf("Free ptr %x ", p);
+  // kprintf("Free ptr %x ", p);
   u32 phys = PA((u32)p);
   BuddyBlockNew *free_me = buddy_new_from_phys(phys, &fast_buddy_new);
   // kprintf("Buddy: ");
   // print_buddy_new(free_me);
+  allocs_size -= (PAGES_PER_BLOCK(free_me->order) * PAGE_SIZE);
   free_buddy_new(free_me, &fast_buddy_new);
+  allocs_done--;
 }
 
 void ffree(void *p) {
