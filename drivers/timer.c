@@ -13,7 +13,7 @@
 #include "../cpu/isr.h"
 #include "../cpu/ports.h"
 #include "cmos.h"
-#include "../mem/buddy_new.h"
+#include "../mem/buddy.h"
 
 
 unsigned long long last_timer_int = 0;
@@ -44,8 +44,8 @@ void scheduler_handler(registers_t *regs) {
   /* for (u32 i = 0; i < ALLOC_NUM; ++i) {
     u32 r = rand() % (8192);
     // kprintf("%d) Size: %d -> ", i, r);
-    alloc_ptr_sched[i] = (u32)fmalloc_new(r);
-    // ffree_new((void *) alloc_ptr[i]);
+    alloc_ptr_sched[i] = (u32)fmalloc(r);
+    // ffree((void *) alloc_ptr[i]);
     // free_buddy_new(alloc_b[i], &fast_buddy_new);
     // print_buddy_new(alloc_b[i]);
   } */
@@ -58,7 +58,7 @@ void scheduler_handler(registers_t *regs) {
     //    kprintf("%d) Freeing\n", k);
     // if (k % 3 == 0) continue;
     // print_buddy_new(alloc_b[k]);
-    ffree_new((void *)alloc_ptr_sched[k]);
+    ffree((void *)alloc_ptr_sched[k]);
   } */
   // kprintf("\n");
 

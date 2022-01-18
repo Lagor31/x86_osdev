@@ -10,7 +10,7 @@
 #include "../drivers/rtl8139.h"
 #include "../mem/slab.h"
 #include "../net/arp.h"
-#include "../mem/buddy_new.h"
+#include "../mem/buddy.h"
 
 void *fm;
 void *alloc_ptr[ALLOC_NUM];
@@ -182,64 +182,75 @@ void user_input(char *command) {
     bool pi = disable_int();
 
     for (u32 i = 0; i < ALLOC_NUM; ++i) {
-      u32 r = rand() % (8192);
+      //u32 r = rand() % (8192);
       // kprintf("%d) Size: %d -> ", i, r);
-      alloc_ptr[i] = fmalloc_new(100);
-      // ffree_new(alloc_ptr[i]);
+      alloc_ptr[i] = fmalloc(100);
+      // ffree(alloc_ptr[i]);
 
       // free_buddy_new(alloc_b[i], &fast_buddy_new);
       // print_buddy_new(alloc_b[i]);
     }
     // kprintfColor(GREEN, "Alloc done!\n");
 
-
     for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
-    kprintfColor(PURPLE, "Allocs done: %d\n", allocs_done); 
-    for (u32 k = 0; k < ALLOC_NUM; ++k) {
+    kprintfColor(PURPLE, "Allocs done: %d\n", allocs_done);
+   /*  for (u32 k = 0; k < ALLOC_NUM; ++k) {
       //    kprintf("%d) Freeing\n", k);
       // if (k % 3 == 0) continue;
       // print_buddy_new(alloc_b[k]);
-      ffree_new(alloc_ptr[k]);
+      ffree(alloc_ptr[k]);
     }
-    kprintfColor(LIGHTBLUE, "Freeing done!\n");
+    kprintfColor(LIGHTBLUE, "Freeing done!\n"); */
     enable_int(pi);
 
-  } else if (!strcmp(input, "buddy")) {
+  } else if (!strcmp(input, "tbk")) {
     bool pi = disable_int();
+
     for (u32 i = 0; i < ALLOC_NUM; ++i) {
-      u32 r = rand() % (MAX_ORDER - 7);
+      u32 r = rand() % (8192);
       // kprintf("%d) Size: %d -> ", i, r);
-      alloc_b[i] = get_buddy_new(r, &fast_buddy_new);
+      alloc_ptr[i] = kmalloc(r);
+      // ffree(alloc_ptr[i]);
+
       // free_buddy_new(alloc_b[i], &fast_buddy_new);
       // print_buddy_new(alloc_b[i]);
     }
-    kprintfColor(GREEN, "Alloc done!\n");
+    // kprintfColor(GREEN, "Alloc done!\n");
 
-    for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
-    for (u32 k = 0; k < ALLOC_NUM; ++k) {
+    for (u32 o = 0; o <= MAX_ORDER; ++o)
+      print_buddy_status(o, &kernel_buddy_new);
+    kprintfColor(PURPLE, "Allocs done: %d\n", allocs_done);
+    /* for (u32 k = 0; k < ALLOC_NUM; ++k) {
       //    kprintf("%d) Freeing\n", k);
       // if (k % 3 == 0) continue;
       // print_buddy_new(alloc_b[k]);
-      free_buddy_new(alloc_b[k], &fast_buddy_new);
+      kfree(alloc_ptr[k]);
     }
-    kprintfColor(BLUE, "Freeing done!\n");
+    kprintfColor(LIGHTBLUE, "Freeing done!\n"); */
     enable_int(pi);
-    // free_buddy_new(b);
+
   } else if (!strcmp(input, "bi")) {
     bool pi = disable_int();
+    kprintf("Fast Mem: \n");
     for (u32 o = 0; o <= MAX_ORDER; ++o) {
       print_buddy_status(o, &fast_buddy_new);
     }
+    kprintf("Kernel Mem: \n");
+    for (u32 o = 0; o <= MAX_ORDER; ++o) {
+      print_buddy_status(o, &kernel_buddy_new);
+    }
     enable_int(pi);
-    kprintfColor(GREEN, "Allocs done: %d TotalPackets: %d\n", allocs_done, total_packets);
+    kprintfColor(GREEN, "Allocs done: %d TotalPackets: %d\n", allocs_done,
+                 total_packets);
   } else if (!strcmp(input, "mac")) {
     print_mac_address();
   } else if (!strcmp(input, "tx")) {
-   /*  byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-    byte src[] = {0xfe, 0xfe, 0xde, 0x32, 0x12, 0x34};
-    u16 type = 0x0608;
-    byte *data = kmalloc(30);
-    memset(data, 31, 30) */;
+    /*  byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+     byte src[] = {0xfe, 0xfe, 0xde, 0x32, 0x12, 0x34};
+     u16 type = 0x0608;
+     byte *data = kmalloc(30);
+     memset(data, 31, 30) */
+    ;
     // send_ethernet_packet(dest, type, data, 10);
     byte ip[4] = {192, 168, 1, 254};
     send_arp_request(ip);

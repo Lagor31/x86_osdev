@@ -7,18 +7,17 @@
 
 #define STACK_SIZE 0x1000
 // 1048576
-#define KERNEL_ALLOC 1
-#define NORMAL_ALLOC 0
-#define FAST_ALLOC 2
+
+#define PAGES_PER_BLOCK(order) (1 << order)
+
+#define FREE 1
+#define USED 0
 
 typedef struct boot_mmap {
   u32 highest_mem_addess;
   u32 total_pages;
 } BootMmap;
 
-extern Page *kernel_pages;
-extern Page *normal_pages;
-extern Page *fast_pages;
 
 extern BootMmap boot_mmap;
 
@@ -26,11 +25,16 @@ extern byte
     *free_mem_addr;  // Reppresents the first byte that we can freeily allocate
 extern byte *stack_pointer;  // Top of the kernel stack
 extern u32 total_kernel_pages;
+
 extern u32 allocs_done;
 extern u32 total_packets;
 extern u32 allocs_size;
 
-BuddyBlock *get_buddy_from_page(Page *p, u8 kernel_alloc);
+extern u32 total_used_memory;
+extern u32 total_fused_memory;
+extern u32 total_kused_memory;
+extern u32 total_nused_memory;
+
 void init_memory_ptrs();
 void memcopy(byte *source, byte *dest, size_t nbytes);
 void *boot_alloc(size_t size, uint8_t align);
@@ -42,17 +46,12 @@ void *kalloc_page(u32 order);
 void *kmalloc(u32 size);
 void kfree(void *b);
 
-void *nmalloc(u32 size);
 void kfree_normal(void *ptr);
 
 void *fmalloc(u32 size);
 void ffree(void *);
 
-void *fmalloc_new(u32 size);
-void ffree_new(void *);
-
 void *kalloc_nosleep(u32 order);
-void *normal_page_alloc(u32 order);
 void kfree_page(void *ptr);
 void printFree();
 void print_mem_desc(MemDesc *m);

@@ -12,7 +12,7 @@ void _start() {
   // unsigned r = random(2000);
   sleepms(3000);
   // write(1, par, 8);
-  printf(par);
+  //printf(par);
   unsigned pid = clone(CLONE_VM);
 
   // Child

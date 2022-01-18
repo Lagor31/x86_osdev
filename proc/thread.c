@@ -63,7 +63,7 @@ void reparent(Thread *adopter, List *adoptees) {
 }
 void sleep_ms(u32 ms) {
   bool pi = disable_int();
-  Timer *t = fmalloc_new(sizeof(Timer));
+  Timer *t = fmalloc(sizeof(Timer));
   t->expiration = millis_to_ticks(ms) + tick_count;
   t->thread = current_thread;
   list_add_head(&kernel_timers, &t->q);
@@ -126,7 +126,7 @@ void kill_process(Thread *p) {
     Timer *activeT = list_entry(l, Timer, q);
     if (activeT->thread->pid == p->pid) {
       list_remove(&activeT->q);
-      ffree_new(activeT);
+      ffree(activeT);
       break;
     }
   }

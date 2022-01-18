@@ -5,7 +5,7 @@
 #include "../kernel/kernel.h"
 #include "../lib/utils.h"
 #include "../proc/thread.h"
-#include "../mem/buddy_new.h"
+#include "../mem/buddy.h"
 
 pci_dev_t pci_rtl8139_device;
 rtl8139_dev_t rtl8139_device;
@@ -133,19 +133,19 @@ void receive_packet() {
       print_buddy_status(o, &fast_buddy_new);
     }
     kprintf("\n"); */
-    void *packet = fmalloc_new(packet_length);
+    void *packet = fmalloc(packet_length);
     // total_size += packet_length;
 
     memcopy((byte *)t, packet, packet_length);
-    Work *net_work = fmalloc_new(sizeof(Work));
+    Work *net_work = fmalloc(sizeof(Work));
     net_work->data = packet;
     net_work->type = 0;
     net_work->t = NULL;
     net_work->size = packet_length;
     LIST_INIT(&net_work->work_queue);
     list_add_tail(&kwork_queue, &net_work->work_queue);
-    /* ffree_new(packet);
-    ffree_new(net_work); */
+    /* ffree(packet);
+    ffree(net_work); */
 
     ++packets;
     /* for (u32 i = 0; i < ALLOC_NUM; ++i) {

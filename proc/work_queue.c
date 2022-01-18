@@ -29,8 +29,8 @@ void work_queue_thread() {
       list_remove(&p1->work_queue);
       //print_ethernet_packet(p1->data);
       bool pi = disable_int();
-      ffree_new(p1->data);
-      ffree_new(p1);
+      ffree(p1->data);
+      ffree(p1);
       enable_int(pi);
       goto net_work;
     }

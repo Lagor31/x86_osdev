@@ -28,7 +28,7 @@ void k_simple_proc() {
     sleep_ms(2000);
     // print_elf(b);
 
-    for (size_t i = 0; i < ALLOC_NUM; i++) {
+    for (size_t i = 0; i < 10; i++) {
       /*  if (sys_clone(getRegisterValue(EIP) + 2, getRegisterValue(ESP),
                      CLONE_VM) == 0) {
          sleep_ms(500);
@@ -51,8 +51,8 @@ void k_simple_proc() {
     }
 
     sys_wait4all();
-    // kprintf("All children ko\n");
-    sleep_ms(300);
+    //kprintf("All children ko\n");
+    sleep_ms(30000);
     // kprintf("Quitting\n");
 
     // sys_exit(0);
