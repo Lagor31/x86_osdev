@@ -67,7 +67,7 @@ void init_memory_ptrs() {
 */
 
 void *kmalloc(u32 size) {
-  goto no_cache;
+  //goto no_cache;
   if (size <= MAX_SLAB_SIZE) {
     // Search in cache or create one ad hoc
     if (size < 4) size = 4;
@@ -84,26 +84,16 @@ void *kmalloc(u32 size) {
 
   else {
   no_cache:
-    /*  u32 order = 0;
-     u32 pages = size / PAGE_SIZE + ((size % PAGE_SIZE) > 0 ? 1 : 0);
-
-     while (order <= MAX_ORDER) {
-       if (pages <= (u32)PAGES_PER_BLOCK(order)) {
-         // kprintf("Size %d -> Order: %d\n", size, order);
-         return kalloc_page(order);
-       }
-       order++;
-     } */
-
     return kalloc_page(calc_page_order(size));
   }
 }
 
 void kfree(void *buf) {
-  kfree_page(buf);
-  return;
+  /*  kfree_page(buf);
+   return; */
   if (!sfree(buf)) {
-    kprintf("Error freeing cache obj");
+    kfree_page(buf);
+    // kprintf("Error freeing cache obj");
   }
 }
 

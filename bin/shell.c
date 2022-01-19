@@ -11,6 +11,8 @@
 #include "../mem/slab.h"
 #include "../net/arp.h"
 #include "../mem/buddy.h"
+#include "../net/ipv4.h"
+#include "../net/dhcp.h"
 
 void *fm;
 void *alloc_ptr[ALLOC_NUM];
@@ -182,7 +184,7 @@ void user_input(char *command) {
     bool pi = disable_int();
 
     for (u32 i = 0; i < ALLOC_NUM; ++i) {
-      //u32 r = rand() % (8192);
+      // u32 r = rand() % (8192);
       // kprintf("%d) Size: %d -> ", i, r);
       alloc_ptr[i] = fmalloc(100);
       // ffree(alloc_ptr[i]);
@@ -194,13 +196,13 @@ void user_input(char *command) {
 
     for (u32 o = 0; o <= MAX_ORDER; ++o) print_buddy_status(o, &fast_buddy_new);
     kprintfColor(PURPLE, "Allocs done: %d\n", allocs_done);
-   /*  for (u32 k = 0; k < ALLOC_NUM; ++k) {
-      //    kprintf("%d) Freeing\n", k);
-      // if (k % 3 == 0) continue;
-      // print_buddy_new(alloc_b[k]);
-      ffree(alloc_ptr[k]);
-    }
-    kprintfColor(LIGHTBLUE, "Freeing done!\n"); */
+    /*  for (u32 k = 0; k < ALLOC_NUM; ++k) {
+       //    kprintf("%d) Freeing\n", k);
+       // if (k % 3 == 0) continue;
+       // print_buddy_new(alloc_b[k]);
+       ffree(alloc_ptr[k]);
+     }
+     kprintfColor(LIGHTBLUE, "Freeing done!\n"); */
     enable_int(pi);
 
   } else if (!strcmp(input, "tbk")) {
@@ -255,6 +257,19 @@ void user_input(char *command) {
     byte ip[4] = {192, 168, 1, 254};
     send_arp_request(ip);
     // rtl8139_send_packet(arp, 60);
+  } else if (!strcmp(input, "ip")) {
+    /*  byte dest[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+     byte src[] = {0xfe, 0xfe, 0xde, 0x32, 0x12, 0x34};
+     u16 type = 0x0608;
+     byte *data = kmalloc(30);
+     memset(data, 31, 30) */
+
+    // send_ethernet_packet(dest, type, data, 10);
+    byte src_ip[] = {0, 0, 0, 0};
+    byte dst_ip[] = {255, 255, 255, 255};
+    send_ip_packet(create_ipv4_header(src_ip, dst_ip, 20));
+  } else if (!strcmp(input, "dhcp")) {
+    for (int i = 0; i < 1; ++i) send_dchp_discovery();
   } else if (!strcmp(input, "date")) {
     print_date();
   } else if (!strcmp(input, "lsof")) {

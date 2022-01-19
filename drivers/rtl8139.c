@@ -90,8 +90,8 @@ void rtl8139_packet_handler(registers_t *regs) {
     // kprintf("Received packet\n");
     receive_packet();
     // outw(rtl8139_device.io_base + 0x3E, 0x5);
-    outw(rtl8139_device.io_base + 0x3E, 0x5);
   }
+  outw(rtl8139_device.io_base + 0x3E, 0x5);
 
   UNUSED(regs);
 }
@@ -113,8 +113,8 @@ void receive_packet() {
   /* u32 packets = 0;
   u32 total_size = 0; */
 
-  if (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE)) return;
-  
+  //if (!(inb(rtl8139_device.io_base + 0x37) & RTL_BUFE)) return;
+
   do {
     uint16_t *t = (uint16_t *)(rtl8139_device.rx_buffer + current_packet_ptr);
     // Skip packet header, get packet length
@@ -148,13 +148,17 @@ void receive_packet() {
     ffree(net_work); */
 
     ++packets;
+    //print_ethernet_packet(packet);
+
     /* for (u32 i = 0; i < ALLOC_NUM; ++i) {
       u32 r = rand() % (MAX_ORDER - 8);
       // kprintf("%d) Size: %d -> ", i, r);
       get_buddy_new(r, &fast_buddy_new);
     } */
-    if (packets > 100)
+    if (packets > 100) {
       kprintfColor(LIGHTGREEN, "%d packets in while loop!\n", packets);
+      print_ethernet_packet(packet);
+    }
     current_packet_ptr =
         (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
 

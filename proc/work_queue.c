@@ -27,7 +27,7 @@ void work_queue_thread() {
       ++total_packets;
       // if (p1->type == 0) kprintf("Received network packet\n");
       list_remove(&p1->work_queue);
-      //print_ethernet_packet(p1->data);
+      // print_ethernet_packet(p1->data);
       bool pi = disable_int();
       ffree(p1->data);
       ffree(p1);
